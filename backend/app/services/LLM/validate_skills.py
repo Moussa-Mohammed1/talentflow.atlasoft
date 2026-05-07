@@ -21,7 +21,9 @@ class LLMService:
 
     @classmethod
     def validate(cls, text: str, skills: list[dict[str, Any]] | list[str]) -> dict[str, Any]:
-        prompt = cls._build_skill_review_prompt(text, skills)
+        prompt = "/no_think\n" + cls._build_skill_review_prompt(text, skills)
+        print("calling ollama...")
+        print(f"current timeout : {float(os.getenv('TALENTFLOW_SKILL_LLM_TIMEOUT', '300'))}")
         response = requests.post(
             cls.endpoint(),
             json={
@@ -36,6 +38,8 @@ class LLMService:
             },
             timeout=float(os.getenv("TALENTFLOW_SKILL_LLM_TIMEOUT", "300")),
         )
+        print("printing result...")
+        print(response.text)
         response.raise_for_status()
         payload = response.json()
         return cls._parse_json_response(str(payload.get("response", "")))
@@ -43,43 +47,44 @@ class LLMService:
     @staticmethod
     def _build_skill_review_prompt(text: str, skills: list[dict[str, Any]] | list[str]) -> str:
         serialized_skills = json.dumps(skills, ensure_ascii=False)
-        return f"""
-You are an ATS skill extraction validator for French and English resumes.
+        return (
+        "You are an ATS skill extraction validator for French and English resumes.\n"
+        "Review the extracted skills against the resume text.\n"
+        "Remove any incorrectly extracted items.\n"
+        "Keep only skills explicitly mentioned or strongly supported by the resume.\n"
+        "Do not infer unsupported skills.\n"
 
-Task:
-1. Review the extracted skills against the raw resume text.
-2. Keep only real professional skills, tools, technologies, methodologies, domain skills, and competencies.
-3. Remove locations, schools, names, dates, language proficiency lines, job titles, and generic resume prose.
-4. Add missing skills only when they are explicitly present in the resume text.
-5. Preserve exact skill names as written when possible.
+        "Keep only technologies, tools, frameworks, programming languages, "
+        "networking technologies, telecommunications technologies, protocols, "
+        "platforms, certifications, methodologies, databases, operating systems, "
+        "cloud services, cybersecurity tools, and technical competencies.\n"
 
-Think carefully about the resume before answering. After any private reasoning, your final answer must contain only one valid JSON object.
-Do not write markdown.
+        "Discard personal information, contact details, project descriptions, "
+        "responsibilities, sentences, achievements, company names, section titles, "
+        "job titles, educational institutions, arbitrary text fragments, and soft skills.\n"
 
-JSON schema:
-{{
-  "skills": [
-    {{
-      "name": "exact skill name",
-      "category": "Technology | Framework | Programming Language | Database | Cloud Platform | DevOps Tool | Networking Technology | Cybersecurity | Methodology | Soft Skill | Business Skill | Domain Knowledge | Competency",
-      "confidence": 0.0,
-      "evidence": "short exact resume line or phrase"
-    }}
-  ],
-  "rejected": [
-    {{
-      "name": "removed extracted item",
-      "reason": "short reason"
-    }}
-  ]
-}}
-
-Extracted skills:
-{serialized_skills}
-
-Raw resume text:
-{text}
-""".strip()
+        "Return only skills useful for matching candidates to technical positions in "
+        "networking, telecommunications, IT infrastructure, cybersecurity, software engineering, cloud, or DevOps.\n"
+        "Do not explain your reasoning.\n"
+        "Do not think step by step.\n"
+        "Do not write markdown.\n"
+        "Return only the final JSON object.\n"
+        
+        
+        "JSON schema:\n"
+        "{\n"
+        '  "skills": [\n'
+        "    {\n"
+        '      "name": "exact skill name",\n'
+        '      "category": "Programming Language | Framework | Database | DevOps Tool | Cloud Service | Networking Technology | Telecommunications Technology | Protocol | Operating System | Cybersecurity Tool | Methodology | Certification | Development Tool | Other"\n'
+        "    }\n"
+        "  ]\n"
+        "}\n\n"
+        "Extracted skills:\n"
+        + serialized_skills
+        + "\n\nRaw resume text:\n"
+        + text
+    )
 
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:

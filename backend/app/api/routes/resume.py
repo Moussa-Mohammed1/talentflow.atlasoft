@@ -6,9 +6,9 @@ import tempfile
 from app.schemas.identity_extraction import ResumeIdentityRead
 from app.schemas.resume import ResumeRead, ResumeTextRead
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
-from app.services.extraction.file_extractor import TextExtractionService
-from app.services.extraction.file_extractor import UnsupportedFileTypeError
-from app.services.nlp.identity_pipeline import ResumeIdentityExtractionPipeline
+from backend.app.services.resume_extraction.extractor import TextExtractionService
+from backend.app.services.resume_extraction.extractor import UnsupportedFileTypeError
+from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
 from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -97,7 +97,7 @@ def analyze_resume(file: UploadFile = File(...)):
 @router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
 def extract_identity(file: UploadFile = File(...)):
 	text_extractor = TextExtractionService()
-	identity_extractor = ResumeIdentityExtractionPipeline()
+	identity_extractor = ResumeIdentityPipeline()
 	if not file.filename:
 		raise HTTPException(status_code=400, detail="Resume file is required")
 

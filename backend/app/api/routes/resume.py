@@ -3,12 +3,13 @@ from pathlib import Path
 import shutil
 import tempfile
 
+from app.schemas.identity_extraction import ResumeIdentityRead
 from app.schemas.resume import ResumeRead, ResumeTextRead
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
 from app.services.extraction.file_extractor import TextExtractionService
 from app.services.extraction.file_extractor import UnsupportedFileTypeError
-from app.services.nlp.skills_extraction_service import PretrainedBilingualExtractor
-
+from app.services.nlp.identity_pipeline import ResumeIdentityExtractionPipeline
+from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
 
@@ -91,3 +92,29 @@ def analyze_resume(file: UploadFile = File(...)):
 		Path(temp_path).unlink(missing_ok=True)
 
 	return ResumeAnalysisRead(raw_text=raw_text, analysis=ResumeSkillAnalysisRead.model_validate(converted))
+
+
+@router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
+def extract_identity(file: UploadFile = File(...)):
+	text_extractor = TextExtractionService()
+	identity_extractor = ResumeIdentityExtractionPipeline()
+	if not file.filename:
+		raise HTTPException(status_code=400, detail="Resume file is required")
+
+	file_suffix = Path(file.filename).suffix.lower()
+	with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
+		shutil.copyfileobj(file.file, temp_file)
+		temp_path = temp_file.name
+
+	try:
+		raw_text = text_extractor.extract(temp_path)
+		identity = identity_extractor.analyze(raw_text)
+	except UnsupportedFileTypeError as e:
+		raise HTTPException(
+			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+			detail=str(e) + ", allowed: pdf, docx",
+		)
+	finally:
+		Path(temp_path).unlink(missing_ok=True)
+
+	return ResumeIdentityRead.model_validate(identity)

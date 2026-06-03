@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import re
 from functools import lru_cache
-from typing import Iterable
 
 import spacy
 
 from app.services.skill_extraction.constants import ACTION_VERB_TO_COMPETENCY, HEADER_TERMS, SECTION_CONFIDENCE
+from app.services.skill_extraction.layout_signal_extractor import LayoutSignalExtractor
 from app.services.skill_extraction.models import CandidateRecord, SectionSpan
 from app.services.skill_extraction.ontology import SkillOntology
 
@@ -14,34 +13,139 @@ from app.services.skill_extraction.ontology import SkillOntology
 class CandidateExtractor:
     def __init__(self, ontology: SkillOntology) -> None:
         self.ontology = ontology
+        self.layout = LayoutSignalExtractor(ontology)
         self._nlp = self._load_spacy_model()
-        self._regex_patterns = [
-            re.compile(r"\b[A-Z]{2,}(?:[./#-][A-Z0-9]+)+\b"),
-            re.compile(r"\b[A-Z][a-z]+(?:\.[A-Za-z0-9]+)?\b"),
-            re.compile(r"\b[A-Za-z]+(?:[.-][A-Za-z0-9]+)+\b"),
-            re.compile(r"\b(?:[A-Z]{2,}|[A-Z][a-z]+(?:\s+[A-Z][a-z0-9]+)+)\b"),
-        ]
-        self._action_verb_set = set(ACTION_VERB_TO_COMPETENCY)
+        self._action_verb_set = {
+            *ACTION_VERB_TO_COMPETENCY,
+            "developper",
+            "developpe",
+            "developpement",
+            "concevoir",
+            "conception",
+            "creer",
+            "creation",
+            "realiser",
+            "implementation",
+            "gerer",
+            "gestion",
+            "administrer",
+            "deployer",
+            "deploiement",
+            "analyser",
+            "analyse",
+            "optimiser",
+            "maintenir",
+            "maintenance",
+            "securiser",
+            "superviser",
+        }
 
     @staticmethod
     @lru_cache(maxsize=1)
     def _load_spacy_model():
-        try:
-            return spacy.load("fr_core_news_sm")
-        except Exception:
-            nlp = spacy.blank("fr")
-            if "sentencizer" not in nlp.pipe_names:
-                nlp.add_pipe("sentencizer")
-            return nlp
+        for model_name in ("fr_core_news_sm", "en_core_web_sm", "xx_ent_wiki_sm"):
+            try:
+                return spacy.load(model_name)
+            except Exception:
+                continue
+
+        nlp = spacy.blank("xx")
+        if "sentencizer" not in nlp.pipe_names:
+            nlp.add_pipe("sentencizer")
+        return nlp
 
     _UNKNOWN_SECTION = SectionSpan("unknown", "", 1, 1, 0, 0, 0.3)
 
     TECH_HINTS = {
-        "system", "software", "database", "api", "server", "network",
-        "platform", "tool", "infrastructure", "framework", "library",
-        "cloud", "devops", "backend", "frontend", "stack", "protocol",
-        "deployment", "container", "pipeline", "microservice", "architecture",
+        "api",
+        "architecture",
+        "backend",
+        "base",
+        "cloud",
+        "code",
+        "container",
+        "database",
+        "deployment",
+        "devops",
+        "frontend",
+        "framework",
+        "infrastructure",
+        "library",
+        "logiciel",
+        "microservice",
+        "network",
+        "plateforme",
+        "platform",
+        "protocol",
+        "reseau",
+        "serveur",
+        "server",
+        "software",
+        "stack",
+        "system",
+        "systeme",
+        "tool",
+        "web",
     }
+    BUSINESS_HINTS = {
+        "acquisition",
+        "advertising",
+        "business",
+        "client",
+        "customer",
+        "editing",
+        "lead",
+        "leads",
+        "management",
+        "marketing",
+        "media",
+        "operations",
+        "pitching",
+        "process",
+        "relationship",
+        "relationships",
+        "sales",
+        "service",
+        "social",
+        "strategic",
+    }
+    COMPOUND_SKILL_ALIASES = {
+        "advertising": "Advertising",
+        "business development": "Business Development",
+        "business growth": "Business Development",
+        "client acquisition": "Client Acquisition",
+        "customer service": "Customer Service",
+        "editing": "Editing",
+        "lead generation": "Lead Generation",
+        "generate new leads": "Lead Generation",
+        "new leads": "Lead Generation",
+        "marketing": "Marketing",
+        "marketing initiatives": "Marketing",
+        "marketing management": "Marketing Management",
+        "microsoft excel": "Microsoft Excel",
+        "microsoft office suite": "Microsoft Office Suite",
+        "microsoft outlook": "Microsoft Outlook",
+        "microsoft powerpoint": "Microsoft PowerPoint",
+        "microsoft word": "Microsoft Word",
+        "powerpoint": "Microsoft PowerPoint",
+        "process improvement": "Process Improvement",
+        "relationship management": "Relationship Management",
+        "maintaining relationships": "Relationship Management",
+        "establishing and maintaining relationships": "Relationship Management",
+        "sales cycle": "Sales Cycle Management",
+        "sales management": "Sales Management",
+        "sales operations": "Sales Operations",
+        "sales pitching": "Sales Pitching",
+        "social media": "Social Media Marketing",
+        "social media marketing": "Social Media Marketing",
+        "strategic marketing": "Strategic Marketing",
+        "strategic sales": "Strategic Sales",
+        "strategic sales and marketing": "Strategic Marketing",
+        "word": "Microsoft Word",
+        "excel": "Microsoft Excel",
+        "outlook": "Microsoft Outlook",
+    }
+    SKILL_LABEL_WORDS = LayoutSignalExtractor.SKILL_LABEL_WORDS
 
     @staticmethod
     def _section_for_char(char_index: int, sections: list[SectionSpan]) -> SectionSpan:
@@ -57,9 +161,11 @@ class CandidateExtractor:
         return any(character.isalpha() for character in value)
 
     @staticmethod
-    def _looks_like_header(value: str) -> bool:
-        normalized = SkillOntology.normalize_key(value)
-        return normalized in HEADER_TERMS or normalized.replace(" ", "") in {term.replace(" ", "") for term in HEADER_TERMS}
+    def _word_count(value: str) -> int:
+        return LayoutSignalExtractor.word_count(value)
+
+    def _looks_like_header(self, value: str) -> bool:
+        return self.layout.looks_like_header(value)
 
     @staticmethod
     def _singularize_phrase(value: str) -> str:
@@ -69,9 +175,10 @@ class CandidateExtractor:
             if word.isupper() and len(word) <= 4:
                 singularized.append(word)
                 continue
-            if word.endswith("ies") and len(word) > 4:
+            lower = word.casefold()
+            if lower.endswith("ies") and len(word) > 4:
                 singularized.append(word[:-3] + "y")
-            elif word.endswith("s") and len(word) > 3 and not word.endswith(("ss", "us", "is")):
+            elif lower.endswith("s") and len(word) > 3 and not lower.endswith(("ss", "us", "is")):
                 singularized.append(word[:-1])
             else:
                 singularized.append(word)
@@ -80,11 +187,11 @@ class CandidateExtractor:
     @staticmethod
     def _phrase_score(source: str) -> float:
         return {
-            "ontology": 0.98,
-            "context": 0.8,
-            "phrase": 0.7,
+            "layout": 0.86,
+            "context": 0.78,
+            "business_context": 0.76,
+            "phrase": 0.68,
             "ner": 0.58,
-            "regex": 0.55,
         }.get(source, 0.5)
 
     def _add_candidate(
@@ -99,12 +206,19 @@ class CandidateExtractor:
         cleaned = self.ontology.clean_surface(candidate)
         if not cleaned or len(cleaned) < 2 or not self._contains_alpha(cleaned):
             return
-        if self._looks_like_header(cleaned):
+        if self._looks_like_header(cleaned) or cleaned.isdigit():
             return
-        if cleaned.isdigit():
+        key_preview = self.ontology.normalize_key(cleaned)
+        if self.layout.looks_like_metadata_value(cleaned):
+            return
+        if self.layout.looks_like_language_level(cleaned):
+            return
+        if key_preview in HEADER_TERMS:
+            return
+        if self._word_count(cleaned) > 7:
             return
 
-        key = self.ontology.normalize_key(cleaned)
+        key = key_preview
         if not key:
             return
 
@@ -118,81 +232,134 @@ class CandidateExtractor:
             candidates[key] = record
 
         record.add(source, self._phrase_score(source), evidence)
-        if char_start is not None and section.name == "profile":
+        if char_start is not None and section.name != "unknown":
             record.section = section.name
 
-    def _extract_regex_candidates(self, text: str) -> Iterable[str]:
-        for pattern in self._regex_patterns:
-            for match in pattern.finditer(text):
-                candidate = match.group(0).strip()
-                if not candidate:
-                    continue
-                # Reject very short candidates (2 chars or less)
-                if len(candidate) <= 2:
-                    continue
-                # Reject titlecase-only alphabetic words not in ontology
-                if candidate.isalpha() and candidate.istitle() and self.ontology.resolve_concept(candidate) is None:
-                    continue
-                yield candidate
+    @classmethod
+    def _is_structured_line(cls, line: str) -> bool:
+        return LayoutSignalExtractor.is_structured_line(line)
+
+    @classmethod
+    def _split_skill_line(cls, line: str) -> list[str]:
+        return LayoutSignalExtractor.split_skill_line(line)
+
+    def _has_skill_surface(self, value: str, *, list_item: bool = False) -> bool:
+        return self.layout.has_skill_surface(value, list_item=list_item)
 
     @staticmethod
-    def _is_structured_line(line: str) -> bool:
-        """Check if a line looks like a structured skill listing (bullet, comma-separated, etc.)."""
-        stripped = line.strip()
-        # Bullet list patterns
-        if stripped and stripped[0] in {'-', '•', '▪', '►', '●', '○', '★', '✓', '*'}:
-            return True
-        # Numbered list
-        if re.match(r'^\d+[.)\-]\s', stripped):
-            return True
-        # Comma/pipe/semicolon separated lists (3+ items)
-        for delimiter in (',', '|', ';'):
-            if stripped.count(delimiter) >= 2:
-                return True
-        return False
+    def _line_start_positions(text: str) -> list[tuple[int, str]]:
+        return LayoutSignalExtractor.line_start_positions(text)
+
+    def _extract_layout_candidates(self, text: str, sections: list[SectionSpan], candidates: dict[str, CandidateRecord]) -> None:
+        for start_char, line in self._line_start_positions(text):
+            stripped = line.strip()
+            if not stripped:
+                continue
+
+            section = self._section_for_char(start_char, sections)
+            is_structured = self._is_structured_line(stripped)
+            has_skill_label = self.layout.has_skill_label(stripped)
+            is_skill_section = section.name == "technical_skills"
+            is_context_section = section.name in {"projects", "experience", "certifications"}
+
+            if is_context_section and not has_skill_label:
+                continue
+            if not is_structured and not is_skill_section:
+                continue
+
+            comma_fragments = self._split_skill_line(stripped) if "," in stripped else []
+            should_split_concise_skill_line = (
+                is_skill_section
+                and len(comma_fragments) >= 2
+                and len(comma_fragments) <= 6
+                and any(self.layout.has_strong_skill_surface(fragment) for fragment in comma_fragments)
+            )
+            fragments = self._split_skill_line(stripped) if is_structured or has_skill_label or should_split_concise_skill_line else [stripped]
+            list_like = len(fragments) >= 2
+            for fragment in fragments:
+                cleaned = self.ontology.clean_surface(fragment)
+                if not cleaned:
+                    continue
+                if is_context_section and not has_skill_label:
+                    continue
+                if not is_structured and self._word_count(cleaned) > 4:
+                    continue
+                if not has_skill_label and not self._has_skill_surface(cleaned, list_item=list_like):
+                    continue
+                self._add_candidate(candidates, cleaned, "layout", section, stripped, start_char)
 
     def _extract_context_candidate(self, sentence, sentence_text: str) -> list[str]:
-        # Context extraction is heavily constrained:
-        # 1. Must have an action verb
-        # 2. Sentence must contain a TECH_HINT
-        # 3. Noun phrase must contain a TECH_HINT
-        # 4. Sentence should be in structured formatting
-        tokens = [token.lemma_.casefold() for token in sentence if token.is_alpha]
+        tokens = [SkillOntology.strip_accents(token.lemma_ or token.text).casefold() for token in sentence if token.is_alpha]
         matched_verb = next((token for token in tokens if token in self._action_verb_set), None)
         if matched_verb is None:
             return []
 
-        # Check if sentence contains at least one tech hint
-        sentence_lower = sentence_text.casefold()
+        sentence_lower = SkillOntology.strip_accents(sentence_text).casefold()
         has_sentence_tech = any(hint in sentence_lower for hint in self.TECH_HINTS)
         if not has_sentence_tech:
             return []
 
-        # Check if sentence is in structured formatting
-        is_structured = self._is_structured_line(sentence_text)
-
-        noun_phrases = [chunk.text for chunk in sentence.noun_chunks if self._contains_alpha(chunk.text)] if sentence.has_annotation("DEP") else []
-        if not noun_phrases:
-            return []
-
-        competency_suffix = ACTION_VERB_TO_COMPETENCY.get(matched_verb, "Competency")
+        noun_phrases = [chunk.text for chunk in sentence.noun_chunks if self._contains_alpha(chunk.text)] if sentence.doc.has_annotation("DEP") else []
         extracted: list[str] = []
-        for noun_phrase in noun_phrases[:3]:
+        for noun_phrase in noun_phrases[:4]:
             normalized_noun = self._singularize_phrase(self.ontology.clean_surface(noun_phrase))
-            if len(normalized_noun.split()) == 1 and normalized_noun.casefold() in {"it", "they", "we", "i"}:
+            if len(normalized_noun.split()) == 1 and normalized_noun.casefold() in {"it", "they", "we", "i", "il", "elle", "nous"}:
                 continue
-            # Noun phrase must contain a tech hint
-            noun_lower = normalized_noun.casefold()
-            has_noun_tech = any(hint in noun_lower for hint in self.TECH_HINTS)
-            if not has_noun_tech and not is_structured:
-                continue
-            if normalized_noun:
-                extracted.append(f"{normalized_noun} {competency_suffix}".strip())
+            noun_lower = SkillOntology.strip_accents(normalized_noun).casefold()
+            if any(hint in noun_lower for hint in self.TECH_HINTS):
+                extracted.append(normalized_noun)
         return extracted
+
+    def _extract_business_candidates(self, text: str, sections: list[SectionSpan], candidates: dict[str, CandidateRecord]) -> None:
+        normalized_text = self.ontology.normalize_key(text)
+        for alias, canonical in self.COMPOUND_SKILL_ALIASES.items():
+            if not self._contains_normalized_phrase(normalized_text, alias):
+                continue
+            evidence = self._line_for_phrase(text, alias) or canonical
+            section = self._section_for_char(text.find(evidence) if evidence in text else 0, sections)
+            self._add_candidate(candidates, canonical, "business_context", section, evidence)
+
+        for start_char, line in self._line_start_positions(text):
+            stripped = line.strip()
+            if not stripped or ":" not in stripped:
+                continue
+            label, rest = stripped.split(":", 1)
+            label_key = self.ontology.normalize_key(label)
+            if label_key and any(hint in label_key.split() for hint in self.BUSINESS_HINTS):
+                section = self._section_for_char(start_char, sections)
+                self._add_candidate(candidates, label, "business_context", section, stripped, start_char)
+            rest_key = self.ontology.normalize_key(rest)
+            if "microsoft office suite" in rest_key:
+                section = self._section_for_char(start_char, sections)
+                self._add_candidate(candidates, "Microsoft Office Suite", "business_context", section, stripped, start_char)
+
+    @staticmethod
+    def _contains_normalized_phrase(normalized_text: str, phrase: str) -> bool:
+        start = 0
+        while True:
+            index = normalized_text.find(phrase, start)
+            if index < 0:
+                return False
+            before = normalized_text[index - 1] if index > 0 else " "
+            after_index = index + len(phrase)
+            after = normalized_text[after_index] if after_index < len(normalized_text) else " "
+            if not before.isalnum() and not after.isalnum():
+                return True
+            start = index + 1
+
+    def _line_for_phrase(self, text: str, phrase: str) -> str | None:
+        phrase_key = self.ontology.normalize_key(phrase)
+        for line in text.splitlines():
+            if self._contains_normalized_phrase(self.ontology.normalize_key(line), phrase_key):
+                return line.strip()
+        return None
 
     def _extract_candidates(self, text: str, sections: list[SectionSpan]) -> dict[str, CandidateRecord]:
         candidates: dict[str, CandidateRecord] = {}
         doc = self._nlp(text)
+
+        self._extract_layout_candidates(text, sections, candidates)
+        self._extract_business_candidates(text, sections, candidates)
 
         for ent in getattr(doc, "ents", []):
             candidate = ent.text.strip()
@@ -209,24 +376,15 @@ class CandidateExtractor:
                 if not candidate or len(candidate) < 2:
                     continue
                 section = self._section_for_char(chunk.start_char, sections)
+                if section.name != "technical_skills":
+                    continue
                 self._add_candidate(candidates, candidate, "phrase", section, chunk.sent.text if chunk.sent is not None else None, chunk.start_char)
 
         if doc.has_annotation("SENT_START"):
             for sent in doc.sents:
                 section = self._section_for_char(sent.start_char, sections)
-                contextual_candidates = self._extract_context_candidate(sent, sent.text)
-                for candidate in contextual_candidates:
+                for candidate in self._extract_context_candidate(sent, sent.text):
                     self._add_candidate(candidates, candidate, "context", section, sent.text, sent.start_char)
-
-        for candidate in self._extract_regex_candidates(text):
-            section = sections[0] if sections else self._UNKNOWN_SECTION
-            self._add_candidate(candidates, candidate, "regex", section, candidate)
-
-        normalized_text = self.ontology.normalize_key(text)
-        for alias, concept in self.ontology.alias_to_concept.items():
-            if alias and re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", normalized_text):
-                section = sections[0] if sections else self._UNKNOWN_SECTION
-                self._add_candidate(candidates, concept.canonical, "ontology", section, concept.canonical)
 
         return candidates
 

@@ -38,8 +38,12 @@ class CandidateRecord:
     phrase_score: float = 0.0
     regex_score: float = 0.0
     context_score: float = 0.0
+    business_context_score: float = 0.0
     validation_score: float = 0.0
     semantic_score: float = 0.0
+    ontology_score: float = 0.0
+    embedding_score: float = 0.0
+    llm_score: float = 0.0
 
     def add(self, source: str, score: float, evidence: str | None = None) -> None:
         self.count += 1
@@ -54,6 +58,8 @@ class CandidateRecord:
             self.regex_score = max(self.regex_score, score)
         elif source == "context":
             self.context_score = max(self.context_score, score)
+        elif source == "business_context":
+            self.business_context_score = max(self.business_context_score, score)
 
 
 @dataclass(frozen=True)

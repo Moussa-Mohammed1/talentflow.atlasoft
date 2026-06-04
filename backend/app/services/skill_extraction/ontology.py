@@ -1,4 +1,3 @@
-import re
 import unicodedata
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -47,14 +46,17 @@ class SkillOntology:
     @classmethod
     def normalize_key(cls, value: str) -> str:
         value = cls.strip_accents(value).casefold()
-        value = re.sub(r"[^a-z0-9+#.]+", " ", value)
-        return re.sub(r"\s+", " ", value).strip()
+        normalized_characters = [
+            character if character.isalnum() or character in {"+", "#", "."} else " "
+            for character in value
+        ]
+        return " ".join("".join(normalized_characters).split())
 
     @staticmethod
     def clean_surface(value: str) -> str:
         value = unicodedata.normalize("NFKC", value).replace("\u00a0", " ")
         value = value.replace("▁", " ").replace("Ġ", " ")
-        value = re.sub(r"\s+", " ", value)
+        value = " ".join(value.split())
         return value.strip(" \t\r\n-–—,;:.()[]{}<>\"'`|")
 
     def resolve_concept(self, value: str) -> SkillConcept | None:
@@ -111,7 +113,7 @@ class SkillOntology:
         for word in words:
             if word.isupper() and len(word) <= 5:
                 canonical_words.append(word)
-            elif re.fullmatch(r"[A-Za-z]\.[A-Za-z]+", word):
+            elif "." in word and all(part.isalpha() for part in word.split(".") if part):
                 canonical_words.append(word)
             else:
                 canonical_words.append(word[:1].upper() + word[1:].lower())
@@ -127,10 +129,9 @@ class SkillOntology:
         if category is not None:
             return category, None, max(semantic_hint, 0.55)
 
-        if self._embedding_model is not None:
-            score, category = self._best_category_by_embedding(value)
-            if category is not None:
-                return category, None, score
+        score, category = self._best_category_by_embedding(value)
+        if category is not None:
+            return category, None, score
 
         return "Competency", None, semantic_hint
 
@@ -165,7 +166,10 @@ class SkillOntology:
         if SentenceTransformer is None:
             return
         try:
-            self._embedding_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+            self._embedding_model = SentenceTransformer(
+                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+                local_files_only=True,
+            )
         except Exception:
             self._embedding_model = None
             return

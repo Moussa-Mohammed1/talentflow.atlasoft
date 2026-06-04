@@ -9,3 +9,5 @@ from app.models.education import Education
 from app.models.certification import Certification
 from app.models.language import Language
 from app.models.candidat_language import CandidatLanguages
+from app.models.skills import Skills
+from app.models.skills_category import SkillsCategory

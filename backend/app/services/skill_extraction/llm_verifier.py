@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from app.services.LLM.llm_service import LLMService
+from backend.app.services.LLM.validate_skills import LLMService
 
 try:
     from dotenv import load_dotenv

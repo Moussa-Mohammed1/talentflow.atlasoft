@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-import re
 from math import exp
 from typing import Iterable
 
 from app.services.skill_extraction.constants import COMPETENCY_FAMILY, TECHNOLOGY_FAMILY, SECTION_CONFIDENCE
+from app.services.skill_extraction.category_classifier import SkillCategoryClassifier
+from app.services.skill_extraction.embedding_matcher import EmbeddingSkillMatcher
+from app.services.skill_extraction.llm_verifier import LLMSkillVerifier
 from app.services.skill_extraction.models import CandidateRecord, SectionSpan, SkillMention
+from app.services.skill_extraction.normalizer import SkillNormalizer
 from app.services.skill_extraction.ontology import SkillOntology
+from app.services.skill_extraction.ontology_matcher import OntologyMatch, OntologyMatcher
 from app.services.skill_extraction.skill_taxonomy import DEFAULT_REJECT_TERMS
 
 
@@ -46,6 +50,11 @@ _AMBIGUOUS_SINGLE_WORDS = {
 class SkillScorer:
     def __init__(self, ontology: SkillOntology) -> None:
         self.ontology = ontology
+        self.normalizer = SkillNormalizer(ontology)
+        self.ontology_matcher = OntologyMatcher(ontology)
+        self.embedding_matcher = EmbeddingSkillMatcher(ontology)
+        self.llm_verifier = LLMSkillVerifier()
+        self.category_classifier = SkillCategoryClassifier(ontology)
 
     @staticmethod
     def _section_for_char(char_index: int, sections: list[SectionSpan]) -> SectionSpan:
@@ -67,14 +76,15 @@ class SkillScorer:
         return SECTION_CONFIDENCE.get(section, 0.3)
 
     def _match_taxonomy(self, candidate: str):
-        return self.ontology.resolve_concept(candidate)
+        match = self.ontology_matcher.match(candidate)
+        return match if match.matched else None
 
     # ------------------------------------------------------------------
     # Hard-negative detection
     # ------------------------------------------------------------------
     @staticmethod
     def _is_person_like(candidate: str) -> bool:
-        cleaned = re.sub(r"[^A-Za-zÀ-ÿ\s'-]", " ", candidate).strip()
+        cleaned = "".join(character if character.isalpha() or character in {" ", "'", "-"} else " " for character in candidate).strip()
         if not cleaned:
             return False
 
@@ -121,11 +131,11 @@ class SkillScorer:
         Check if candidate (or its ontology aliases) explicitly exists in the raw text.
         Returns (exact_span, matched_alias) or (None, None) if not found.
         """
-        normalized_text = self.ontology.normalize_key(text)
+        normalized_text = self.normalizer.key(text)
 
         # 1. Check exact match of candidate in raw text
-        candidate_key = self.ontology.normalize_key(candidate)
-        if candidate_key and re.search(rf"(?<!\w){re.escape(candidate_key)}(?!\w)", normalized_text):
+        candidate_key = self.normalizer.key(candidate)
+        if candidate_key and self._contains_normalized_span(normalized_text, candidate_key):
             # Find the actual span in original text
             span = self._find_span_in_text(candidate, text)
             return span, candidate
@@ -136,11 +146,27 @@ class SkillScorer:
             all_names = [concept.canonical, *concept.aliases]
             for alias in all_names:
                 alias_key = self.ontology.normalize_key(alias)
-                if alias_key and re.search(rf"(?<!\w){re.escape(alias_key)}(?!\w)", normalized_text):
+                if alias_key and self._contains_normalized_span(normalized_text, alias_key):
                     span = self._find_span_in_text(alias, text)
                     return span, alias
 
         return None, None
+
+    @staticmethod
+    def _contains_normalized_span(haystack: str, needle: str) -> bool:
+        if not needle:
+            return False
+        start = 0
+        while True:
+            index = haystack.find(needle, start)
+            if index < 0:
+                return False
+            before = haystack[index - 1] if index > 0 else " "
+            after_index = index + len(needle)
+            after = haystack[after_index] if after_index < len(haystack) else " "
+            if not before.isalnum() and before not in {"+", "#", "."} and not after.isalnum() and after not in {"+", "#", "."}:
+                return True
+            start = index + 1
 
     @staticmethod
     def _find_span_in_text(needle: str, haystack: str) -> str | None:
@@ -159,12 +185,40 @@ class SkillScorer:
             return False
         if stripped[0] in {'-', '•', '▪', '►', '●', '○', '★', '✓', '*'}:
             return True
-        if re.match(r'^\d+[.)\-]\s', stripped):
+        if len(stripped) >= 3 and stripped[0].isdigit() and stripped[1] in {".", ")", "-"} and stripped[2].isspace():
             return True
         for delimiter in (',', '|', ';'):
             if stripped.count(delimiter) >= 2:
                 return True
         return False
+
+    @staticmethod
+    def _surface_skill_score(candidate: str, section: SectionSpan, record: CandidateRecord) -> float:
+        compact = candidate.replace(" ", "")
+        words = [word for word in candidate.replace("/", " ").replace("-", " ").split() if word]
+        score = 0.0
+
+        if any(character.isdigit() for character in candidate):
+            score += 0.18
+        if any(character in candidate for character in (".", "+", "#", "/", "-")):
+            score += 0.22
+        if any(word.isupper() and 2 <= len(word) <= 6 for word in words):
+            score += 0.22
+        if any(any(character.islower() for character in word) and any(character.isupper() for character in word[1:]) for word in words):
+            score += 0.16
+        if 1 <= len(words) <= 4 and 2 <= len(compact) <= 32:
+            score += 0.12
+        if section.name == "technical_skills":
+            score += 0.22
+        elif section.name in {"projects", "experience", "certifications"}:
+            score += 0.12
+        if record.sources.get("layout", 0.0) > 0:
+            score += 0.18
+        if record.sources.get("context", 0.0) > 0:
+            score += 0.1
+        if record.sources.get("business_context", 0.0) > 0:
+            score += 0.22
+        return min(1.0, score)
 
     # ------------------------------------------------------------------
     # Scoring helpers
@@ -177,17 +231,29 @@ class SkillScorer:
         """Context is now a BONUS ONLY — used for ranking, never for validation."""
         if record.context_score > 0:
             return 0.9
+        if record.business_context_score > 0:
+            return 0.82
         if record.phrase_score > 0 and record.sources.get("phrase", 0.0) > 0:
             return 0.7
         if record.ner_score > 0:
             return 0.55
         return 0.35
 
-    def _validate_candidate(self, candidate: str, record: CandidateRecord, section: SectionSpan) -> tuple[float, float]:
-        semantic_score = self.ontology.semantic_score(candidate)
-        exact_concept = self.ontology.resolve_concept(candidate)
-        if exact_concept is not None:
-            return 1.0, semantic_score or 1.0
+    def _validate_candidate(
+        self,
+        candidate: str,
+        record: CandidateRecord,
+        section: SectionSpan,
+        ontology_match: OntologyMatch | None,
+    ) -> tuple[float, float]:
+        if ontology_match is not None and ontology_match.matched:
+            record.ontology_score = ontology_match.confidence
+            record.embedding_score = 0.0
+            return 1.0, ontology_match.confidence
+
+        embedding_match = self.embedding_matcher.match(candidate)
+        semantic_score = embedding_match.confidence
+        record.embedding_score = semantic_score
 
         section_bonus = self._section_multiplier(section.name)
         if section.name in {"languages", "interests"}:
@@ -196,20 +262,33 @@ class SkillScorer:
         if semantic_score >= 0.5:
             return min(1.0, 0.6 * semantic_score + 0.4 * section_bonus), semantic_score
 
-        heuristic = 0.0
-        key = self.ontology.normalize_key(candidate)
+        llm_decision = self.llm_verifier.verify(candidate, sorted(record.evidence), section.name)
+        if llm_decision.accepted:
+            record.llm_score = llm_decision.confidence
+            return min(1.0, 0.65 * llm_decision.confidence + 0.35 * section_bonus), semantic_score
+
+        heuristic = self._surface_skill_score(candidate, section, record)
+        key = self.normalizer.key(candidate)
         if any(term in key for term in ("management", "development", "design", "analysis", "configuration", "administration", "implementation")):
-            heuristic = 0.55
+            heuristic = max(heuristic, 0.55)
+        elif any(term in key for term in ("gestion", "developpement", "conception", "analyse", "configuration", "administration", "deploiement")):
+            heuristic = max(heuristic, 0.55)
         elif any(term in key for term in ("agile", "scrum", "kanban", "leadership", "collaboration", "communication", "project")):
-            heuristic = 0.45
+            heuristic = max(heuristic, 0.45)
         elif any(separator in candidate for separator in (".", "+", "#", "/", "-")):
-            heuristic = 0.4
+            heuristic = max(heuristic, 0.4)
 
         validation_score = max(0.0, min(1.0, heuristic * 0.45 + section_bonus * 0.55))
         return validation_score, semantic_score
 
-    def _score_candidate(self, candidate: str, record: CandidateRecord, section: SectionSpan) -> float:
-        validation_score, semantic_score = self._validate_candidate(candidate, record, section)
+    def _score_candidate(
+        self,
+        candidate: str,
+        record: CandidateRecord,
+        section: SectionSpan,
+        ontology_match: OntologyMatch | None,
+    ) -> float:
+        validation_score, semantic_score = self._validate_candidate(candidate, record, section, ontology_match)
         record.validation_score = validation_score
         record.semantic_score = semantic_score
 
@@ -247,7 +326,7 @@ class SkillScorer:
         # =============================================
         # HARD GATE 1: Hard negative filter
         # =============================================
-        if self._is_hard_negative(candidate, record):
+        if exact_hit is None and self._is_hard_negative(candidate, record):
             return None
 
         # =============================================
@@ -279,13 +358,6 @@ class SkillScorer:
                     return None
 
         # =============================================
-        # HARD GATE 5: Regex-only candidates need structured formatting
-        # =============================================
-        if set(record.sources.keys()) == {"regex"} and record.context_score == 0:
-            if not self._is_structured_line(exact_span):
-                return None
-
-        # =============================================
         # HARD GATE 6: Person-like names (legacy check)
         # =============================================
         if exact_hit is None and self._is_person_like(candidate):
@@ -296,21 +368,24 @@ class SkillScorer:
             return None
 
         if exact_hit is None and word_count == 1:
+            in_tech_section = section.name == "technical_skills"
+            in_structured = self._is_structured_line(exact_span)
+            if not in_tech_section and not in_structured:
+                return None
+            if self._surface_skill_score(candidate, section, record) < 0.35:
+                return None
+
+        if exact_hit is None and word_count > 4 and record.sources.get("context", 0.0) <= 0 and record.sources.get("business_context", 0.0) <= 0:
             return None
 
-        if exact_hit is None and word_count > 4 and record.sources.get("context", 0.0) <= 0:
-            return None
-
-        # Build the skill mention
-        normalized = self.ontology.normalize(candidate)
-        semantic_candidate = self.ontology.concept_for(candidate)
-        category, canonical, category_semantic = self.ontology.category_for(candidate, section.name, record.semantic_score)
-        canonical_name = canonical or (semantic_candidate.canonical if semantic_candidate is not None else None)
+        confidence = self._score_candidate(candidate, record, section, exact_hit)
+        decision = self.category_classifier.classify(candidate, section, record, record.semantic_score)
+        normalized = self.normalizer.normalize(candidate)
+        category = exact_hit.category if exact_hit is not None and exact_hit.category is not None else decision.category
+        canonical_name = exact_hit.canonical if exact_hit is not None else decision.canonical
 
         if record.validation_score < 0.18 and category not in TECHNOLOGY_FAMILY | COMPETENCY_FAMILY:
             return None
-
-        confidence = self._score_candidate(candidate, record, section)
 
         # =============================================
         # FINAL HARD GATES (after scoring)
@@ -320,7 +395,7 @@ class SkillScorer:
             return None
 
         # Gate: semantic quality check
-        if exact_hit is None and record.semantic_score < 0.5:
+        if exact_hit is None and record.semantic_score < 0.5 and record.validation_score < 0.58:
             return None
 
         evidence = sorted(item for item in record.evidence if item)
@@ -335,10 +410,14 @@ class SkillScorer:
             count=record.count,
             scores={
                 "validation": round(record.validation_score, 4),
-                "semantic": round(record.semantic_score or category_semantic, 4),
+                "semantic": round(record.semantic_score or decision.confidence, 4),
+                "ontology": round(record.ontology_score, 4),
+                "embedding": round(record.embedding_score, 4),
+                "llm": round(record.llm_score, 4),
                 "section": round(section.confidence if section.confidence else self._section_multiplier(section.name), 4),
                 "source": round(max(record.sources.values()) if record.sources else 0.0, 4),
                 "context": round(record.context_score, 4),
+                "business_context": round(record.business_context_score, 4),
                 "frequency": round(self._frequency_multiplier(record.count), 4),
             },
             canonical=canonical_name,

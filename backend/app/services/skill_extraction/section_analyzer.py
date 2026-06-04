@@ -1,4 +1,4 @@
-import re
+from difflib import SequenceMatcher
 from typing import Any
 
 from app.services.skill_extraction.constants import SECTION_ALIASES
@@ -18,8 +18,8 @@ class ResumeSectionAnalyzer:
     @staticmethod
     def _normalize(value: str) -> str:
         value = SkillOntology.strip_accents(value).casefold()
-        value = re.sub(r"[^a-z0-9]+", " ", value)
-        return re.sub(r"\s+", " ", value).strip()
+        normalized_characters = [character if character.isalnum() else " " for character in value]
+        return " ".join("".join(normalized_characters).split())
 
     def _detect_section(self, line: str) -> tuple[str | None, float]:
         normalized = self._normalize(line)
@@ -32,6 +32,19 @@ class ResumeSectionAnalyzer:
         for alias, section in self.alias_lookup.items():
             if normalized.startswith(alias) and len(alias) >= 4:
                 return section, 0.84
+
+        if len(normalized.split()) <= 4:
+            best_section = None
+            best_ratio = 0.0
+            for alias, section in self.alias_lookup.items():
+                if abs(len(alias) - len(normalized)) > 8:
+                    continue
+                ratio = SequenceMatcher(None, normalized, alias).ratio()
+                if ratio > best_ratio:
+                    best_section = section
+                    best_ratio = ratio
+            if best_section is not None and best_ratio >= 0.88:
+                return best_section, 0.78
 
         compact = normalized.replace(" ", "")
         if compact in {"competencestechniques", "hardskills", "technicalskills"}:

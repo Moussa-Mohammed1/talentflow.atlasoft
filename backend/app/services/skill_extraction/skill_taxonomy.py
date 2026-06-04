@@ -123,6 +123,7 @@ DEFAULT_TAXONOMY: tuple[TaxonomyEntry, ...] = (
     TaxonomyEntry("R", "Programming Language", ("r language", "r")),
     TaxonomyEntry("PostgreSQL", "Database", ("postgresql", "postgres", "postgre sql")),
     TaxonomyEntry("MySQL", "Database", ("mysql",)),
+    TaxonomyEntry(".NET", "Toolbox", (".net",".NET")),
     TaxonomyEntry("SQLite", "Database", ("sqlite",)),
     TaxonomyEntry("MongoDB", "Database", ("mongodb", "mongo db")),
     TaxonomyEntry("Oracle Database", "Database", ("oracle database", "oracle")),
@@ -153,6 +154,7 @@ DEFAULT_TAXONOMY: tuple[TaxonomyEntry, ...] = (
     TaxonomyEntry("Kanban", "Methodology", ("kanban",)),
     TaxonomyEntry("Waterfall", "Methodology", ("waterfall",)),
     TaxonomyEntry("DevOps", "Methodology", ("devops",)),
+    TaxonomyEntry("Process Improvement", "Methodology", ("process improvement", "improved processes")),
     TaxonomyEntry("Leadership", "Soft Skill", ("leadership",)),
     TaxonomyEntry("Communication", "Soft Skill", ("communication",)),
     TaxonomyEntry("Team Collaboration", "Soft Skill", ("team collaboration", "collaboration", "teamwork")),
@@ -160,6 +162,19 @@ DEFAULT_TAXONOMY: tuple[TaxonomyEntry, ...] = (
     TaxonomyEntry("Adaptability", "Soft Skill", ("adaptability",)),
     TaxonomyEntry("Critical Thinking", "Soft Skill", ("critical thinking",)),
     TaxonomyEntry("Project Management", "Business Skill", ("project management",)),
+    TaxonomyEntry("Sales Management", "Business Skill", ("sales management",)),
+    TaxonomyEntry("Marketing Management", "Business Skill", ("marketing management",)),
+    TaxonomyEntry("Sales Pitching", "Business Skill", ("sales pitching",)),
+    TaxonomyEntry("Sales Operations", "Business Skill", ("sales operations",)),
+    TaxonomyEntry("Strategic Sales", "Business Skill", ("strategic sales",)),
+    TaxonomyEntry("Strategic Marketing", "Business Skill", ("strategic marketing",)),
+    TaxonomyEntry("Lead Generation", "Business Skill", ("lead generation", "new leads", "generate new leads")),
+    TaxonomyEntry("Sales Cycle Management", "Business Skill", ("sales cycle", "sales cycle management")),
+    TaxonomyEntry("Client Acquisition", "Business Skill", ("client acquisition", "new client acquisition")),
+    TaxonomyEntry("Advertising", "Business Skill", ("advertising", "advertisements")),
+    TaxonomyEntry("Marketing", "Business Skill", ("marketing", "marketing initiatives")),
+    TaxonomyEntry("Business Development", "Business Skill", ("business development", "business growth")),
+    TaxonomyEntry("Social Media Marketing", "Business Skill", ("social media", "social media marketing", "social media platforms")),
     TaxonomyEntry("Business Analysis", "Business Skill", ("business analysis",)),
     TaxonomyEntry("Stakeholder Management", "Business Skill", ("stakeholder management",)),
     TaxonomyEntry("Negotiation", "Business Skill", ("negotiation",)),
@@ -170,6 +185,14 @@ DEFAULT_TAXONOMY: tuple[TaxonomyEntry, ...] = (
     TaxonomyEntry("Financial Analysis", "Domain Knowledge", ("financial analysis",)),
     TaxonomyEntry("Educational Technology", "Domain Knowledge", ("educational technology", "edtech")),
     TaxonomyEntry("Scientific Communication", "Competency", ("scientific communication",)),
+    TaxonomyEntry("Customer Service", "Competency", ("customer service",)),
+    TaxonomyEntry("Relationship Management", "Competency", ("relationship management", "relationships")),
+    TaxonomyEntry("Editing", "Competency", ("editing",)),
+    TaxonomyEntry("Microsoft Office Suite", "Technology", ("microsoft office suite", "office suite")),
+    TaxonomyEntry("Microsoft Word", "Technology", ("microsoft word", "word")),
+    TaxonomyEntry("Microsoft Excel", "Technology", ("microsoft excel", "excel")),
+    TaxonomyEntry("Microsoft Outlook", "Technology", ("microsoft outlook", "outlook")),
+    TaxonomyEntry("Microsoft PowerPoint", "Technology", ("microsoft powerpoint", "powerpoint")),
     TaxonomyEntry("REST API Development", "Competency", ("rest api development", "api development", "restful api development")),
     TaxonomyEntry("Full-Stack Application Design", "Competency", ("full stack application design", "full stack development", "full stack app design")),
     TaxonomyEntry("Object-Oriented Programming", "Competency", ("object oriented programming", "oop", "poo")),
@@ -213,7 +236,7 @@ DEFAULT_REJECT_TERMS = {
 
 @lru_cache(maxsize=1)
 def load_taxonomy() -> tuple[TaxonomyEntry, ...]:
-    custom_path = os.getenv("TALENTFLOW_SKILL_TAXONOMY_PATH")
+    custom_path = os.getenv("TALENTFLOW_SKILL_ONTOLOGY_PATH") or os.getenv("TALENTFLOW_SKILL_TAXONOMY_PATH")
     if not custom_path:
         return DEFAULT_TAXONOMY
 

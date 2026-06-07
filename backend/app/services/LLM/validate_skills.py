@@ -23,13 +23,16 @@ class LLMService:
     def validate(cls, text: str, skills: list[dict[str, Any]] | list[str]) -> dict[str, Any]:
         prompt = "/no_think\n" + cls._build_skill_review_prompt(text, skills)
         print("calling ollama...")
-        print(f"current timeout : {float(os.getenv('TALENTFLOW_SKILL_LLM_TIMEOUT', '300'))}")
+        print(f"current timeout : {float(os.getenv('TALENTFLOW_SKILL_LLM_TIMEOUT', '300'))}\n")
+        print("prompt: \n")
+        print(prompt)
         response = requests.post(
             cls.endpoint(),
             json={
                 "model": cls.model(),
                 "prompt": prompt,
                 "stream": False,
+                "think": False,
                 "options": {
                     "temperature": float(os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1")),
                     "top_p": float(os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8")),

@@ -16,6 +16,7 @@ router = APIRouter(prefix="/resumes", tags=["resumes"])
 @router.post("/upload", response_model=ResumeTextRead, status_code=status.HTTP_201_CREATED)
 def upload_resume(file: UploadFile = File(...)):
 	extractor = TextExtractionService()
+	print("=== REQUEST RECEIVED === /upload", flush=True)
 	if not file.filename:
 		raise HTTPException(status_code=400, detail="Resume file is required")
 
@@ -39,6 +40,7 @@ def upload_resume(file: UploadFile = File(...)):
 
 @router.post("/analyze", response_model=ResumeAnalysisRead, status_code=status.HTTP_200_OK)
 def analyze_resume(file: UploadFile = File(...)):
+	print("=== REQUEST RECEIVED === /analyze", flush=True)
 	text_extractor = TextExtractionService()
 	skill_extractor = PretrainedBilingualExtractor()
 	if not file.filename:
@@ -96,6 +98,7 @@ def analyze_resume(file: UploadFile = File(...)):
 
 @router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
 def extract_identity(file: UploadFile = File(...)):
+	print("=== REQUEST RECEIVED === /identity", flush=True)
 	text_extractor = TextExtractionService()
 	identity_extractor = ResumeIdentityPipeline()
 	if not file.filename:

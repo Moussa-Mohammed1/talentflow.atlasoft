@@ -9,10 +9,12 @@ class Invitation(Base):
 
     email = Column(String, nullable=False)
 
-    token = Column(String, nullable=False)
+    token = Column(String, nullable=False, unique=True)
 
     expires_at = Column(DateTime)
 
     accepted = Column(Boolean, default=False)
 
     invited_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow)

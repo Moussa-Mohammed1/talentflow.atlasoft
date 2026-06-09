@@ -6,3 +6,6 @@ __pycache__/
 app/.env
 
 storage
+_skill_smoke.py
+test_pipeline_run.py
+scripts

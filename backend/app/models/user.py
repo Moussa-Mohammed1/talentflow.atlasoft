@@ -1,17 +1,67 @@
-from sqlalchemy import Integer, String, DateTime, Column
+from sqlalchemy import (
+    Integer,
+    String,
+    DateTime,
+    Column,
+    Boolean
+)
+
 from datetime import datetime
+from enum import Enum
 from app.core.database import Base
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    RECRUITER = "recruiter"
+    EMPLOYEE = "employee"
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+    role = Column(
+        UserRole, 
+        name="user_role_enum",
+        default=UserRole.RECRUITER
+    )
+    fullname = Column(
+        String,
+        nullable=False
+    )
 
-    fullname = Column(String , nullable=False)
+    email = Column(
+        String,
+        nullable=False,
+        unique=True,
+        index=True
+    )
 
-    email = Column(String, nullable=False, unique=True, index=True)
-    
-    password = Column(String, nullable=False)
+    hashed_password = Column(
+        String,
+        nullable=False
+    )
 
-    created_at = Column(DateTime, default=datetime.utcnow)
+    role = Column(
+        String,
+        nullable=False,
+        default="RECRUITER"
+    )
 
+    is_active = Column(
+        Boolean,
+        default=True
+    )
+
+    must_change_password = Column(
+        Boolean,
+        default=True
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow
+    )

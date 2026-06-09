@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, UTC
 
 import jwt
-
+import os
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(
@@ -9,7 +9,7 @@ pwd_context = CryptContext(
     deprecated="auto"
 )
 
-SECRET_KEY = "CHANGE_ME"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
 

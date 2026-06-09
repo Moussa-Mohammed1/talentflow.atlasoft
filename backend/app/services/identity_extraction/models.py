@@ -18,8 +18,39 @@ class CandidateScore:
 
 
 @dataclass(frozen=True)
+class NameCandidateScore:
+    value: str
+    score: int
+    confidence: float
+    signals: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "value": self.value,
+            "score": int(self.score),
+            "signals": self.signals,
+        }
+
+
+@dataclass(frozen=True)
+class NameExtractionResult:
+    full_name: str
+    confidence: float
+    score: int
+    candidates: list[NameCandidateScore] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "full_name": self.full_name,
+            "confidence": round(self.confidence, 4),
+            "score": int(self.score),
+            "candidates": [candidate.to_dict() for candidate in self.candidates],
+        }
+
+
+@dataclass(frozen=True)
 class IdentityExtractionResult:
-    name: CandidateScore
+    name: NameExtractionResult
     email: CandidateScore
     phone: CandidateScore
     stats: dict[str, Any]

@@ -22,18 +22,19 @@ class IdentityExtractor:
         clean_text, lines, _ = self.preprocessor.clean(text)
         email_candidates = self.contact_extractor._extract_email_candidates(clean_text)
         phone_candidates = self.contact_extractor._extract_phone_candidates(clean_text)
-        name_candidates = self.name_extractor._extract_name_candidates(lines, clean_text)
+        name = self.name_extractor.extract(lines, clean_text, email_candidates=email_candidates, phone_candidates=phone_candidates)
 
         email = self.scorer._best_candidate(email_candidates)
         phone = self.scorer._best_candidate(phone_candidates)
-        name = self.scorer._best_candidate(name_candidates)
 
         stats = {
             "line_count": len(lines),
             "email_candidates": len(email_candidates),
             "phone_candidates": len(phone_candidates),
-            "name_candidates": len(name_candidates),
-            "spacy_model": self.name_extractor._nlp.meta.get("name", "unknown") if hasattr(self.name_extractor._nlp, "meta") else "unknown",
+            "name_candidates": len(name.candidates),
+            "name_score": name.score,
+            "name_confidence": round(name.confidence, 4),
+            "spacy_model": self.name_extractor.spacy_model_name,
         }
 
         return IdentityExtractionResult(name=name, email=email, phone=phone, stats=stats)

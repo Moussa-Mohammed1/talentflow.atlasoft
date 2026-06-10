@@ -29,12 +29,15 @@ class LLMService:
 
     @classmethod
     def validate(cls, text: str, identity: dict[str, Any]) -> dict[str, Any]:
+        print("validating entereddd")
         prompt = cls._build_identity_review_prompt(text, identity)
+        print("calling ollama...")
         response = requests.post(
             cls.endpoint(),
             json={
                 "model": cls.model(),
                 "prompt": prompt,
+                "think": False,
                 "stream": False,
                 "options": {
                     "temperature": float(
@@ -70,48 +73,53 @@ class LLMService:
 
     @staticmethod
     def _build_identity_review_prompt(text: str, identity: dict[str, Any]) -> str:
+        print("build entered")
         serialized_identity = json.dumps(identity, ensure_ascii=False)
-        return f"""
-You validate identity information extracted from a French or English resume.
-Return ONLY one valid JSON object matching this schema.
-No markdown. No explanations.
+        print("json v-identity")
+        print(serialized_identity)
+        schema = {
+            "name": {
+                "full_name": "",
+                "confidence": 0.0,
+                "score": 0,
+                "evidence": "",
+                "action": "accepted | corrected | rejected | missing"
+            },
+            "email": {
+                "value": "",
+                "confidence": 0.0,
+                "evidence": "",
+                "action": "accepted | corrected | rejected | missing"
+            },
+            "phone": {
+                "value": "",
+                "confidence": 0.0,
+                "evidence": "",
+                "action": "accepted | corrected | rejected | missing"
+            },
+            "rejected": [
+                {
+                "field": "name | email | phone",
+                "value": "",
+                "reason": ""
+                }
+            ]
+            }
+        return (
+            "You validate identity information extracted from a French or English resume.\n"
+            "Return ONLY one valid JSON object matching this schema.\n"
+            "No markdown. No explanations.\n"
 
-{
-  "name": {
-    "full_name": "",
-    "confidence": 0.0,
-    "score": 0,
-    "evidence": "",
-    "action": "accepted | corrected | rejected | missing"
-  },
-  "email": {
-    "value": "",
-    "confidence": 0.0,
-    "evidence": "",
-    "action": "accepted | corrected | rejected | missing"
-  },
-  "phone": {
-    "value": "",
-    "confidence": 0.0,
-    "evidence": "",
-    "action": "accepted | corrected | rejected | missing"
-  },
-  "rejected": [
-    {
-      "field": "name | email | phone",
-      "value": "",
-      "reason": ""
-    }
-  ]
-}
+            f"{json.dumps(schema, indent=2)}\n\n"
 
-Extracted identity:
-{serialized_identity}
+            "Extracted identity:\n"
+            f"{serialized_identity}\n\n"
 
-Resume text:
-{text}
-""".strip()
-
+            "Resume text:\n"
+            f"{text}"
+                )
+        
+        
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
         cleaned = raw_response.strip()

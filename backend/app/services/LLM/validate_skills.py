@@ -24,8 +24,6 @@ class LLMService:
         prompt = "/no_think\n" + cls._build_skill_review_prompt(text, skills)
         print("calling ollama...")
         print(f"current timeout : {float(os.getenv('TALENTFLOW_SKILL_LLM_TIMEOUT', '300'))}\n")
-        print("prompt: \n")
-        print(prompt)
         response = requests.post(
             cls.endpoint(),
             json={

@@ -29,8 +29,18 @@ class AuthService:
             .filter(User.email == email)
             .first()
         )
+        print("\n\nUSER FOUND:", user is not None)
+        if user:
+            print("EMAIL:", user.email)
+            print("HASH:", user.hashed_password)
+            print("PASSWORD:" , password)
+            result = verify_password(
+                password,
+                user.hashed_password
+            )
 
-        if not user and not verify_password():
+            print("PASSWORD MATCH:", result)
+        if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid credentials"

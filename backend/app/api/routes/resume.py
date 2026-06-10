@@ -1,11 +1,17 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from pathlib import Path
 import shutil
 import tempfile
 
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.core.security import get_current_user
+from app.models.user import User
 from app.schemas.identity_extraction import ResumeIdentityRead
-from app.schemas.resume import ResumeRead, ResumeTextRead
+from app.schemas.resume import ResumePathRequest, ResumeRead, ResumeTextRead
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
+from app.services.resume_service import create_resume, get_resume_by_path, resolve_stored_resume_path
 from app.services.resume_extraction.extractor import TextExtractionService
 from app.services.resume_extraction.extractor import UnsupportedFileTypeError
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
@@ -13,29 +19,14 @@ from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
 
-@router.post("/upload", response_model=ResumeTextRead, status_code=status.HTTP_201_CREATED)
-def upload_resume(file: UploadFile = File(...)):
-	extractor = TextExtractionService()
+@router.post("/upload", response_model=ResumeRead, status_code=status.HTTP_201_CREATED)
+def upload_resume(
+	file: UploadFile = File(...),
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
 	print("=== REQUEST RECEIVED === /upload", flush=True)
-	if not file.filename:
-		raise HTTPException(status_code=400, detail="Resume file is required")
-
-	file_suffix = Path(file.filename).suffix.lower()
-	with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
-		shutil.copyfileobj(file.file, temp_file)
-		temp_path = temp_file.name
-
-	try:
-		raw_text = extractor.extract(temp_path)
-	except UnsupportedFileTypeError as e:
-		raise HTTPException(
-			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-			detail=str(e) + ", allowed: pdf, docx"
-		)
-	finally:
-		Path(temp_path).unlink(missing_ok=True)
-
-	return ResumeTextRead(raw_text=raw_text)
+	return create_resume(file=file, recruiter_id=current_user.id, db=db)
 
 
 @router.post("/analyze", response_model=ResumeAnalysisRead, status_code=status.HTTP_200_OK)
@@ -97,27 +88,25 @@ def analyze_resume(file: UploadFile = File(...)):
 
 
 @router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
-def extract_identity(file: UploadFile = File(...)):
+def extract_identity(
+	payload: ResumePathRequest,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
 	print("=== REQUEST RECEIVED === /identity", flush=True)
 	text_extractor = TextExtractionService()
 	identity_extractor = ResumeIdentityPipeline()
-	if not file.filename:
-		raise HTTPException(status_code=400, detail="Resume file is required")
-
-	file_suffix = Path(file.filename).suffix.lower()
-	with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
-		shutil.copyfileobj(file.file, temp_file)
-		temp_path = temp_file.name
+	resume = get_resume_by_path(path=payload.path, recruiter_id=current_user.id, db=db)
+	if resume is None:
+		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
 	try:
-		raw_text = text_extractor.extract(temp_path)
+		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 		identity = identity_extractor.analyze(raw_text)
 	except UnsupportedFileTypeError as e:
 		raise HTTPException(
 			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
 			detail=str(e) + ", allowed: pdf, docx",
 		)
-	finally:
-		Path(temp_path).unlink(missing_ok=True)
 
 	return ResumeIdentityRead.model_validate(identity)

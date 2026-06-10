@@ -3,7 +3,8 @@ from sqlalchemy import (
     String,
     DateTime,
     Column,
-    Boolean
+    Boolean,
+    Enum as SQLEnum
 )
 
 from datetime import datetime
@@ -24,7 +25,7 @@ class User(Base):
         index=True
     )
     role = Column(
-        UserRole, 
+        SQLEnum(UserRole, name="user_role_enum"), 
         name="user_role_enum",
         default=UserRole.RECRUITER
     )

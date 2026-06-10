@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 
 from app.schemas.auth import LoginRequest, LoginResponse
-
+from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
     ValidateInvitationResponse,
@@ -33,6 +33,20 @@ def login(
         email=payload.email,
         password=payload.password,
     )
+
+# @router.post(
+#     "/login",
+#     response_model=LoginResponse
+# )
+# def login(
+#     form_data: OAuth2PasswordRequestForm = Depends(),
+#     db: Session = Depends(get_db)
+# ):
+#     return AuthService.login(
+#         db=db,
+#         email=form_data.username,  
+#         password=form_data.password,
+#     )
 
 
 @router.post("/invite")

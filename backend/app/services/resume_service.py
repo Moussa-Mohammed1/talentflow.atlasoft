@@ -20,7 +20,7 @@ ALLOWED_CONTENT_TYPES = {
 }
 
 
-def create_resume(file: UploadFile, db: Session) -> Resume:
+def create_resume(file: UploadFile, recruiter_id: int, db: Session) -> Resume:
 	if not file.filename:
 		raise HTTPException(status_code=400, detail="Resume file is required")
 
@@ -39,8 +39,33 @@ def create_resume(file: UploadFile, db: Session) -> Resume:
 	with file_path.open("wb") as buffer:
 		shutil.copyfileobj(file.file, buffer)
 
-	resume = Resume(path=str(file_path))
+	resume = Resume(path=str(file_path), recruiter_id=recruiter_id)
 	db.add(resume)
 	db.commit()
 	db.refresh(resume)
 	return resume
+
+
+def get_resume_by_path(path: str, recruiter_id: int, db: Session) -> Resume | None:
+	return (
+		db.query(Resume)
+		.filter(Resume.path == path, Resume.recruiter_id == recruiter_id)
+		.first()
+	)
+
+
+def resolve_stored_resume_path(path: str) -> Path:
+	resume_path = Path(path)
+	if not resume_path.is_absolute():
+		resume_path = Path.cwd() / resume_path
+
+	resolved_path = resume_path.resolve()
+	resolved_upload_dir = UPLOAD_DIR.resolve()
+
+	if resolved_upload_dir not in resolved_path.parents:
+		raise HTTPException(status_code=400, detail="Resume path is outside resume storage")
+
+	if not resolved_path.exists():
+		raise HTTPException(status_code=404, detail="Stored resume file was not found")
+
+	return resolved_path

@@ -14,6 +14,7 @@ class ResumeCreate(BaseModel):
 
 class ResumeRead(ResumeBase):
 	id: int
+	recruiter_id: int
 	created_at: datetime | None = None
 
 	model_config = ConfigDict(from_attributes=True)
@@ -21,3 +22,7 @@ class ResumeRead(ResumeBase):
 
 class ResumeTextRead(BaseModel):
 	raw_text: str | list
+
+
+class ResumePathRequest(BaseModel):
+	path: str

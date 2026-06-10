@@ -26,7 +26,6 @@ class User(Base):
     )
     role = Column(
         SQLEnum(UserRole, name="user_role_enum"), 
-        name="user_role_enum",
         default=UserRole.RECRUITER
     )
     fullname = Column(

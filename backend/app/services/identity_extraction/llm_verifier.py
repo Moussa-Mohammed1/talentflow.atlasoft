@@ -39,12 +39,15 @@ class LLMIdentityVerifier:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen"}
 
     def review_resume_identity(self, text: str, identity: dict[str, Any]) -> LLMIdentityReview:
+        print("verfiying")
         if not self.available:
             return LLMIdentityReview(False, self.provider or "none", {}, [], "llm_fallback_not_configured")
 
         try:
             payload = LLMService.validate(text, identity)
+            print("validating sorted")
         except Exception as exc:
+            print("validating excepted")
             return LLMIdentityReview(True, self.provider, {}, [], f"llm_error:{exc}")
 
         reviewed = self._sanitize_payload(text, payload)

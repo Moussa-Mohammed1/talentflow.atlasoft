@@ -6,16 +6,16 @@ from sqlalchemy.orm import Session
 
 from app.models.user import User
 from app.models.invitation import Invitation
-
+from app.services.email_service import EmailService
 from app.core.security import hash_password
 
 
 class InvitationService:
 
-    INVITATION_EXPIRATION_HOURS = 24
+    INVITATION_EXPIRATION_HOURS = 48
 
     @staticmethod
-    def invite_user(
+    async def invite_user(
         db: Session,
         email: str,
         invited_by: int,
@@ -64,6 +64,10 @@ class InvitationService:
         db.commit()
         db.refresh(invitation)
 
+        await EmailService.send_invitation_email(
+            to=email,
+            token=token
+        )
         
         return {
             "message": "Invitation sent successfully",

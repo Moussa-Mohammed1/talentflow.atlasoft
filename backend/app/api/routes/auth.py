@@ -52,12 +52,12 @@ def login(
 
 
 @router.post("/invite")
-def invite_user(
+async def invite_user(
     payload: InviteUserRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return InvitationService.invite_user(
+    return await InvitationService.invite_user(
         db=db,
         email=payload.email,
         invited_by=current_user.id,

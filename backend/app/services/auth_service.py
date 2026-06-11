@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from app.schemas.auth import UserResponse
 import os
 from app.models.user import User
 from app.core.security import (
@@ -63,6 +64,7 @@ class AuthService:
         return {
             "access_token": token,
             "token_type": "bearer",
+            "user": UserResponse.model_validate(user),
             "must_change_password":
                 user.must_change_password
         }

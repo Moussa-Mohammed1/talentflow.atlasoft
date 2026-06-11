@@ -40,6 +40,16 @@ class User(Base):
         index=True
     )
 
+    email_verified = Column(
+        Boolean, 
+        default=False
+    )
+
+    email_verified_at = Column(
+        DateTime, 
+        nullable=True
+    )
+
     hashed_password = Column(
         String,
         nullable=False

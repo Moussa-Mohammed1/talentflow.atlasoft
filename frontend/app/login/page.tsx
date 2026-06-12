@@ -24,20 +24,20 @@ export default function LoginPage() {
           <div className="lg:col-span-5 flex flex-col items-center justify-center text-center space-y-6 pt-12 lg:pt-0 lg:h-full">
             <div className="flex flex-col items-center space-y-2">
               {/* Logo avec bordure blanche pour ressortir sur le fond sombre */}
-              <div className="w-30 h-30 rounded-full border-none flex items-center justify-center overflow-hidden">
+              <div className="w-40 h-40 rounded-full border-none flex items-center justify-center overflow-hidden">
                 <img 
                   src="/images/logo.png"
                   alt="Logo 3GCOM" 
                   className="w-full h-full object-contain p-2" 
                 />
               </div>
-              <h1 className="text-3xl font-bold tracking-tight text-black">
+              {/* <h1 className="text-3xl font-bold tracking-tight text-black">
                 3GCOM <span className="font-light italic">en ligne</span>
-              </h1>
+              </h1> */}
             </div>
 
-            <p className="text-lg font-medium text-black max-w-sm leading-relaxed">
-              Plateforme de découverte de talents
+            <p className="inline-block bg-blue-900 text-white font-bold text-xs max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
+              Optimisez l'identification et le suivi des talents
             </p>
           </div>
 
@@ -45,7 +45,7 @@ export default function LoginPage() {
           <div className="lg:col-span-7 w-full lg:h-full lg:overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             
             {/* Wrapper interne */}
-            <div className="w-full flex flex-col items-center justify-center py-8 lg:py-12">
+            <div className="w-full flex flex-col items-center justify-center py-2 lg:py-4">
               
               {/* LA CARTE DE CONNEXION */}
                 <LoginForm/>

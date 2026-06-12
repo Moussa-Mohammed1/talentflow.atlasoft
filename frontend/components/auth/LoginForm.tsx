@@ -21,33 +21,38 @@ export default function LoginForm() {
     const { setUser, setToken } = useAuthStore();
 
     const handleLogin = async (
-        e: React.FormEvent<HTMLFormElement>
+        e: React.FormEvent<HTMLFormElement>,
     ) => {
         e.preventDefault();
-
+        console.log("starting");
+        
         setError("");
         setLoading(true);
 
         try {
+            console.log("calling api");
+            
         const response = await AuthService.login(
             email,
             password
         );
-
+        console.log(response);
+        
         const token = response.access_token;
 
         localStorage.setItem(
             "access_token",
             token
         );
-
+        document.cookie = `access_token=${token}; path=/; max-age=86400; SameSite=Lax`;
         setToken(token);
 
         const user = await AuthService.me();
 
-        setUser(user);
+        setUser(response.user);
 
         router.push("/dashboard");
+        console.log("failed to re")
 
         } catch (err: any) {
         setError(
@@ -139,7 +144,7 @@ export default function LoginForm() {
                     ${
                     !isFormValid || loading
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                        : "bg-blue-800 hover:bg-blue-500 text-white"
+                        : "bg-blue-800 hover:bg-blue-500 text-white cursor-pointer"
                     }
                 `}
                 >
@@ -171,23 +176,7 @@ export default function LoginForm() {
                 </span>
             </li>
 
-            <li className="flex items-start">
-                <span className="mr-2 text-slate-400">
-                •
-                </span>
-
-                <span>
-                l’équipe support à{" "}
-                <a
-                    href="mailto:support@talentflow.com"
-                    className="text-blue-600 hover:underline"
-                >
-                    support@talentflow.com
-                </a>{" "}
-                pour toute difficulté d’accès ou
-                demande d’assistance
-                </span>
-            </li>
+           
             </ul>
         </div>
         </div>

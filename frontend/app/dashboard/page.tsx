@@ -43,7 +43,7 @@ export default function Dashboard() {
 ];
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-rose-100">
+    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       
       <Sidebar/>
 

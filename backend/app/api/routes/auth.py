@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.models.user import User
 
 from app.core.security import get_current_user
-from app.schemas.auth import LoginRequest, LoginResponse
+from app.schemas.auth import LoginRequest, LoginResponse, UserResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
@@ -76,7 +76,13 @@ def validate_invitation(
         db=db,
         token=token,
     )
-
+@router.get("/me")
+async def get_me(
+    current_user: User = Depends(get_current_user),
+):
+    return {
+        "user": UserResponse.model_validate(current_user)
+    }
 
 @router.post("/accept-invite")
 def accept_invitation(

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -22,19 +22,29 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "/login",
-    response_model=LoginResponse
-)
+@router.post("/login")
 def login(
-    payload: LoginRequest,
-    db: Session = Depends(get_db)
-):
-    return AuthService.login(
+        payload: LoginRequest,
+        response: Response,
+        db: Session = Depends(get_db),
+        ):
+        result = AuthService.login(
         db=db,
         email=payload.email,
         password=payload.password,
-    )
+        )
+
+        response.set_cookie(
+            key="access_token",
+            value=result["access_token"],
+            httponly=True,
+            secure=False,  
+            samesite="lax",
+            max_age=60 * 60 * 24,
+            path="/",
+        )
+
+        return result
 
 # @router.post(
 #     "/login",
@@ -76,12 +86,22 @@ def validate_invitation(
         db=db,
         token=token,
     )
-@router.get("/me")
+@router.get("/me")   
 async def get_me(
     current_user: User = Depends(get_current_user),
 ):
     return {
         "user": UserResponse.model_validate(current_user)
+    }
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+    )
+
+    return {
+        "message": "Successfully logged out"
     }
 
 @router.post("/accept-invite")

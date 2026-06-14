@@ -69,3 +69,63 @@ def resolve_stored_resume_path(path: str) -> Path:
 		raise HTTPException(status_code=404, detail="Stored resume file was not found")
 
 	return resolved_path
+
+import os
+import random
+from app.repositories.resumer_repository import ResumeRepository
+
+def get_resumes_list(db: Session, recruiter_id: int):
+    
+    records = ResumeRepository.get_all(db)
+    
+    docs = []
+
+    for resume, candidat in records:
+        
+        try:
+            size_bytes = os.path.getsize(resume.path)
+            if size_bytes >= 1024 * 1024:
+                file_size = f"{size_bytes / (1024 * 1024):.1f} MB"
+            else:
+                file_size = f"{size_bytes / 1024:.0f} KB"
+        except OSError:
+            file_size = "Unknown"
+        
+
+        
+        file_name = Path(resume.path).name
+        
+        docs.append({
+            "id": str(resume.id),
+            "name": file_name,
+            "candidateName": candidat.fullname if candidat else "Inconnu",
+            "role": "Candidat" if candidat else "En cours de traitement", 
+            "importDate": resume.created_at.strftime("%d/%m/%Y") if resume.created_at else "",
+            "fileSize": file_size,
+            "category": "CV" if str(resume.path).lower().endswith(".pdf") else "Autre",
+            "previewUrl": f"/api/resumes/{resume.id}/preview"
+        })
+        
+    return docs
+
+def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
+    resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+        
+    return resume
+
+def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
+    resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+    
+    # Delete from DB
+    ResumeRepository.delete(db, resume)
+    
+    # Delete from disk
+    file_path = Path(resume.path)
+    if file_path.exists():
+        file_path.unlink()
+        
+    return {"status": "success", "message": "Resume deleted"}

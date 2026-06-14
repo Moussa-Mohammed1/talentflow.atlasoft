@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 from pathlib import Path
 import shutil
 import tempfile
+from typing import List
 
 from sqlalchemy.orm import Session
 
@@ -9,9 +11,9 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.schemas.identity_extraction import ResumeIdentityRead
-from app.schemas.resume import ResumePathRequest, ResumeRead, ResumeTextRead
+from app.schemas.resume import ResumePathRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
-from app.services.resume_service import create_resume, get_resume_by_path, resolve_stored_resume_path
+from app.services.resume_service import create_resume, get_resume_by_path, resolve_stored_resume_path, get_resumes_list, get_resume_detail, delete_resume_and_file
 from app.services.resume_extraction.extractor import TextExtractionService
 from app.services.resume_extraction.extractor import UnsupportedFileTypeError
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
@@ -110,3 +112,40 @@ def extract_identity(
 		)
 
 	return ResumeIdentityRead.model_validate(identity)
+
+@router.get('/', response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
+def get_resumes(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return get_resumes_list(db, recruiter_id=current_user.id)
+
+@router.get('/{resume_id}', status_code=status.HTTP_200_OK)
+def get_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    # You can specify response_model=ResumeDetailSchema when ready to map all details.
+    return get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+
+@router.get('/{resume_id}/download', status_code=status.HTTP_200_OK)
+def download_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    resume = get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+    file_path = resolve_stored_resume_path(resume.path)
+    return FileResponse(path=file_path, filename=Path(resume.path).name)
+
+@router.delete('/{resume_id}', status_code=status.HTTP_200_OK)
+def delete_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    return delete_resume_and_file(db, resume_id, recruiter_id=current_user.id)
+
+
+from fastapi.responses import Response
+
+@router.get('/{resume_id}/preview', status_code=status.HTTP_200_OK)
+def preview_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    resume = get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+    file_path = resolve_stored_resume_path(resume.path)
+    
+    try:
+        import fitz
+        pdf_doc = fitz.open(file_path)
+        page = pdf_doc.load_page(0)
+        # Scaled down for thumbnail
+        pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
+        return Response(content=pix.tobytes("png"), media_type="image/png")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Could not generate preview")

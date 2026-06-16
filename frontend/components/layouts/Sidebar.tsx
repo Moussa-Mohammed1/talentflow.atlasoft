@@ -1,6 +1,8 @@
 import Image from "next/image";
 import { useState } from "react";
 import ProfileSection from "../user/ProfileSection";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { 
     ChevronRight,
     ChevronLeft,
@@ -8,23 +10,25 @@ import {
     Briefcase, 
     Users,
     CheckSquare,
-    BarChart2,
+    Building2,
     FolderOpen,
     MailPlus,
-    MailCheck
 } from "lucide-react";
-
+import { href } from "react-router-dom";
+import { useModal } from "@/context/ModalContext";
 export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
-    
+    const [collapsed, setCollapsed] = useState(true);
+    const pathname = usePathname();
+    const { isModalOpen } = useModal();
+    if(isModalOpen) return null;
     const sidebarItems = [
-      { icon: <Home size={16} />, label: "Accueil", active: true },
-      { icon: <Users size={16} />, label: "Talents" },
-      { icon: <Briefcase size={16} />, label: "Recrutement" },
-      { icon: <CheckSquare size={16} />, label: "Évaluations" },
-      { icon: <BarChart2 size={16} />, label: "Rapports" },
-      { icon: <FolderOpen size={16} />, label: "Documents" },
-      { icon: <MailPlus size={16} />, label: "Inviter" },
+      { icon: <Home size={16} />, label: "Accueil",href: "/dashboard",  active: true },
+      { icon: <Users size={16} />, label: "Talents", href: "/talents" },
+      { icon: <Briefcase size={16} />, label: "Recrutement", href: "/recrutement" },
+      { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
+      { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
+      { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
+      { icon: <MailPlus size={16} />, label: "Inviter", href: "/inviter" },
     ];
 
     return (
@@ -56,7 +60,7 @@ export default function Sidebar() {
           >    
             <div>
               {/* Logo Brand */}
-              <div className="flex items-center justify-between px-1.5 py-3 mb-2">
+              <div className="flex items-center justify-between px-1.5 py-3 mb-2 select-none">
                 <Image
                   src="/images/logo.png"
                   alt="3GCOM Logo"
@@ -84,11 +88,12 @@ export default function Sidebar() {
               {/* Navigation Menus */}
               <nav className="space-y-0.5">
                 {sidebarItems.map((item, index) => (
-                  <button
+                  <Link
                     key={index}
-                    className={`w-full flex items-center cursor-pointer px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
-                      item.active
-                        ? "bg-slate-50 text-slate-600"
+                    href={item.href}
+                    className={`w-full flex items-center px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
+                      pathname === item.href
+                        ? "bg-slate-50 text-slate-900"
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
@@ -108,7 +113,7 @@ export default function Sidebar() {
                         {item.label}
                       </span>
                     </div>
-                  </button>
+                  </Link>
                 ))}
               </nav>
             </div>

@@ -9,7 +9,13 @@ export const AuthService = {
         return response.data;
     },
     me: async () => {
-        const response = await api.get("/auth/me");
+        const response = await api.post(
+            "/auth/logout",
+            {},
+            {
+                withCredentials: true,
+            }
+        );;
         return response.data;
     },
     logout: async () => {

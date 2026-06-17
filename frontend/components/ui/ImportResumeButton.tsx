@@ -1,5 +1,7 @@
+"use client";
 import { useState, useRef, useEffect } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
+import { useResumeImport } from "@/hooks/useResumeImport";
 import {
   Plus,
   X,
@@ -39,7 +41,7 @@ export default function ImportResumeButton() {
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            const selectedFile = e.target.files[0];
+            const selectedFile = e.target.files?.[0] ?? null;
 
             setFile(selectedFile);
             setFileName(selectedFile.name);
@@ -83,7 +85,23 @@ export default function ImportResumeButton() {
             fileInputRef.current.value = "";
         }
     };
+    const {
+        loading,
+        result,
+        importResume,
+    } = useResumeImport();
 
+    const handleImport = async (
+        file: File,
+        mode: 'identity' | 'analyze'
+        ) => {
+        openModal();
+        await importResume({
+            file,
+            mode,
+        });
+    };
+    
     return (
         <div className="selection:bg-slate-200">
             <button 
@@ -239,7 +257,7 @@ export default function ImportResumeButton() {
 
                             <button
                                 disabled={!fileName}
-                                onClick={() => { alert("Extraction d'identité réussie !"); setIsOpen(false); resetImport(); }}
+                                onClick={() => { handleImport(file!, "identity"); resetImport(); closeModal() }}
                                 className={`px-4 py-2 text-xs font-semibold rounded-lg border transition-colors cursor-pointer text-center ${
                                     fileName 
                                         ? "bg-white border-slate-200 text-slate-700 hover:bg-slate-50" 
@@ -252,7 +270,7 @@ export default function ImportResumeButton() {
                             <div className="relative group">
                                 <button
                                     disabled={!fileName}
-                                    onClick={() => { alert("Extraction complète mise en arrière-plan."); setIsOpen(false); resetImport(); }}
+                                    onClick={() => { handleImport(file!, "analyze"); setIsOpen(false); resetImport(); closeModal()}}
                                     className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg text-white transition-all shadow-xs ${
                                         fileName 
                                             ? "bg-yellow-600 hover:bg-yellow-700 cursor-pointer" 

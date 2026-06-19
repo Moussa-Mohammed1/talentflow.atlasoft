@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { ChevronRight, User, Settings, LogOut } from "lucide-react";
-
+import { ChevronRight, User, Settings, LogOut, Loader2 } from "lucide-react";
+import { AuthService } from "@/services/auth.service";
 interface ProfileSectionProps {
     collapsed: boolean;
 }
@@ -8,11 +8,23 @@ interface ProfileSectionProps {
 export default function ProfileSection({
     collapsed,
 }: ProfileSectionProps) {
-    const [isOpen, setIsOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    // Fonction pour fermer le menu lors de la perte de focus (clic à l'extérieur)
-    const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => {
-        // On vérifie si le nouvel élément cliqué est à l'intérieur du menu
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+
+            await AuthService.logout();
+            window.location.href = "/login";
+        } catch (error) {
+            console.error("Logout failed:", error);
+        } finally {
+            setIsLoggingOut(false);
+        }
+    };
+    const [isOpen, setIsOpen] = useState(false);
+ 
+    const handleBlur = (event: React.FocusEvent<HTMLDivElement>) => { 
         if (!event.currentTarget.contains(event.relatedTarget)) {
             setIsOpen(false);
         }
@@ -21,11 +33,11 @@ export default function ProfileSection({
     return (
         <div 
             className="relative w-full outline-none"
-            tabIndex={0} // Rend le conteneur focalisable pour écouter le clic extérieur
+            tabIndex={0} 
             onBlur={handleBlur}
         >
             
-            {/* --- SOUS-MENU --- */}
+             
             <div
                 className={`
                     absolute bottom-full left-0 w-full bg-white border border-slate-100 
@@ -54,15 +66,40 @@ export default function ProfileSection({
 
                 <div className="h-px bg-slate-100 my-1" />
 
-                <button className="w-full flex items-center gap-2 px-2.5 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer font-medium text-left">
+                <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="
+                        w-full flex items-center gap-2 px-2.5 py-2 text-xs
+                        text-rose-600 hover:bg-rose-50 rounded-md
+                        transition-colors cursor-pointer font-medium text-left
+                        disabled:opacity-70 disabled:cursor-not-allowed
+                    "
+                >
                     <LogOut size={14} />
-                    <span className={`${collapsed ? "hidden group-hover/sidebar:block" : "block"}`}>
-                        Déconnexion
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                        <span
+                            className={`${
+                                collapsed
+                                    ? "hidden group-hover/sidebar:block"
+                                    : "block"
+                            }`}
+                        >
+                            Déconnexion
+                        </span>
+
+                        {isLoggingOut && (
+                            <Loader2
+                                size={12}
+                                className="animate-spin"
+                            />
+                        )}
+                    </div>
                 </button>
             </div>
 
-            {/* --- BOUTON PRINCIPAL --- */}
+            
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
@@ -77,12 +114,12 @@ export default function ProfileSection({
                 `}
             >
                 <div className="flex items-center gap-2.5">
-                    {/* Avatar (MM) */}
+                     
                     <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-[10px] shrink-0">
                         MM
                     </div>
 
-                    {/* Texte de profil */}
+                     
                     <span
                         className={`
                             whitespace-nowrap transition-all duration-300
@@ -97,7 +134,7 @@ export default function ProfileSection({
                     </span>
                 </div>
 
-                {/* Icône Chevron */}
+               
                 <ChevronRight
                     size={14}
                     className={`

@@ -26,11 +26,7 @@ export default function Dashboard() {
     subtitle: "Suivre les indicateurs clés de recrutement",
     description:
       "Visualisez les performances du recrutement grâce à des tableaux de bord, des statistiques détaillées et des indicateurs de suivi des talents.",
-    illustration: (
-      <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center text-blue-500">
-        <BarChart2 size={32} />
-      </div>
-    )
+    illustration: null,
   },
   {
     title: "Documents & Ressources",

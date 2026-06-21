@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pathlib import Path
-import shutil
-import tempfile
 from typing import List
 
 from sqlalchemy.orm import Session
@@ -32,22 +30,22 @@ def upload_resume(
 
 
 @router.post("/analyze", response_model=ResumeAnalysisRead, status_code=status.HTTP_200_OK)
-def analyze_resume(file: UploadFile = File(...)):
+def analyze_resume(
+	payload: ResumePathRequest,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
 	print("=== REQUEST RECEIVED === /analyze", flush=True)
 	text_extractor = TextExtractionService()
 	skill_extractor = PretrainedBilingualExtractor()
-	if not file.filename:
-		raise HTTPException(status_code=400, detail="Resume file is required")
-
-	file_suffix = Path(file.filename).suffix.lower()
-	with tempfile.NamedTemporaryFile(delete=False, suffix=file_suffix) as temp_file:
-		shutil.copyfileobj(file.file, temp_file)
-		temp_path = temp_file.name
+	resume = get_resume_by_path(path=payload.path, recruiter_id=current_user.id, db=db)
+	if resume is None:
+		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
 	try:
-		raw_text = text_extractor.extract(temp_path)
+		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 		analysis = skill_extractor.extract_skills(raw_text)
-		# Convert pipeline output (SkillMention dicts) to API schema shape
+	
 		def _convert_mention(m: dict) -> dict:
 			signals = m.get("scores", {})
 			return {
@@ -83,8 +81,6 @@ def analyze_resume(file: UploadFile = File(...)):
 			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
 			detail=str(e) + ", allowed: pdf, docx",
 		)
-	finally:
-		Path(temp_path).unlink(missing_ok=True)
 
 	return ResumeAnalysisRead(raw_text=raw_text, analysis=ResumeSkillAnalysisRead.model_validate(converted))
 

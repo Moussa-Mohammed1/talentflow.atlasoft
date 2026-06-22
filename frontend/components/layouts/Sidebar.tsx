@@ -3,7 +3,7 @@ import { useState } from "react";
 import ProfileSection from "../user/ProfileSection";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
+import {
     ChevronRight,
     ChevronLeft,
     Home,
@@ -14,15 +14,17 @@ import {
     FolderOpen,
     MailPlus,
 } from "lucide-react";
-import { href } from "react-router-dom";
 import { useModal } from "@/context/ModalContext";
+
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(true);
     const pathname = usePathname();
     const { isModalOpen } = useModal();
+    
     if(isModalOpen) return null;
+
     const sidebarItems = [
-      { icon: <Home size={16} />, label: "Accueil",href: "/dashboard",  active: true },
+      { icon: <Home size={16} />, label: "Accueil", href: "/dashboard", active: true },
       { icon: <Users size={16} />, label: "Talents", href: "/talents" },
       { icon: <Briefcase size={16} />, label: "Recrutement", href: "/recrutement" },
       { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
@@ -33,7 +35,7 @@ export default function Sidebar() {
 
     return (
       <>
-        {/* 1. BACKDROP MOBILE */}
+         
         {!collapsed && (
           <div 
             className="fixed inset-0 bg-slate-900/20 z-40 md:hidden transition-opacity"
@@ -41,25 +43,26 @@ export default function Sidebar() {
           />
         )}
 
-        
+         
         <div 
-          className={`shrink-0 h-screen sticky top-0 z-40 transition-all duration-300 group/sidebar ${
-            collapsed ? "w-16 md:hover:w-56" : "w-0 md:w-56"
+          className={`shrink-0 h-screen sticky top-0 z-40 group/sidebar ${
+            collapsed 
+              ? "w-16 md:hover:w-56 transition-all duration-300 ease-in-out" 
+              : "w-0 md:w-56 transition-none"
           }`}
         >
-          
-          {/* 3. COMPOSANT SIDEBAR EFFECTIF */}
+           
           <aside
             className={`
-              bg-white border-r border-slate-100 flex flex-col justify-between p-3 h-screen top-0 left-0 transition-all duration-300
+              bg-white border-r border-slate-100 flex flex-col justify-between p-3 h-screen top-0 left-0
               ${collapsed 
-                ? "absolute w-16 group-hover/sidebar:w-56 z-50 shadow-md group-hover/sidebar:shadow-xl md:shadow-none" 
-                : "fixed md:sticky w-56 z-50 shadow-xl md:shadow-none"
+                ? "absolute w-16 group-hover/sidebar:w-56 z-50 shadow-md group-hover/sidebar:shadow-xl md:shadow-none transition-all duration-300 ease-in-out" 
+                : "fixed md:sticky w-56 z-50 shadow-xl md:shadow-none transition-none"
               }
             `}
           >    
             <div>
-              {/* Logo Brand */}
+              
               <div className="flex items-center justify-between px-1.5 py-3 mb-2 select-none">
                 <Image
                   src="/images/logo.png"
@@ -85,7 +88,7 @@ export default function Sidebar() {
                 </button>
               </div>
 
-              {/* Navigation Menus */}
+               
               <nav className="space-y-0.5">
                 {sidebarItems.map((item, index) => (
                   <Link
@@ -102,11 +105,11 @@ export default function Sidebar() {
 
                       <span
                         className={`
-                          whitespace-nowrap transition-all duration-300
+                          whitespace-nowrap
                           ${
                             collapsed
-                              ? "opacity-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-auto"
-                              : "opacity-100"
+                              ? "opacity-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-auto transition-all duration-300 ease-in-out"
+                              : "opacity-100 transition-none"
                           }
                         `}
                       >
@@ -117,11 +120,9 @@ export default function Sidebar() {
                 ))}
               </nav>
             </div>
-
-            {/* Sidebar Footer */}
-           
-            <div className="border-t border-slate-100  pt-3 w-full">
-            <ProfileSection collapsed={collapsed} />
+ 
+            <div className="border-t border-slate-100 pt-3 w-full">
+              <ProfileSection collapsed={collapsed} />
             </div>
           </aside>
         </div>

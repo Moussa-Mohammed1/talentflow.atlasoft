@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
+from app.repositories.candidat_repository import CandidatRepository
 from app.schemas.identity_extraction import ResumeIdentityRead
 from app.schemas.resume import ResumePathRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
@@ -65,7 +66,6 @@ def analyze_resume(
 				},
 			}
 
-		# Build converted analysis
 		converted = {
 			"sections": analysis.get("sections", []),
 			"technologies": [_convert_mention(m) for m in analysis.get("technologies", [])],
@@ -107,15 +107,17 @@ def extract_identity(
 			detail=str(e) + ", allowed: pdf, docx",
 		)
 
-	return ResumeIdentityRead.model_validate(identity)
+	validated_identity = ResumeIdentityRead.model_validate(identity)
+	CandidatRepository.upsert_from_identity(db, resume_id=resume.id, identity=validated_identity)
+	return validated_identity
 
 @router.get('/', response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
-def get_resumes(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return get_resumes_list(db, recruiter_id=current_user.id)
+def get_resumes(db: Session = Depends(get_db)):
+    return get_resumes_list(db)
 
 @router.get('/{resume_id}', status_code=status.HTTP_200_OK)
 def get_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    # You can specify response_model=ResumeDetailSchema when ready to map all details.
+
     return get_resume_detail(db, resume_id, recruiter_id=current_user.id)
 
 @router.get('/{resume_id}/download', status_code=status.HTTP_200_OK)
@@ -140,7 +142,7 @@ def preview_resume(resume_id: int, db: Session = Depends(get_db), current_user: 
         import fitz
         pdf_doc = fitz.open(file_path)
         page = pdf_doc.load_page(0)
-        # Scaled down for thumbnail
+     
         pix = page.get_pixmap(matrix=fitz.Matrix(0.5, 0.5))
         return Response(content=pix.tobytes("png"), media_type="image/png")
     except Exception as e:

@@ -8,6 +8,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import Sidebar from '@/components/layouts/Sidebar';
+import NotificationButton from '@/components/ui/NotificationButton';
 
 export default function Dashboard() {
   
@@ -42,19 +43,16 @@ export default function Dashboard() {
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       
       <Sidebar/>
-
-      {/* --- MAIN CONTENT CONTAINER --- */}
+ 
       <div className="flex-1 flex flex-col min-h-screen">
         
         
         <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
           <h1 className="text-lg font-bold text-slate-900">Accueil</h1>
-          <button className="p-1.5 text-slate-500 hover:text-slate-800 bg-white border border-slate-200 rounded-full shadow-sm transition-all">
-            <Bell size={16} />
-          </button>
+          <NotificationButton/>
         </header>
 
-        {/* --- CARDS GRID (Gaps shrunk from 6 to 4, max-width tightened) --- */}
+        
         <main className="flex-1 px-6 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
             {cardsData.map((card, index) => (
@@ -71,8 +69,7 @@ export default function Dashboard() {
                   </button>
                 </div>
 
-                {/* Card Content & Illustration Layout (Text size shifted down to text-xs/text-[11px]) */}
-                <div className="flex gap-4 items-start flex-1">
+                 <div className="flex gap-4 items-start flex-1">
                   {card.illustration && (
                     <div className="hidden sm:block flex-shrink-0">
                       {card.illustration}

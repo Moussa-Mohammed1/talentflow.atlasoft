@@ -14,7 +14,7 @@ export default function LoginForm() {
         email.trim() !== "" &&
         password.trim() !== "";
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [error, setError] = useState<any>(null);
 
     const router = useRouter();
 
@@ -52,7 +52,6 @@ export default function LoginForm() {
         setUser(response.user);
 
         router.push("/dashboard");
-        console.log("failed to re")
 
         } catch (err: any) {
         setError(
@@ -74,7 +73,7 @@ export default function LoginForm() {
             onSubmit={handleLogin}
             className="space-y-5"
         >
-            {/* Email */}
+      
             <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 <span className="text-red-500 font-bold mr-1">
@@ -97,8 +96,7 @@ export default function LoginForm() {
                 Format : exemple@mail.com
             </p>
             </div>
-
-            {/* Password */}
+ 
             <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
                 <span className="text-red-500 font-bold mr-1">
@@ -135,7 +133,7 @@ export default function LoginForm() {
             </div>
 
         
-            {/* Submit */}
+          
             <button
                 type="submit"
                 disabled={!isFormValid || loading}
@@ -181,4 +179,4 @@ export default function LoginForm() {
         </div>
         </div>
     );
-    }
+}

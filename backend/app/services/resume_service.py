@@ -74,7 +74,7 @@ import os
 import random
 from app.repositories.resumer_repository import ResumeRepository
 
-def get_resumes_list(db: Session, recruiter_id: int):
+def get_resumes_list(db: Session):
     
     records = ResumeRepository.get_all(db)
     
@@ -102,7 +102,7 @@ def get_resumes_list(db: Session, recruiter_id: int):
             "role": "Candidat" if candidat else "En cours de traitement", 
             "importDate": resume.created_at.strftime("%d/%m/%Y") if resume.created_at else "",
             "fileSize": file_size,
-            "category": "CV" if str(resume.path).lower().endswith(".pdf") else "Autre",
+            "category": "PDF" if str(resume.path).lower().endswith(".pdf") else "DOCX",
             "previewUrl": f"/api/resumes/{resume.id}/preview"
         })
         
@@ -120,10 +120,8 @@ def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
     
-    # Delete from DB
     ResumeRepository.delete(db, resume)
     
-    # Delete from disk
     file_path = Path(resume.path)
     if file_path.exists():
         file_path.unlink()

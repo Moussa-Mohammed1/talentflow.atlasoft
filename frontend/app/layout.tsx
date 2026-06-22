@@ -1,3 +1,4 @@
+import { ModalProvider } from "@/context/ModalContext";
 import type { Metadata } from "next";
 import "./globals.css";
 
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased [scroll:smooth]">
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+      <body className="min-h-full [scrollbar-width:none] flex flex-col font-sans">
+        <ModalProvider>{children}</ModalProvider>
+      </body>
     </html>
   );
 }

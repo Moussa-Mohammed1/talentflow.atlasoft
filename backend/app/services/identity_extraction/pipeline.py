@@ -44,12 +44,7 @@ class ResumeIdentityPipeline:
         reviewed_name = reviewed if isinstance(reviewed, dict) else {}
         full_name = str(reviewed_name.get("full_name", "")).strip()
         if not full_name:
-            return {
-                "full_name": "",
-                "confidence": 0.0,
-                "score": 0,
-                "candidates": original_name.get("candidates", []),
-            }
+            return original_name
         return {
             "full_name": full_name,
             "confidence": float(reviewed_name.get("confidence", 0.0) or 0.0),
@@ -62,7 +57,7 @@ class ResumeIdentityPipeline:
         reviewed_field = reviewed if isinstance(reviewed, dict) else {}
         value = str(reviewed_field.get("value", "")).strip()
         if not value:
-            return {"value": "", "confidence": 0.0, "evidence": []}
+            return original if isinstance(original, dict) else {"value": "", "confidence": 0.0, "evidence": []}
         evidence = reviewed_field.get("evidence", [])
         if not isinstance(evidence, list):
             evidence = [str(evidence)] if evidence else []

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-
+from sqlalchemy import or_
 from app.models.candidat import Candidat
 from app.schemas.identity_extraction import ResumeIdentityRead
 
@@ -41,3 +41,25 @@ class CandidatRepository:
         db.refresh(candidat)
 
         return candidat
+    
+    @staticmethod
+    def check_duplicate(
+        db: Session,
+        email: str,
+        phone: str,
+    ) -> Candidat | None:
+        filters = []
+        if email: 
+            filters.append(Candidat.email == email.strip())
+        if phone:
+            filters.append(Candidat.phone == phone.strip())
+        if not filters:
+            return None
+        return (
+            db.query(Candidat)
+            .filter(or_(*filters))
+            .first()
+        )
+        
+        
+    

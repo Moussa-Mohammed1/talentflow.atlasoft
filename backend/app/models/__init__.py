@@ -12,3 +12,4 @@ from app.models.candidat_language import CandidatLanguages
 from app.models.skills import Skills
 from app.models.skills_category import SkillsCategory
 from app.models.invitation import Invitation
+from app.models.notification import Notification, NotificationType

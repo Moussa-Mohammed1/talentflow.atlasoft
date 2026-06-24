@@ -20,6 +20,18 @@ ALGORITHM = "HS256"
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 
+def decode_access_token(token: str) -> int:
+    """Validate an access token and return its user id."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        subject = payload.get("sub")
+        if subject is None:
+            raise ValueError("Token subject is missing")
+        return int(subject)
+    except (jwt.PyJWTError, TypeError, ValueError) as exc:
+        raise ValueError("Invalid access token") from exc
+
+
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -64,16 +76,7 @@ def get_current_user(
     )
 
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-    except jwt.PyJWTError:
-        raise credentials_exception
-
-    if user_id is None:
-        raise credentials_exception
-
-    try:
-        user_id_int = int(user_id)
+        user_id_int = decode_access_token(token)
     except ValueError:
         raise credentials_exception
 

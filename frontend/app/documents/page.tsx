@@ -1,16 +1,21 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { FileText, Search, FileQuestionMark } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Search, FileQuestionMark } from "lucide-react";
 import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
-import ImportResumeButton from "@/components/resume/ImportResumeButton";
 import DocumentPreviewCard from "@/components/resume/DocumentPreviewCard";
 import {
   DocumentListItem,
   getResumeDocuments,
   revokeResumeDocumentPreviews,
 } from "@/services/resume.service";
+
+const ImportResumeButton = dynamic(
+  () => import("@/components/resume/ImportResumeButton"),
+  { ssr: false },
+);
 
 export default function DocumentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,24 +76,22 @@ export default function DocumentsPage() {
   }, [documents, searchQuery]);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-50  text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-white border-b border-slate-100 px-8 py-5 flex justify-between items-center sticky top-0 z-30">
+      <div className="flex-1 flex flex-col min-h-screen [scrollbar-width:none]">
+        <header className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex justify-between items-center  z-30">
           <div>
-            <h1 className="text-xl font-bold text-slate-900">Documents</h1>
-            <p className="text-xs text-slate-500">
-              Gérez, filtrez et prévisualisez les candidatures reçues.
-            </p>
+            <h1 className="text-lg font-bold text-slate-900">Documents</h1>
+            
           </div>
-          <div className="flex items-center gap-4">
-            <NotificationButton />
+          <div className="flex items-center text-lg gap-4">
             <ImportResumeButton />
+            <NotificationButton />
           </div>
         </header>
 
-        <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 p-8 max-w-7xl mx-auto w-full space-y-6 [scrollbar-width:none]">
           <div className="bg-white border rounded-full border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="relative flex-1">
               <Search

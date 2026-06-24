@@ -29,10 +29,10 @@ export default function ExtractingIdentityModal({
             <Loader2 className="w-5 h-5 text-amber-600 animate-spin"/>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-gray-900">
+            <h2 className="text-lg text-left font-bold text-gray-900">
               Extraction de l&apos;identité
             </h2>
-            <p className="text-sm font-medium text-gray-600">
+            <p className="text-left text-sm font-medium text-gray-600">
               Analyse du CV en cours... Veuillez patienter.
             </p>
           </div>

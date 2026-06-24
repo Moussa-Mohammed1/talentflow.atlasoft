@@ -94,10 +94,10 @@ export default function Sidebar() {
                   <Link
                     key={index}
                     href={item.href}
-                    className={`w-full flex items-center px-2.5 py-2 rounded-md text-xs font-medium transition-colors ${
+                    className={`w-full flex items-center focus:scale-95 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
                       pathname === item.href
-                        ? "bg-slate-50 text-slate-900"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                        ? "bg-slate-50 text-slate-900 border "
+                        : "text-slate-600 hover:bg-slate-200 hover:text-black  duration-500"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">

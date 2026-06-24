@@ -120,10 +120,10 @@ export default function ImportResumeButton() {
         <div className="selection:bg-slate-200">
             <button 
                 onClick={openModal}
-                className="flex cursor-pointer items-center gap-1.5 bg-yellow-600 hover:bg-yellow-700 text-white font-medium text-xs px-3.5 py-2 rounded-lg shadow-sm hover:shadow transition-all"
+                className="flex cursor-pointer hover:border-yellow-500 border items-center gap-1.5 bg-white hover:bg-black hover:text-white text-black font-medium text-xs px-3.5 py-2 rounded-lg shadow-sm hover:shadow transition-all"
             >
                 
-                <span>Importer</span><Plus size={14} />
+                <span>Importer un candidat</span><Plus size={14} />
             </button>
 
             <div 
@@ -198,7 +198,7 @@ export default function ImportResumeButton() {
                             >
                                 <UploadCloud size={28} className="text-slate-400 mb-2.5" />
                                 <p className="text-xs font-semibold text-slate-600">
-                                    Glissez-déposez votre CV ici ou <span className="text-yellow-600 underline">parcourez vos fichiers</span>
+                                    Glissez-déposez votre CV ici ou <span className="text-black font-semibold underline">parcourez vos fichiers</span>
                                 </p>
                                 <p className="text-[10px] text-slate-400 mt-1">
                                     Formats acceptés : PDF, DOCX (Max. 10 Mo)
@@ -216,7 +216,7 @@ export default function ImportResumeButton() {
                                     </div>
                                     <button 
                                         onClick={resetImport}
-                                        className="text-[11px] font-semibold text-yellow-600 hover:text-yellow-700 flex items-center gap-1 bg-yellow-50 hover:bg-yellow-100/80 px-2.5 py-1 rounded-md transition-all cursor-pointer border border-yellow-200/40"
+                                        className="text-[11px] font-semibold text-black  flex items-center gap-1 hover:bg-black/10 px-2.5 py-1 rounded-md transition-all cursor-pointer border"
                                     >
                                         <UploadCloud size={12} />
                                         Changer de document
@@ -268,14 +268,14 @@ export default function ImportResumeButton() {
                             <button
                                 disabled={!fileName}
                                 onClick={() => { if (file) void handleImport(file); }}
-                                className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-semibold rounded-lg text-white transition-all shadow-xs ${
+                                className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-semibold rounded-lg text-black border transition-all shadow-xs ${
                                     fileName 
-                                        ? "bg-yellow-600 hover:bg-yellow-700 cursor-pointer" 
-                                        : "bg-yellow-600/40 text-white/70 cursor-not-allowed"
+                                        ? "bg-white hover:bg-black/10 cursor-pointer" 
+                                        : "bg-white text-black/20 cursor-not-allowed"
                                 }}`}
                             >
                                 
-                                <Sparkles size={12} />
+                                <Sparkles size={12}/>
                                 <span>Importer & extraire tous</span>
                             </button>
 

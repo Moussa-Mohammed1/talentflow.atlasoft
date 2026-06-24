@@ -39,6 +39,23 @@ export interface ResumeAnalysisResult {
   };
 }
 
+export interface ResumeExperienceResult {
+  raw_text?: string;
+  analysis?: {
+    sections?: unknown[];
+    experiences?: Array<{
+      title: string;
+      description?: string | null;
+      start_date: string;
+      end_date?: string | null;
+      confidence: number;
+      section: string;
+      evidence: string[];
+    }>;
+    stats?: Record<string, unknown>;
+  };
+}
+
 interface ImportResumeParams {
   file: File;
 }
@@ -54,6 +71,7 @@ export function useResumeImport() {
   const [loading, setLoading] = useState(false);
   const [identityResult, setIdentityResult] = useState<ResumeIdentityResult | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null);
+  const [experienceResult, setExperienceResult] = useState<ResumeExperienceResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const importResume = async ({
@@ -64,6 +82,7 @@ export function useResumeImport() {
       setError(null);
       setIdentityResult(null);
       setAnalysisResult(null);
+      setExperienceResult(null);
       setStatus("uploading");
 
       const formData = new FormData();
@@ -97,17 +116,21 @@ export function useResumeImport() {
       );
       setStatus("analyzing")
       
-      const analyzeResponse = await api.post<ResumeAnalysisResult>(
-        "/resumes/analyze",
-        {
-          path: uploadResponse.data.path
-        }
-      )
+      const [analyzeResponse, experienceResponse] = await Promise.all([
+        api.post<ResumeAnalysisResult>("/resumes/analyze", {
+          path: uploadResponse.data.path,
+        }),
+        api.post<ResumeExperienceResult>("/resumes/experience", {
+          path: uploadResponse.data.path,
+        }),
+      ]);
       setAnalysisResult(analyzeResponse.data);
+      setExperienceResult(experienceResponse.data);
       setStatus("success");
       return {
         identity: identityResponse.data,
         analysis: analyzeResponse.data,
+        experience: experienceResponse.data,
       };
     } catch (err) {
       setStatus("error");
@@ -121,6 +144,7 @@ export function useResumeImport() {
   const reset = () => {
     setIdentityResult(null);
     setAnalysisResult(null);
+    setExperienceResult(null);
     setError(null);
     setStatus("idle");
   };
@@ -130,6 +154,7 @@ export function useResumeImport() {
     result: identityResult,
     identityResult,
     analysisResult,
+    experienceResult,
     error,
     status,
     importResume,

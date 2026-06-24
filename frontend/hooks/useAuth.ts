@@ -29,7 +29,7 @@ export const useAuth = () => {
     const currentUser =
       await AuthService.me();
 
-    setUser(currentUser);
+    setUser(currentUser.user);
   };
 
   return {

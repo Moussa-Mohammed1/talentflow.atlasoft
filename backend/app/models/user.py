@@ -24,6 +24,11 @@ class User(Base):
         primary_key=True,
         index=True
     )
+    avatar = Column(
+        String,
+        nullable=True
+    )
+    
     role = Column(
         SQLEnum(UserRole, name="user_role_enum"), 
         default=UserRole.RECRUITER

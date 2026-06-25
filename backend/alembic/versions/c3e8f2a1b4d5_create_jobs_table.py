@@ -24,6 +24,7 @@ job_type = postgresql.ENUM(
     "bulk_data_export",
     "candidate_matching",
     "skill_extraction",
+    "language_extraction",
     "experience_extraction",
     name="job_type_enum",
     create_type=False,

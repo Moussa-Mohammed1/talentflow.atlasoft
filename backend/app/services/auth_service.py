@@ -64,7 +64,18 @@ class AuthService:
         return {
             "access_token": token,
             "token_type": "bearer",
-            "user": UserResponse.model_validate(user),
+            "user": {
+                "id": user.id,
+                "fullname": user.fullname,
+                "email": user.email,
+                "role": user.role,
+                "is_active": user.is_active,
+                "must_change_password": user.must_change_password,
+                "avatar": f"{os.getenv('APP_URL')}{user.avatar}",
+                "email_verified": user.email_verified,
+                "email_verified_at": user.email_verified_at,
+                "created_at": user.created_at,
+            },
             "must_change_password":
                 user.must_change_password
         }

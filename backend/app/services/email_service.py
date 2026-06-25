@@ -63,7 +63,12 @@ class EmailService:
             </p>
 
             <p>
-                Si vous n'attendiez pas cette invitation, vous pouvez simplement ignorer cet e-mail.
+                Après votre premier enregistrement, vous pourrez utiliser le mot de passe ci-dessous pour vous connecter une première fois.
+
+                Pour des raisons de sécurité, il est fortement recommandé de le modifier dès votre première connexion.
+
+                Mot de passe temporaire : `{os.getenv('DEFAULT_PASSWORD')}`
+
             </p>
 
             <p>

@@ -122,3 +122,31 @@ class NotificationService:
                 type=NotificationType.INFO,
             ),
         )
+
+    @classmethod
+    def language_extraction_completed(
+        cls, db: Session, *, recruiter_id: int, language_count: int
+    ) -> Notification:
+        return cls.create(
+            db,
+            NotificationCreate(
+                recruiter_id=recruiter_id,
+                title="Language extraction completed",
+                message=f"Found {language_count} language(s) in the resume.",
+                type=NotificationType.SUCCESS,
+            ),
+        )
+
+    @classmethod
+    def language_extraction_failed(
+        cls, db: Session, *, recruiter_id: int, reason: str
+    ) -> Notification:
+        return cls.create(
+            db,
+            NotificationCreate(
+                recruiter_id=recruiter_id,
+                title="Language extraction failed",
+                message=f"Language extraction failed: {reason}",
+                type=NotificationType.ERROR,
+            ),
+        )

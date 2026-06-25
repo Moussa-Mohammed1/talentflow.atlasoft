@@ -176,7 +176,7 @@ export default function Home() {
       </main>
 
       {result ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 backdrop-blur-xl px-4 py-6 ">
           <div
             role="dialog"
             aria-modal="true"

@@ -2,7 +2,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from app.models.candidat import Candidat
 from app.schemas.identity_extraction import ResumeIdentityRead
-
+from app.models.user import User
+from app.schemas.auth import UpdateProfileRequest
+from fastapi import HTTPException, status
+from passlib.context import CryptContext
+ 
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class CandidatRepository:
     @staticmethod
@@ -59,3 +64,59 @@ class CandidatRepository:
         if candidat is None:
             return None
         return candidat.resume_id == resume_id
+
+    @staticmethod
+    def update_profile(
+        db: Session,
+        user: User,
+        payload: UpdateProfileRequest,
+    ) -> User:
+
+        
+        if payload.fullname is not None:
+            user.fullname = payload.fullname
+
+        if payload.email is not None:
+           
+            existing = (
+                db.query(User)
+                .filter(User.email == payload.email, User.id != user.id)
+                .first()
+            )
+
+            if existing:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Email is already in use.",
+                )
+
+            user.email = payload.email
+
+        if payload.avatar is not None:
+            user.avatar = payload.avatar
+
+      
+        if payload.current_password or payload.new_password:
+
+            if not payload.current_password or not payload.new_password:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Current password and new password are required.",
+                )
+
+            if not pwd_context.verify(
+                payload.current_password,
+                user.hashed_password,
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Current password is incorrect.",
+                )
+
+            user.hashed_password = pwd_context.hash(payload.new_password)
+            user.must_change_password = False
+
+        db.commit()
+        db.refresh(user)
+
+        return user

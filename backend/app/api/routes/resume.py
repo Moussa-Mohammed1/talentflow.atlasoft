@@ -10,13 +10,17 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
+from app.models.candidat import Candidat
 from app.repositories.candidat_repository import CandidatRepository
 from app.repositories.experience_repository import ExperienceRepository
+from app.repositories.skill_repository import SkillRepository
 from app.schemas.experience_extraction import ResumeExperienceAnalysisRead, ResumeExperienceRead
 from app.schemas.identity_extraction import ResumeIdentityRead
-from app.schemas.resume import ResumePathRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema
+from app.schemas.resume import ResumePathRequest, ResumeIdRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema, ResumeFullDetailSchema
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
-from app.services.resume_service import create_resume, get_resume_by_path, resolve_stored_resume_path, get_resumes_list, get_resume_detail, delete_resume_and_file
+from app.services.resume_service import create_resume, get_resume_by_path, get_resume_by_id, resolve_stored_resume_path, get_resumes_list, get_resume_detail, get_full_resume_detail, delete_resume_and_file
+from app.repositories.resumer_repository import ResumeRepository
+from app.services.candidat_service import update_candidat_from_identity
 from app.services.resume_extraction.extractor import TextExtractionService
 from app.services.resume_extraction.extractor import UnsupportedFileTypeError
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
@@ -73,14 +77,17 @@ def analyze_resume(
 	print("=== REQUEST RECEIVED === /analyze", flush=True)
 	text_extractor = TextExtractionService()
 	skill_extractor = PretrainedBilingualExtractor()
+	experience_extractor = PretrainedBilingualExperienceExtractor()
 	resume = get_resume_by_path(path=payload.path, recruiter_id=current_user.id, db=db)
 	if resume is None:
 		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
 	try:
 		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
-		analysis = skill_extractor.extract_skills(raw_text)
-	
+
+		skill_result = skill_extractor.extract_skills(raw_text)
+		experience_result = experience_extractor.extract_experiences(raw_text)
+
 		def _convert_mention(m: dict) -> dict:
 			signals = m.get("scores", {})
 			return {
@@ -100,16 +107,41 @@ def analyze_resume(
 				},
 			}
 
-		converted = {
-			"sections": analysis.get("sections", []),
-			"technologies": [_convert_mention(m) for m in analysis.get("technologies", [])],
-			"competencies": [_convert_mention(m) for m in analysis.get("competencies", [])],
+		converted_skills = {
+			"sections": skill_result.get("sections", []),
+			"technologies": [_convert_mention(m) for m in skill_result.get("technologies", [])],
+			"competencies": [_convert_mention(m) for m in skill_result.get("competencies", [])],
 			"skills_by_category": {
 				cat: [_convert_mention(m) for m in items]
-				for cat, items in (analysis.get("skills_by_category") or {}).items()
+				for cat, items in (skill_result.get("skills_by_category") or {}).items()
 			},
-			"flattened_skills": [s.get("normalized") or s.get("original") for s in analysis.get("skills", [])],
+			"flattened_skills": [s.get("normalized") or s.get("original") for s in skill_result.get("skills", [])],
 		}
+
+		experience_analysis = ResumeExperienceAnalysisRead.model_validate(
+			{
+				"sections": experience_result.get("sections", []),
+				"experiences": experience_result.get("experiences", []),
+				"stats": experience_result.get("stats", {}),
+			}
+		)
+
+		candidat = CandidatRepository.get_by_resume_id(db, resume.id)
+		if candidat is not None:
+			skills_analysis = ResumeSkillAnalysisRead.model_validate(converted_skills)
+			stored_skills = SkillRepository.replace_for_candidate(
+				db, candidat_id=candidat.id, skills=skills_analysis.technologies + skills_analysis.competencies,
+			)
+			stored_experiences = ExperienceRepository.replace_for_candidate(
+				db, candidat_id=candidat.id, experiences=experience_analysis.experiences,
+			)
+			experience_analysis.stats["skills_persisted_count"] = len(stored_skills)
+			experience_analysis.stats["persisted_count"] = len(stored_experiences)
+		else:
+			experience_analysis.stats["skills_persisted_count"] = 0
+			experience_analysis.stats["persisted_count"] = 0
+			experience_analysis.stats["persistence_reason"] = "candidate_identity_not_extracted"
+
 	except UnsupportedFileTypeError as e:
 		_create_notification(
 			background_tasks,
@@ -147,7 +179,8 @@ def analyze_resume(
 
 	response = ResumeAnalysisRead(
 		raw_text=raw_text,
-		analysis=ResumeSkillAnalysisRead.model_validate(converted),
+		analysis=ResumeSkillAnalysisRead.model_validate(converted_skills),
+		experience=experience_analysis.model_dump(),
 	)
 	_create_notification(
 		background_tasks,
@@ -157,6 +190,132 @@ def analyze_resume(
 		filename=Path(resume.path).name,
 	)
 	return response
+
+
+@router.post("/re-analyze", response_model=ResumeAnalysisRead, status_code=status.HTTP_200_OK)
+def re_analyze_resume(
+    payload: ResumeIdRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    print("=== REQUEST RECEIVED === /re-analyze", flush=True)
+    text_extractor = TextExtractionService()
+    skill_extractor = PretrainedBilingualExtractor()
+    experience_extractor = PretrainedBilingualExperienceExtractor()
+    resume = get_resume_by_id(resume_id=payload.resume_id, recruiter_id=current_user.id, db=db)
+    if resume is None:
+        raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
+
+    try:
+        raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
+
+        skill_result = skill_extractor.extract_skills(raw_text)
+        experience_result = experience_extractor.extract_experiences(raw_text)
+
+        def _convert_mention(m: dict) -> dict:
+            signals = m.get("scores", {})
+            return {
+                "original": m.get("original", ""),
+                "normalized": m.get("normalized", ""),
+                "name": m.get("canonical") or m.get("normalized") or m.get("original"),
+                "category": m.get("category", ""),
+                "confidence": float(m.get("confidence", 0.0) or 0.0),
+                "section": m.get("section", ""),
+                "source": ",".join(m.get("sources", [])) if m.get("sources") else "",
+                "signals": {
+                    "ner_score": float(signals.get("validation", 0.0)),
+                    "semantic_score": float(signals.get("semantic", 0.0)),
+                    "section_score": float(signals.get("section", 0.0)),
+                    "frequency_score": float(signals.get("frequency", 0.0)),
+                    "context_score": float(signals.get("context", 0.0)),
+                },
+            }
+
+        converted_skills = {
+            "sections": skill_result.get("sections", []),
+            "technologies": [_convert_mention(m) for m in skill_result.get("technologies", [])],
+            "competencies": [_convert_mention(m) for m in skill_result.get("competencies", [])],
+            "skills_by_category": {
+                cat: [_convert_mention(m) for m in items]
+                for cat, items in (skill_result.get("skills_by_category") or {}).items()
+            },
+            "flattened_skills": [s.get("normalized") or s.get("original") for s in skill_result.get("skills", [])],
+        }
+
+        experience_analysis = ResumeExperienceAnalysisRead.model_validate(
+            {
+                "sections": experience_result.get("sections", []),
+                "experiences": experience_result.get("experiences", []),
+                "stats": experience_result.get("stats", {}),
+            }
+        )
+
+        candidat = CandidatRepository.get_by_resume_id(db, resume.id)
+        if candidat is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="No candidate associated with this resume. Please extract identity first.",
+            )
+
+        skills_analysis = ResumeSkillAnalysisRead.model_validate(converted_skills)
+        stored_skills = SkillRepository.replace_for_candidate(
+            db, candidat_id=candidat.id, skills=skills_analysis.technologies + skills_analysis.competencies,
+        )
+        stored_experiences = ExperienceRepository.replace_for_candidate(
+            db, candidat_id=candidat.id, experiences=experience_analysis.experiences,
+        )
+        experience_analysis.stats["skills_persisted_count"] = len(stored_skills)
+        experience_analysis.stats["persisted_count"] = len(stored_experiences)
+
+    except UnsupportedFileTypeError as e:
+        _create_notification(
+            background_tasks,
+            NotificationService.resume_analysis_failed,
+            db,
+            recruiter_id=current_user.id,
+            filename=Path(resume.path).name,
+            reason=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+             detail=str(e) + ", allowed: pdf, docx",
+        )
+    except HTTPException as e:
+        _create_notification(
+            background_tasks,
+            NotificationService.resume_analysis_failed,
+            db,
+            recruiter_id=current_user.id,
+            filename=Path(resume.path).name,
+            reason=str(e.detail),
+        )
+        raise
+    except Exception:
+        logger.exception("Resume re-analysis failed for resume %s", resume.id)
+        _create_notification(
+            background_tasks,
+            NotificationService.resume_analysis_failed,
+            db,
+            recruiter_id=current_user.id,
+            filename=Path(resume.path).name,
+            reason="An unexpected processing error occurred.",
+        )
+        raise HTTPException(status_code=500, detail="Resume re-analysis failed")
+
+    response = ResumeAnalysisRead(
+        raw_text=raw_text,
+        analysis=ResumeSkillAnalysisRead.model_validate(converted_skills),
+        experience=experience_analysis.model_dump(),
+    )
+    _create_notification(
+        background_tasks,
+        NotificationService.resume_analysis_completed,
+        db,
+        recruiter_id=current_user.id,
+        filename=Path(resume.path).name,
+    )
+    return response
 
 
 @router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
@@ -184,21 +343,22 @@ def extract_identity(
 	validated_identity = ResumeIdentityRead.model_validate(identity)
 	email = (validated_identity.email.value or "").strip()
 	phone = (validated_identity.phone.value or "").strip()
-	duplicate = CandidatRepository.check_duplicate(db, email, phone)
+	duplicate = CandidatRepository.check_duplicate(db, email, phone, resume.id)
 	if duplicate is not None:
-		if duplicate.resume_id != resume.id:
+		if duplicate is False:
 			delete_resume_and_file(
 				db,
 				resume_id=resume.id,
 				recruiter_id=current_user.id,
 			)
 			detail = (
-				"Duplicate candidate: this identity already belongs to another "
-				"resume; the new resume was deleted."
+				f"""
+				Duplicate candidate: this identity already belongs to "{validated_identity.name.full_name}"
+				resume; the new resume was deleted.
+				"""
 			)
 		else:
-			detail = "Duplicate candidate: this identity is already saved for this resume."
-
+			detail = f"Duplicate candidate: this identity is already saved for this resume {validated_identity.name.full_name}."
 		_create_notification(
 			background_tasks,
 			NotificationService.duplicate_candidate_detected,
@@ -212,6 +372,49 @@ def extract_identity(
 	_create_notification(
 		background_tasks,
 		NotificationService.identity_extraction_completed,
+		db,
+		recruiter_id=current_user.id,
+		candidate_name=validated_identity.name.full_name,
+	)
+	return validated_identity
+
+@router.post("/{resume_id}/reanalyze-identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)
+def reanalyze_identity(
+	resume_id: int,
+	background_tasks: BackgroundTasks,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	resume = get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+	text_extractor = TextExtractionService()
+	identity_extractor = ResumeIdentityPipeline()
+
+	try:
+		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
+		identity = identity_extractor.analyze(raw_text)
+	except UnsupportedFileTypeError as e:
+		raise HTTPException(
+			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+			detail=str(e) + ", allowed: pdf, docx",
+		)
+
+	validated_identity = ResumeIdentityRead.model_validate(identity)
+	email = (validated_identity.email.value or "").strip()
+	phone = (validated_identity.phone.value or "").strip()
+	# if CandidatRepository.check_duplicate
+	if CandidatRepository.check_duplicate(db, email, phone, resume.id):
+		candidat = CandidatRepository.get_by_resume_id(db, resume.id)
+		update_candidat_from_identity(db, candidat, validated_identity)
+		notification = NotificationService.identity_extraction_updated
+	else:
+		candidat = Candidat(resume_id=resume.id, fullname="", email="", phone="")
+		db.add(candidat)
+		update_candidat_from_identity(db, candidat, validated_identity)
+		notification = NotificationService.identity_extraction_completed
+
+	_create_notification(
+		background_tasks,
+		notification,
 		db,
 		recruiter_id=current_user.id,
 		candidate_name=validated_identity.name.full_name,
@@ -265,10 +468,10 @@ def extract_experience(
 def get_resumes(db: Session = Depends(get_db)):
     return get_resumes_list(db)
 
-@router.get('/{resume_id}', status_code=status.HTTP_200_OK)
+@router.get('/{resume_id}', response_model=ResumeFullDetailSchema | None, status_code=status.HTTP_200_OK)
 def get_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
 
-    return get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+    return get_full_resume_detail(db, resume_id, recruiter_id=current_user.id)
 
 @router.get('/{resume_id}/download', status_code=status.HTTP_200_OK)
 def download_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

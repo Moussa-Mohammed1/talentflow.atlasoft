@@ -47,7 +47,22 @@ class NotificationService:
             NotificationCreate(
                 recruiter_id=recruiter_id,
                 title="Identity extraction completed",
-                message=f"Identity details were extracted for {subject}.",
+                message=f"Identity extraction completed successfully for {subject}.",
+                type=NotificationType.SUCCESS,
+            ),
+        )
+
+    @classmethod
+    def identity_extraction_updated(
+        cls, db: Session, *, recruiter_id: int, candidate_name: str
+    ) -> Notification:
+        subject = candidate_name.strip() or "The candidate"
+        return cls.create(
+            db,
+            NotificationCreate(
+                recruiter_id=recruiter_id,
+                title="Identity updated",
+                message=f"Identity details updated successfully for {subject}.",
                 type=NotificationType.SUCCESS,
             ),
         )

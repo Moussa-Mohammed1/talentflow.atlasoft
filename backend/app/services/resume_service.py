@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import HTTPException, UploadFile
 from pathlib import Path
 import shutil
@@ -6,6 +7,15 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.models.resume import Resume
+from app.models.candidat import Candidat
+from app.models.experience import Experience
+from app.models.education import Education
+from app.models.certification import Certification
+from app.models.candidat_skill import CandidatSkills
+from app.models.skills import Skills
+from app.models.skills_category import SkillsCategory
+from app.models.candidat_language import CandidatLanguages
+from app.models.language import Language
 
 
 # UPLOAD_DIR = Path(__file__).resolve().parents[2] / "storage" / "resumes"
@@ -52,6 +62,13 @@ def get_resume_by_path(path: str, recruiter_id: int, db: Session) -> Resume | No
 		.filter(Resume.path == path, Resume.recruiter_id == recruiter_id)
 		.first()
 	)
+
+def get_resume_by_id(resume_id: int, recruiter_id: int, db: Session) -> Resume | None:
+     return (
+          db.query(Resume)
+          .filter(Resume.id == resume_id, Resume.recruiter_id == recruiter_id)
+          .first()
+     )
 
 
 def resolve_stored_resume_path(path: str) -> Path:
@@ -114,6 +131,104 @@ def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
         raise HTTPException(status_code=404, detail="Resume not found")
         
     return resume
+
+
+def get_full_resume_detail(db: Session, resume_id: int, recruiter_id: int):
+    resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
+    if not resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    candidat = db.query(Candidat).filter(Candidat.resume_id == resume.id).first()
+
+    if candidat is None:
+        return None
+
+    experiences = db.query(Experience).filter(Experience.candidat_id == candidat.id).all()
+    educations = db.query(Education).filter(Education.candidat_id == candidat.id).all()
+    certifications = db.query(Certification).filter(Certification.candidat_id == candidat.id).all()
+
+    skill_records = (
+        db.query(Skills, SkillsCategory)
+        .join(CandidatSkills, CandidatSkills.skill_id == Skills.id)
+        .join(SkillsCategory, Skills.category_id == SkillsCategory.id)
+        .filter(CandidatSkills.candidat_id == candidat.id)
+        .all()
+    )
+
+    language_records = (
+        db.query(Language)
+        .join(CandidatLanguages, CandidatLanguages.language_id == Language.id)
+        .filter(CandidatLanguages.candidat_id == candidat.id)
+        .all()
+    )
+
+    from app.schemas.resume import ResumeFullDetailSchema, CandidatDetailSchema, ExperienceDetailSchema, EducationDetailSchema, CertificationDetailSchema, SkillDetailSchema, LanguageDetailSchema
+
+    def fmt_date(dt: datetime | None) -> str | None:
+        if dt is None:
+            return None
+        return dt.strftime("%Y-%m-%d")
+
+    return ResumeFullDetailSchema(
+        resume_id=resume.id,
+        candidat=CandidatDetailSchema(
+            id=candidat.id,
+            fullname=candidat.fullname,
+            email=candidat.email,
+            phone=candidat.phone,
+            created_at=candidat.created_at,
+        ),
+        experiences=[
+            ExperienceDetailSchema(
+                id=exp.id,
+                title=exp.title or "",
+                description=exp.description,
+                start_date=fmt_date(exp.start_date) or "",
+                end_date=fmt_date(exp.end_date),
+            )
+            for exp in experiences
+        ],
+        educations=[
+            EducationDetailSchema(
+                id=edu.id,
+                institution=edu.institution or "",
+                degree=edu.degree,
+                field_of_study=edu.field_of_study,
+                start_date=fmt_date(edu.start_date),
+                end_date=fmt_date(edu.end_date),
+                description=edu.description,
+            )
+            for edu in educations
+        ],
+        certifications=[
+            CertificationDetailSchema(
+                id=cert.id,
+                name=cert.name or "",
+                organization=cert.organization or "",
+                issue_date=fmt_date(cert.issue_date),
+                expiration_date=fmt_date(cert.expiration_date),
+                credential_id=cert.credential_id,
+                credential_url=cert.credential_url,
+                description=cert.description,
+            )
+            for cert in certifications
+        ],
+        skills=[
+            SkillDetailSchema(
+                id=skill.id,
+                name=skill.name,
+                category_name=category.name,
+            )
+            for skill, category in skill_records
+        ],
+        languages=[
+            LanguageDetailSchema(
+                id=lang.id,
+                name=lang.name or "",
+            )
+            for lang in language_records
+        ],
+    )
 
 def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
     resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)

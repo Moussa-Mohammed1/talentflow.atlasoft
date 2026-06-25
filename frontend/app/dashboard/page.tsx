@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Sidebar from '@/components/layouts/Sidebar';
 import NotificationButton from '@/components/ui/NotificationButton';
+import PasswordChangeBanner from '@/components/ui/PasswordChangeBanner';
 
 export default function Dashboard() {
   
@@ -19,7 +20,7 @@ export default function Dashboard() {
     subtitle: "Consulter et gérer les profils talents",
     description:
       "Explorez les profils des candidats, leurs compétences, expériences, évaluations et disponibilités afin d'identifier les meilleurs talents.",
-    illustration: null
+    illustration: "/static/Acceuil/talents.svg"
   },
   {
     title: "Analyse & Statistiques",
@@ -27,7 +28,7 @@ export default function Dashboard() {
     subtitle: "Suivre les indicateurs clés de recrutement",
     description:
       "Visualisez les performances du recrutement grâce à des tableaux de bord, des statistiques détaillées et des indicateurs de suivi des talents.",
-    illustration: null,
+    illustration: "/static/Acceuil/analysis.svg",
   },
   {
     title: "Documents & Ressources",
@@ -35,7 +36,7 @@ export default function Dashboard() {
     subtitle: "Centraliser les ressources et documents",
     description:
       "Retrouvez les CV, rapports d'évaluation et autres documents nécessaires à la gestion des talents et des recrutements.",
-    illustration: null
+    illustration: "/static/Acceuil/documents.svg"
   }
 ];
 
@@ -51,8 +52,7 @@ export default function Dashboard() {
           <h1 className="text-lg font-bold text-slate-900">Accueil</h1>
           <NotificationButton/>
         </header>
-
-        
+       
         <main className="flex-1 px-6 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
             {cardsData.map((card, index) => (
@@ -72,7 +72,11 @@ export default function Dashboard() {
                  <div className="flex gap-4 items-start flex-1">
                   {card.illustration && (
                     <div className="hidden sm:block flex-shrink-0">
-                      {card.illustration}
+                      <img
+                        src={card.illustration}
+                        alt={card.title}
+                        className="w-20 h-20 object-contain"
+                      />
                     </div>
                   )}
                   <div className="space-y-1 flex-1">

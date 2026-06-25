@@ -47,19 +47,15 @@ class CandidatRepository:
         db: Session,
         email: str,
         phone: str,
-    ) -> Candidat | None:
+        resume_id: int,
+    ) -> bool | None:
         filters = []
         if email: 
             filters.append(Candidat.email == email.strip())
         if phone:
             filters.append(Candidat.phone == phone.strip())
-        if not filters:
+        
+        candidat = db.query(Candidat).filter(or_(*filters)).first()
+        if candidat is None:
             return None
-        return (
-            db.query(Candidat)
-            .filter(or_(*filters))
-            .first()
-        )
-        
-        
-    
+        return candidat.resume_id == resume_id

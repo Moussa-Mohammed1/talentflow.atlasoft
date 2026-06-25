@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
-
+from pathlib import Path
+import shutil
+import uuid
+import os
 from app.core.database import get_db
 from app.models.user import User
-
+from app.repositories.candidat_repository import CandidatRepository
 from app.core.security import get_current_user
-from app.schemas.auth import LoginRequest, LoginResponse, UserResponse
+from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
@@ -15,6 +18,8 @@ from app.schemas.invitation import (
 
 from app.services.auth_service import AuthService
 from app.services.invitation_service import InvitationService
+
+AVATAR_DIR = Path("storage/avatars")
 
 router = APIRouter(
     prefix="/auth",
@@ -91,8 +96,85 @@ async def get_me(
     current_user: User = Depends(get_current_user),
 ):
     return {
-        "user": UserResponse.model_validate(current_user)
+        "user": {
+            "id": current_user.id,
+            "fullname": current_user.fullname,
+            "email": current_user.email,
+            "role": current_user.role,
+            "is_active": current_user.is_active,
+            "must_change_password": current_user.must_change_password,
+            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "email_verified": current_user.email_verified,
+            "email_verified_at": current_user.email_verified_at,
+            "created_at": current_user.created_at,
+        }
     }
+
+@router.patch("/me")
+async def update_profile(
+    payload: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = CandidatRepository.update_profile(
+        db=db,
+        user=current_user,
+        payload=payload,
+    )
+
+    return {
+        "user": {
+            "id": current_user.id,
+            "fullname": current_user.fullname,
+            "email": current_user.email,
+            "role": current_user.role,
+            "is_active": current_user.is_active,
+            "must_change_password": current_user.must_change_password,
+            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "email_verified": current_user.email_verified,
+            "email_verified_at": current_user.email_verified_at,
+            "created_at": current_user.created_at,
+        }
+    }
+
+@router.post("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="File is required")
+
+    ext = Path(file.filename).suffix.lower()
+    if ext not in {".jpg", ".jpeg", ".png", ".gif", ".webp"}:
+        raise HTTPException(status_code=400, detail="Invalid image type. Allowed: jpg, jpeg, png, gif, webp")
+
+    unique_name = f"{uuid.uuid4()}{ext}"
+    file_path = AVATAR_DIR / unique_name
+
+    with file_path.open("wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    current_user.avatar = f"/storage/avatars/{unique_name}"
+    db.commit()
+    db.refresh(current_user)
+   
+    return {
+        "user": {
+            "id": current_user.id,
+            "fullname": current_user.fullname,
+            "email": current_user.email,
+            "role": current_user.role,
+            "is_active": current_user.is_active,
+            "must_change_password": current_user.must_change_password,
+            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "email_verified": current_user.email_verified,
+            "email_verified_at": current_user.email_verified_at,
+            "created_at": current_user.created_at,
+        }
+    }
+
 @router.post("/logout")
 def logout(response: Response):
     response.delete_cookie(

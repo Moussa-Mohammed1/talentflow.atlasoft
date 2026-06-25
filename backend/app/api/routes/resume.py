@@ -25,9 +25,15 @@ from app.services.resume_extraction.extractor import TextExtractionService
 from app.services.resume_extraction.extractor import UnsupportedFileTypeError
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
 from app.services.experience_extraction.pipeline import PretrainedBilingualExperienceExtractor
+from app.services.language_extraction.pipeline import ResumeLanguageExtractionPipeline
 from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
 from app.services.notification_manager import notification_manager
 from app.services.notification_service import NotificationService
+from app.models.job import JobType
+from app.repositories.language_repository import LanguageRepository
+from app.schemas.language_extraction import ResumeLanguageRead, ResumeLanguageAnalysisRead
+from app.schemas.job import JobCreate, JobStatusUpdate
+from app.services.job_service import JobService
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 logger = logging.getLogger(__name__)
 
@@ -45,6 +51,20 @@ def _create_notification(background_tasks: BackgroundTasks, factory, *args, **kw
 		logger.exception("Could not create resume workflow notification")
 		return
 	_queue_notification(background_tasks, notification)
+
+
+def _create_job(db: Session, recruiter_id: int, job_type: JobType, target: str, message: str | None = None) -> int:
+	"""Create a background job and return its ID."""
+	job_service = JobService(db)
+	job_in = JobCreate(recruiter_id=recruiter_id, type=job_type, target=target, message=message)
+	job = job_service.create_job(job_in)
+	return job.id
+
+
+def _update_job_status(db: Session, job_id: int, recruiter_id: int, status: str, message: str | None = None) -> None:
+	"""Update job status."""
+	job_service = JobService(db)
+	job_service.update_job_status(job_id, recruiter_id, JobStatusUpdate(status=status, message=message))
 
 
 @router.post("/upload", response_model=ResumeRead, status_code=status.HTTP_201_CREATED)
@@ -78,15 +98,40 @@ def analyze_resume(
 	text_extractor = TextExtractionService()
 	skill_extractor = PretrainedBilingualExtractor()
 	experience_extractor = PretrainedBilingualExperienceExtractor()
+	language_extractor = ResumeLanguageExtractionPipeline()
 	resume = get_resume_by_path(path=payload.path, recruiter_id=current_user.id, db=db)
 	if resume is None:
 		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
+	# Create jobs for skill extraction, experience extraction and language extraction
+	skill_job_id = _create_job(db, current_user.id, JobType.SKILL_EXTRACTION, Path(resume.path).name, "Extracting skills from resume")
+	experience_job_id = _create_job(db, current_user.id, JobType.EXPERIENCE_EXTRACTION, Path(resume.path).name, "Extracting experience from resume")
+	language_job_id = _create_job(db, current_user.id, JobType.LANGUAGE_EXTRACTION, Path(resume.path).name, "Extracting languages from resume")
+
 	try:
+		_update_job_status(db, skill_job_id, current_user.id, "running", "Extracting skills from resume")
+		_update_job_status(db, experience_job_id, current_user.id, "running", "Extracting experience from resume")
+		_update_job_status(db, language_job_id, current_user.id, "running", "Extracting languages from resume")
+		
 		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 
 		skill_result = skill_extractor.extract_skills(raw_text)
+		_update_job_status(db, skill_job_id, current_user.id, "completed", f"Found {len(skill_result.get('technologies', [])) + len(skill_result.get('competencies', []))} skills")
+		
 		experience_result = experience_extractor.extract_experiences(raw_text)
+		_update_job_status(db, experience_job_id, current_user.id, "completed", f"Found {len(experience_result.get('experiences', []))} experiences")
+
+		language_result = language_extractor.extract_languages(raw_text)
+		lang_count = len(language_result.get("languages", []))
+		_update_job_status(db, language_job_id, current_user.id, "completed", f"Found {lang_count} language(s)")
+
+		language_analysis = ResumeLanguageAnalysisRead.model_validate(
+			{
+				"sections": language_result.get("sections", []),
+				"languages": language_result.get("languages", []),
+				"stats": language_result.get("stats", {}),
+			}
+		)
 
 		def _convert_mention(m: dict) -> dict:
 			signals = m.get("scores", {})
@@ -135,11 +180,16 @@ def analyze_resume(
 			stored_experiences = ExperienceRepository.replace_for_candidate(
 				db, candidat_id=candidat.id, experiences=experience_analysis.experiences,
 			)
+			stored_languages = LanguageRepository.replace_for_candidate(
+				db, candidat_id=candidat.id, languages=language_analysis.languages,
+			)
 			experience_analysis.stats["skills_persisted_count"] = len(stored_skills)
 			experience_analysis.stats["persisted_count"] = len(stored_experiences)
+			experience_analysis.stats["languages_persisted_count"] = len(stored_languages)
 		else:
 			experience_analysis.stats["skills_persisted_count"] = 0
 			experience_analysis.stats["persisted_count"] = 0
+			experience_analysis.stats["languages_persisted_count"] = 0
 			experience_analysis.stats["persistence_reason"] = "candidate_identity_not_extracted"
 
 	except UnsupportedFileTypeError as e:
@@ -181,6 +231,7 @@ def analyze_resume(
 		raw_text=raw_text,
 		analysis=ResumeSkillAnalysisRead.model_validate(converted_skills),
 		experience=experience_analysis.model_dump(),
+		languages=language_analysis.model_dump(),
 	)
 	_create_notification(
 		background_tasks,
@@ -203,15 +254,40 @@ def re_analyze_resume(
     text_extractor = TextExtractionService()
     skill_extractor = PretrainedBilingualExtractor()
     experience_extractor = PretrainedBilingualExperienceExtractor()
+    language_extractor = ResumeLanguageExtractionPipeline()
     resume = get_resume_by_id(resume_id=payload.resume_id, recruiter_id=current_user.id, db=db)
     if resume is None:
         raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
+    # Create jobs for skill extraction, experience extraction and language extraction
+    skill_job_id = _create_job(db, current_user.id, JobType.SKILL_EXTRACTION, Path(resume.path).name, "Re-extracting skills from resume")
+    experience_job_id = _create_job(db, current_user.id, JobType.EXPERIENCE_EXTRACTION, Path(resume.path).name, "Re-extracting experience from resume")
+    language_job_id = _create_job(db, current_user.id, JobType.LANGUAGE_EXTRACTION, Path(resume.path).name, "Re-extracting languages from resume")
+
     try:
+        _update_job_status(db, skill_job_id, current_user.id, "running", "Re-extracting skills from resume")
+        _update_job_status(db, experience_job_id, current_user.id, "running", "Re-extracting experience from resume")
+        _update_job_status(db, language_job_id, current_user.id, "running", "Re-extracting languages from resume")
+        
         raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 
         skill_result = skill_extractor.extract_skills(raw_text)
+        _update_job_status(db, skill_job_id, current_user.id, "completed", f"Found {len(skill_result.get('technologies', [])) + len(skill_result.get('competencies', []))} skills")
+        
         experience_result = experience_extractor.extract_experiences(raw_text)
+        _update_job_status(db, experience_job_id, current_user.id, "completed", f"Found {len(experience_result.get('experiences', []))} experiences")
+
+        language_result = language_extractor.extract_languages(raw_text)
+        lang_count = len(language_result.get("languages", []))
+        _update_job_status(db, language_job_id, current_user.id, "completed", f"Found {lang_count} language(s)")
+
+        language_analysis = ResumeLanguageAnalysisRead.model_validate(
+            {
+                "sections": language_result.get("sections", []),
+                "languages": language_result.get("languages", []),
+                "stats": language_result.get("stats", {}),
+            }
+        )
 
         def _convert_mention(m: dict) -> dict:
             signals = m.get("scores", {})
@@ -265,8 +341,12 @@ def re_analyze_resume(
         stored_experiences = ExperienceRepository.replace_for_candidate(
             db, candidat_id=candidat.id, experiences=experience_analysis.experiences,
         )
+        stored_languages = LanguageRepository.replace_for_candidate(
+            db, candidat_id=candidat.id, languages=language_analysis.languages,
+        )
         experience_analysis.stats["skills_persisted_count"] = len(stored_skills)
         experience_analysis.stats["persisted_count"] = len(stored_experiences)
+        experience_analysis.stats["languages_persisted_count"] = len(stored_languages)
 
     except UnsupportedFileTypeError as e:
         _create_notification(
@@ -307,6 +387,7 @@ def re_analyze_resume(
         raw_text=raw_text,
         analysis=ResumeSkillAnalysisRead.model_validate(converted_skills),
         experience=experience_analysis.model_dump(),
+        languages=language_analysis.model_dump(),
     )
     _create_notification(
         background_tasks,
@@ -332,10 +413,16 @@ def extract_identity(
 	if resume is None:
 		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
+	# Create job for identity extraction
+	identity_job_id = _create_job(db, current_user.id, JobType.IDENTITY_EXTRACTION, Path(resume.path).name, "Extracting candidate identity")
+
 	try:
+		_update_job_status(db, identity_job_id, current_user.id, "running", "Extracting candidate identity")
 		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 		identity = identity_extractor.analyze(raw_text)
+		_update_job_status(db, identity_job_id, current_user.id, "completed", "Identity extraction completed")
 	except UnsupportedFileTypeError as e:
+		_update_job_status(db, identity_job_id, current_user.id, "failed", f"Failed to extract identity: {str(e)}")
 		raise HTTPException(
 			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
 			detail=str(e) + ", allowed: pdf, docx",
@@ -389,10 +476,16 @@ def reanalyze_identity(
 	text_extractor = TextExtractionService()
 	identity_extractor = ResumeIdentityPipeline()
 
+	# Create job for identity extraction
+	identity_job_id = _create_job(db, current_user.id, JobType.IDENTITY_EXTRACTION, Path(resume.path).name, "Re-extracting candidate identity")
+
 	try:
+		_update_job_status(db, identity_job_id, current_user.id, "running", "Re-extracting candidate identity")
 		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 		identity = identity_extractor.analyze(raw_text)
+		_update_job_status(db, identity_job_id, current_user.id, "completed", "Identity re-extraction completed")
 	except UnsupportedFileTypeError as e:
+		_update_job_status(db, identity_job_id, current_user.id, "failed", f"Failed to re-extract identity: {str(e)}")
 		raise HTTPException(
 			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
 			detail=str(e) + ", allowed: pdf, docx",
@@ -434,10 +527,16 @@ def extract_experience(
 	if resume is None:
 		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
 
+	# Create job for experience extraction
+	experience_job_id = _create_job(db, current_user.id, JobType.EXPERIENCE_EXTRACTION, Path(resume.path).name, "Extracting experience from resume")
+
 	try:
+		_update_job_status(db, experience_job_id, current_user.id, "running", "Extracting experience from resume")
 		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
 		extracted = experience_extractor.extract_experiences(raw_text)
+		_update_job_status(db, experience_job_id, current_user.id, "completed", f"Found {len(extracted.get('experiences', []))} experiences")
 	except UnsupportedFileTypeError as e:
+		_update_job_status(db, experience_job_id, current_user.id, "failed", f"Failed to extract experience: {str(e)}")
 		raise HTTPException(
 			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
 			detail=str(e) + ", allowed: pdf, docx",
@@ -463,6 +562,64 @@ def extract_experience(
 		analysis.stats["persistence_reason"] = "candidate_identity_not_extracted"
 
 	return ResumeExperienceRead(raw_text=raw_text, analysis=analysis)
+
+
+@router.post("/language", response_model=ResumeLanguageRead, status_code=status.HTTP_200_OK)
+def extract_language(
+	payload: ResumePathRequest,
+	background_tasks: BackgroundTasks,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	text_extractor = TextExtractionService()
+	language_extractor = ResumeLanguageExtractionPipeline()
+	resume = get_resume_by_path(path=payload.path, recruiter_id=current_user.id, db=db)
+	if resume is None:
+		raise HTTPException(status_code=404, detail="Resume was not found for this recruiter")
+
+	language_job_id = _create_job(db, current_user.id, JobType.LANGUAGE_EXTRACTION, Path(resume.path).name, "Extracting languages from resume")
+
+	try:
+		_update_job_status(db, language_job_id, current_user.id, "running", "Extracting languages from resume")
+		raw_text = text_extractor.extract(str(resolve_stored_resume_path(resume.path)))
+		extracted = language_extractor.extract_languages(raw_text)
+		lang_count = len(extracted.get("languages", []))
+		_update_job_status(db, language_job_id, current_user.id, "completed", f"Found {lang_count} language(s)")
+	except UnsupportedFileTypeError as e:
+		_update_job_status(db, language_job_id, current_user.id, "failed", f"Failed to extract languages: {str(e)}")
+		raise HTTPException(
+			status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+			detail=str(e) + ", allowed: pdf, docx",
+		)
+
+	analysis = ResumeLanguageAnalysisRead.model_validate(
+		{
+			"sections": extracted.get("sections", []),
+			"languages": extracted.get("languages", []),
+			"stats": extracted.get("stats", {}),
+		}
+	)
+	candidat = CandidatRepository.get_by_resume_id(db, resume.id)
+	if candidat is not None:
+		stored = LanguageRepository.replace_for_candidate(
+			db,
+			candidat_id=candidat.id,
+			languages=analysis.languages,
+		)
+		analysis.stats["persisted_count"] = len(stored)
+	else:
+		analysis.stats["persisted_count"] = 0
+		analysis.stats["persistence_reason"] = "candidate_identity_not_extracted"
+
+	_create_notification(
+		background_tasks,
+		NotificationService.language_extraction_completed,
+		db,
+		recruiter_id=current_user.id,
+		language_count=lang_count,
+	)
+	return ResumeLanguageRead(raw_text=raw_text, analysis=analysis)
+
 
 @router.get('/', response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
 def get_resumes(db: Session = Depends(get_db)):

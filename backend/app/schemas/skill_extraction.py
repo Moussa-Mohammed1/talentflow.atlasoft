@@ -44,5 +44,6 @@ class ResumeAnalysisRead(BaseModel):
     raw_text: str
     analyzed_at: datetime = Field(default_factory=datetime.utcnow)
     analysis: ResumeSkillAnalysisRead
+    experience: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)

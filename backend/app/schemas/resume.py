@@ -20,6 +20,9 @@ class ResumeTextRead(BaseModel):
 class ResumePathRequest(BaseModel):
 	path: str
 
+class ResumeIdRequest(BaseModel):
+	resume_id: int
+
 class DocumentListSchema(BaseModel):
 	id: str
 	name: str
@@ -38,3 +41,61 @@ class ResumeDetailSchema(BaseModel):
 	importDate: str
 	fileSize: str
 	category: str
+
+
+class CandidatDetailSchema(BaseModel):
+	id: int
+	fullname: str
+	email: str
+	phone: str
+	created_at: datetime | None = None
+
+
+class ExperienceDetailSchema(BaseModel):
+	id: int
+	title: str
+	description: str | None = None
+	start_date: str
+	end_date: str | None = None
+
+
+class EducationDetailSchema(BaseModel):
+	id: int
+	institution: str
+	degree: str | None = None
+	field_of_study: str | None = None
+	start_date: str | None = None
+	end_date: str | None = None
+	description: str | None = None
+
+
+class CertificationDetailSchema(BaseModel):
+	id: int
+	name: str
+	organization: str
+	issue_date: str | None = None
+	expiration_date: str | None = None
+	credential_id: str | None = None
+	credential_url: str | None = None
+	description: str | None = None
+
+
+class SkillDetailSchema(BaseModel):
+	id: int
+	name: str
+	category_name: str
+
+
+class LanguageDetailSchema(BaseModel):
+	id: int
+	name: str
+
+
+class ResumeFullDetailSchema(BaseModel):
+	resume_id: int
+	candidat: CandidatDetailSchema
+	experiences: list[ExperienceDetailSchema]
+	educations: list[EducationDetailSchema]
+	certifications: list[CertificationDetailSchema]
+	skills: list[SkillDetailSchema]
+	languages: list[LanguageDetailSchema]

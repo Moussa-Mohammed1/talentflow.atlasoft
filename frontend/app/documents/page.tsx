@@ -46,40 +46,36 @@ export default function DocumentsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    let isMounted = true;
-    let loadedDocuments: DocumentListItem[] = [];
-
-    async function loadDocuments() {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const resumeDocuments = await getResumeDocuments();
-        loadedDocuments = resumeDocuments;
-
-        if (isMounted) {
-          setDocuments(resumeDocuments);
-        } else {
-          revokeResumeDocumentPreviews(resumeDocuments);
-        }
-      } catch {
-        if (isMounted) {
-          setError("Impossible de charger les documents pour le moment.");
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
+  const loadDocuments = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const resumeDocuments = await getResumeDocuments();
+      setDocuments(resumeDocuments);
+      return resumeDocuments;
+    } catch {
+      setError("Impossible de charger les documents pour le moment.");
+    } finally {
+      setIsLoading(false);
     }
+  }, []);
 
-    loadDocuments();
+  useEffect(() => {
+    let loadedDocuments: DocumentListItem[] = [];
+    let cancelled = false;
+
+    (async () => {
+      const result = await loadDocuments();
+      if (!cancelled && result) {
+        loadedDocuments = result;
+      }
+    })();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
       revokeResumeDocumentPreviews(loadedDocuments);
     };
-  }, []);
+  }, [loadDocuments]);
 
   const deduplicatedDocuments = useMemo(() => {
     const seen = new Set<string>();
@@ -229,6 +225,9 @@ export default function DocumentsPage() {
             setSelectedDetails(null);
           }}
           data={selectedDetails}
+          onDeleted={() => {
+            loadDocuments();
+          }}
         />
       )}
 

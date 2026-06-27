@@ -482,7 +482,7 @@ export default function ProfilePage() {
                   if (field.key === "created_at") {
                     displayValue = formatDate(rawValue as string);
                   } else if (typeof rawValue === "boolean") {
-                    displayValue = rawValue ? "Active" : "Suspendue";
+                    displayValue = rawValue ? "Active" : "Non";
                   } else {
                     displayValue = rawValue?.toString() || "-";
                   }

@@ -1,9 +1,11 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileSection from "../user/ProfileSection";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+    Menu,
+    X,
     ChevronRight,
     ChevronLeft,
     Home,
@@ -13,20 +15,27 @@ import {
     Building2,
     FolderOpen,
     MailPlus,
+    LampDesk,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 
 export default function Sidebar() {
     const [collapsed, setCollapsed] = useState(true);
+    const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
     const { isModalOpen } = useModal();
     
+    useEffect(() => {
+      setMobileOpen(false);
+    }, [pathname]);
+
     if(isModalOpen) return null;
 
     const sidebarItems = [
       { icon: <Home size={16} />, label: "Accueil", href: "/dashboard", active: true },
       { icon: <Users size={16} />, label: "Talents", href: "/talents" },
-      { icon: <Briefcase size={16} />, label: "Recrutement", href: "/recrutement" },
+      { icon: <Briefcase size={16} />, label: "Offre d'emploi", href: "/jobs" },
+      { icon: <LampDesk size={16} />, label: "Recruter", href: "/recrutement" },
       { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
@@ -35,29 +44,86 @@ export default function Sidebar() {
 
     return (
       <>
-         
-        {!collapsed && (
+        {/* Mobile hamburger button */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg bg-white border border-slate-200 shadow-md hover:bg-slate-50 transition-colors cursor-pointer"
+          aria-label="Ouvrir le menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        {/* Mobile overlay */}
+        {mobileOpen && (
           <div 
             className="fixed inset-0 bg-slate-900/20 z-40 md:hidden transition-opacity"
-            onClick={() => setCollapsed(true)}
+            onClick={() => setMobileOpen(false)}
           />
         )}
 
-         
+        {/* Mobile sidebar overlay */}
+        <aside className={`
+          fixed md:hidden top-0 left-0 z-50 h-screen bg-white border-r border-slate-100 flex flex-col justify-between p-3
+          transition-transform duration-300 ease-in-out w-56 shadow-xl
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+        `}>
+          <div>
+            <div className="flex items-center justify-between px-1.5 py-3 mb-2 select-none">
+              <Image
+                src="/images/logo.png"
+                alt="3GCOM Logo"
+                width={40}
+                height={20}
+                className="object-contain"
+                priority
+              />
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="p-1 rounded cursor-pointer hover:bg-slate-200 bg-slate-100 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <nav className="space-y-0.5">
+              {sidebarItems.map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.href}
+                  className={`w-full flex items-center focus:scale-95 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    pathname === item.href
+                      ? "bg-slate-50 text-slate-900 border"
+                      : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </div>
+                </Link>
+              ))}
+            </nav>
+          </div>
+
+          <div className="border-t border-slate-100 pt-3 w-full">
+            <ProfileSection collapsed={false} />
+          </div>
+        </aside>
+
+        {/* Desktop sidebar */}
         <div 
-          className={`shrink-0 h-screen sticky top-0 z-40 group/sidebar ${
+          className={`shrink-0 h-screen sticky top-0 z-40 group/sidebar hidden md:block ${
             collapsed 
-              ? "w-16 md:hover:w-56 transition-all duration-300 ease-in-out" 
-              : "w-0 md:w-56 transition-none"
+              ? "w-16 hover:w-56 transition-all duration-300 ease-in-out" 
+              : "w-56 transition-none"
           }`}
         >
-           
           <aside
             className={`
               bg-white border-r border-slate-100 flex flex-col justify-between p-3 h-screen top-0 left-0
               ${collapsed 
-                ? "absolute w-16 group-hover/sidebar:w-56 z-50 shadow-md group-hover/sidebar:shadow-xl md:shadow-none transition-all duration-300 ease-in-out" 
-                : "fixed md:sticky w-56 z-50 shadow-xl md:shadow-none transition-none"
+                ? "absolute w-16 group-hover/sidebar:w-56 z-50 shadow-md group-hover/sidebar:shadow-xl shadow-none transition-all duration-300 ease-in-out" 
+                : "sticky w-56 shadow-xl shadow-none transition-none"
               }
             `}
           >    
@@ -72,7 +138,7 @@ export default function Sidebar() {
                   className="object-contain"
                   priority
                 />
-
+{/* 
                 <button
                   onClick={() => setCollapsed(!collapsed)}
                   className={`
@@ -85,7 +151,7 @@ export default function Sidebar() {
                   ) : (
                     <ChevronLeft size={18} />
                   )}
-                </button>
+                </button> */}
               </div>
 
                

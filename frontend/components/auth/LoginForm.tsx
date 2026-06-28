@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { AuthService } from "@/services/auth.service";
-import { useAuthStore } from "@/store/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
+import { useToastStore } from "@/stores/toast-store";
 
 export default function LoginForm() {
     const [email, setEmail] = useState("");
@@ -17,26 +18,38 @@ export default function LoginForm() {
     const [error, setError] = useState<any>(null);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { addToast } = useToastStore();
 
     const { setUser, setToken } = useAuthStore();
+
+    useEffect(() => {
+        if (searchParams.get("expired") === "true") {
+            addToast({
+                type: "warning",
+                message: "session expiré, veuillez se connecter a nouveau",
+                duration: 5000,
+            });
+        }
+    }, [searchParams, addToast]);
 
     const handleLogin = async (
         e: React.FormEvent<HTMLFormElement>,
     ) => {
         e.preventDefault();
-        console.log("starting");
+     
         
         setError("");
         setLoading(true);
 
         try {
-            console.log("calling api");
+          
             
         const response = await AuthService.login(
             email,
             password
         );
-        console.log(response);
+        
         
         const token = response.access_token;
 
@@ -50,13 +63,12 @@ export default function LoginForm() {
         const user = await AuthService.me();
 
         setUser(response.user);
-
         router.push("/dashboard");
 
         } catch (err: any) {
         setError(
             err?.response?.data?.detail ||
-            "Adresse e-mail ou mot de passe incorrect."
+            "Une erreur de connexion est survenue. Nous vous invitons à réessayer plus tard."
         );
         } finally {
         setLoading(false);

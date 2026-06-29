@@ -38,7 +38,7 @@ class LLMSkillVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen"}
+        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
     def verify(self, candidate: str, evidence: list[str], section: str) -> LLMVerification:
         if not self.available:

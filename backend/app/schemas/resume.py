@@ -99,3 +99,35 @@ class ResumeFullDetailSchema(BaseModel):
 	certifications: list[CertificationDetailSchema]
 	skills: list[SkillDetailSchema]
 	languages: list[LanguageDetailSchema]
+
+
+class CandidatUpdateSchema(BaseModel):
+	fullname: str | None = None
+	email: str | None = None
+	phone: str | None = None
+
+
+class ExperienceUpdateSchema(BaseModel):
+	title: str | None = None
+	description: str | None = None
+	start_date: str | None = None
+	end_date: str | None = None
+
+
+class EducationUpdateSchema(BaseModel):
+	institution: str | None = None
+	degree: str | None = None
+	field_of_study: str | None = None
+	start_date: str | None = None
+	end_date: str | None = None
+	description: str | None = None
+
+
+class CertificationUpdateSchema(BaseModel):
+	name: str | None = None
+	organization: str | None = None
+	issue_date: str | None = None
+	expiration_date: str | None = None
+	credential_id: str | None = None
+	credential_url: str | None = None
+	description: str | None = None

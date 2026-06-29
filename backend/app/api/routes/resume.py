@@ -16,7 +16,7 @@ from app.repositories.experience_repository import ExperienceRepository
 from app.repositories.skill_repository import SkillRepository
 from app.schemas.experience_extraction import ResumeExperienceAnalysisRead, ResumeExperienceRead
 from app.schemas.identity_extraction import ResumeIdentityRead
-from app.schemas.resume import ResumePathRequest, ResumeIdRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema, ResumeFullDetailSchema
+from app.schemas.resume import ResumePathRequest, ResumeIdRequest, ResumeRead, ResumeTextRead, DocumentListSchema, ResumeDetailSchema, ResumeFullDetailSchema, CandidatUpdateSchema, ExperienceUpdateSchema, EducationUpdateSchema, CertificationUpdateSchema
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
 from app.services.resume_service import create_resume, get_resume_by_path, get_resume_by_id, resolve_stored_resume_path, get_resumes_list, get_resume_detail, get_full_resume_detail, delete_resume_and_file
 from app.repositories.resumer_repository import ResumeRepository
@@ -619,6 +619,110 @@ def extract_language(
 		language_count=lang_count,
 	)
 	return ResumeLanguageRead(raw_text=raw_text, analysis=analysis)
+
+
+@router.patch('/{resume_id}/candidat', status_code=status.HTTP_200_OK)
+def update_candidat(
+	resume_id: int,
+	payload: CandidatUpdateSchema,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	resume = get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+	candidat = db.query(Candidat).filter(Candidat.resume_id == resume.id).first()
+	if not candidat:
+		raise HTTPException(status_code=404, detail="No candidate found for this resume")
+	if payload.fullname is not None:
+		candidat.fullname = payload.fullname
+	if payload.email is not None:
+		candidat.email = payload.email
+	if payload.phone is not None:
+		candidat.phone = payload.phone
+	db.commit()
+	db.refresh(candidat)
+	return {"status": "success", "message": "Candidate updated"}
+
+
+@router.patch('/experience/{experience_id}', status_code=status.HTTP_200_OK)
+def update_experience(
+	experience_id: int,
+	payload: ExperienceUpdateSchema,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	from app.models.experience import Experience
+	from datetime import datetime
+	exp = db.query(Experience).filter(Experience.id == experience_id).first()
+	if not exp:
+		raise HTTPException(status_code=404, detail="Experience not found")
+	if payload.title is not None:
+		exp.title = payload.title
+	if payload.description is not None:
+		exp.description = payload.description
+	if payload.start_date is not None:
+		exp.start_date = datetime.strptime(payload.start_date, "%Y-%m-%d") if payload.start_date else None
+	if payload.end_date is not None:
+		exp.end_date = datetime.strptime(payload.end_date, "%Y-%m-%d") if payload.end_date else None
+	db.commit()
+	return {"status": "success", "message": "Experience updated"}
+
+
+@router.patch('/education/{education_id}', status_code=status.HTTP_200_OK)
+def update_education(
+	education_id: int,
+	payload: EducationUpdateSchema,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	from app.models.education import Education
+	from datetime import datetime
+	edu = db.query(Education).filter(Education.id == education_id).first()
+	if not edu:
+		raise HTTPException(status_code=404, detail="Education not found")
+	if payload.institution is not None:
+		edu.institution = payload.institution 
+	if payload.degree is not None:
+		edu.degree = payload.degree
+	if payload.field_of_study is not None:
+		edu.field_of_study = payload.field_of_study
+	if payload.start_date is not None:
+		edu.start_date = datetime.strptime(payload.start_date, "%Y-%m-%d") if payload.start_date else None
+	if payload.end_date is not None:
+		edu.end_date = datetime.strptime(payload.end_date, "%Y-%m-%d") if payload.end_date else None
+	if payload.description is not None:
+		edu.description = payload.description
+	db.commit()
+	return {"status": "success", "message": "Education updated"}
+
+
+@router.patch('/certification/{certification_id}', status_code=status.HTTP_200_OK)
+def update_certification(
+	certification_id: int,
+	payload: CertificationUpdateSchema,
+	db: Session = Depends(get_db),
+	current_user: User = Depends(get_current_user),
+):
+	from app.models.certification import Certification
+	from datetime import datetime
+	cert = db.query(Certification).filter(Certification.id == certification_id).first()
+	if not cert:
+		raise HTTPException(status_code=404, detail="Certification not found")
+	if payload.name is not None:
+		cert.name = payload.name
+	if payload.organization is not None:
+		cert.organization = payload.organization
+	if payload.issue_date is not None:
+		cert.issue_date = datetime.strptime(payload.issue_date, "%Y-%m-%d") if payload.issue_date else None
+	if payload.expiration_date is not None:
+		cert.expiration_date = datetime.strptime(payload.expiration_date, "%Y-%m-%d") if payload.expiration_date else None
+	if payload.credential_id is not None:
+		cert.credential_id = payload.credential_id
+	if payload.credential_url is not None:
+		cert.credential_url = payload.credential_url
+	if payload.description is not None:
+		cert.description = payload.description
+	db.commit()
+	return {"status": "success", "message": "Certification updated"}
 
 
 @router.get('/', response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)

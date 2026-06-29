@@ -7,7 +7,7 @@ class Education(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    candidat_id = Column(Integer, ForeignKey("candidats.id"))
+    candidat_id = Column(Integer, ForeignKey("candidats.id", ondelete="CASCADE"))
     
     institution = Column(String, nullable=True)
 

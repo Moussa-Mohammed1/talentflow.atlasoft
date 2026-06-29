@@ -7,7 +7,7 @@ class Certification(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    candidat_id =Column(Integer, ForeignKey("candidats.id"))
+    candidat_id = Column(Integer, ForeignKey("candidats.id", ondelete="CASCADE"))
 
     name = Column(String, nullable=True)
 

@@ -4,46 +4,39 @@ import json
 import os
 from typing import Any
 
-import requests
+from openai import OpenAI
 
 
 class LLMService:
-    DEFAULT_ENDPOINT = "http://localhost:11434/api/generate"
-    DEFAULT_MODEL = "qwen3:8b"
+    DEFAULT_MODEL = "deepseek-chat"
+    DEFAULT_ENDPOINT = "https://api.deepseek.com/v1"
 
     @classmethod
-    def endpoint(cls) -> str:
-        return os.getenv("TALENTFLOW_SKILL_LLM_ENDPOINT", cls.DEFAULT_ENDPOINT).strip() or cls.DEFAULT_ENDPOINT
+    def _client(cls) -> OpenAI:
+        api_key = os.getenv("LLM_API_KEY", "").strip()
+        if not api_key:
+            raise ValueError("LLM_API_KEY is not set in .env")
+        return OpenAI(api_key=api_key, base_url=cls.DEFAULT_ENDPOINT)
 
     @classmethod
     def model(cls) -> str:
-        return os.getenv("TALENTFLOW_SKILL_LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
+        return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
 
     @classmethod
     def validate(cls, text: str, skills: list[dict[str, Any]] | list[str]) -> dict[str, Any]:
-        prompt = "/no_think\n" + cls._build_skill_review_prompt(text, skills)
-        print("calling ollama...")
-        print(f"current timeout : {float(os.getenv('TALENTFLOW_SKILL_LLM_TIMEOUT', '300'))}\n")
-        response = requests.post(
-            cls.endpoint(),
-            json={
-                "model": cls.model(),
-                "prompt": prompt,
-                "stream": False,
-                "think": False,
-                "options": {
-                    "temperature": float(os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1")),
-                    "top_p": float(os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8")),
-                    "num_predict": int(os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "2048")),
-                },
-            },
-            timeout=float(os.getenv("TALENTFLOW_SKILL_LLM_TIMEOUT", "300")),
+        prompt = cls._build_skill_review_prompt(text, skills)
+        print("calling deepseek...")
+        response = cls._client().chat.completions.create(
+            model=cls.model(),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=float(os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1")),
+            top_p=float(os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8")),
+            max_tokens=int(os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "4096")),
         )
+        content = response.choices[0].message.content or ""
         print("printing result...")
-        print(response.text)
-        response.raise_for_status()
-        payload = response.json()
-        return cls._parse_json_response(str(payload.get("response", "")))
+        print(content)
+        return cls._parse_json_response(content)
 
     @staticmethod
     def _build_skill_review_prompt(text: str, skills: list[dict[str, Any]] | list[str]) -> str:

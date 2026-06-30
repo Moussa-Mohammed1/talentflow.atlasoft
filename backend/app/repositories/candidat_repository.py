@@ -57,10 +57,14 @@ class CandidatRepository:
         filters = []
         if email: 
             filters.append(Candidat.email == email.strip())
+        else:
+            return None
         if phone:
             filters.append(Candidat.phone == phone.strip())
-        
+        else:
+            return None
         candidat = db.query(Candidat).filter(or_(*filters)).first()
+
         if candidat is None:
             return None
         return candidat.resume_id == resume_id

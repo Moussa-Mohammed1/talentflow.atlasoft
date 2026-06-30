@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 import secrets
 
@@ -8,6 +9,8 @@ from app.models.user import User
 from app.models.invitation import Invitation
 from app.services.email_service import EmailService
 from app.core.security import hash_password
+
+EMAIL_SUFFIX = os.getenv("EMAIL_SUFFIX")
 
 
 class InvitationService:
@@ -20,6 +23,12 @@ class InvitationService:
         email: str,
         invited_by: int,
     ):
+
+        if not email.lower().endswith(EMAIL_SUFFIX):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Les invitations sont réservées aux adresses {EMAIL_SUFFIX}"
+            )
 
         existing_user = (
             db.query(User)

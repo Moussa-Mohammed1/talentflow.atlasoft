@@ -1,19 +1,34 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronRight, User, Settings, LogOut, Loader2 } from "lucide-react";
 import { AuthService } from "@/services/auth.service";
+import { useAuthStore } from "@/stores/auth.store";
+import { useRouter } from "next/navigation";
+
 interface ProfileSectionProps {
     collapsed: boolean;
+}
+
+function getInitials(name: string): string {
+    if (!name) return "?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase() || "?";
 }
 
 export default function ProfileSection({
     collapsed,
 }: ProfileSectionProps) {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const router = useRouter();
+    const user = useAuthStore((state) => state.user);
+
+    const initials = useMemo(() => getInitials(user?.fullname ?? ""), [user?.fullname]);
 
     const handleLogout = async () => {
         try {
             setIsLoggingOut(true);
-
             await AuthService.logout();
             window.location.href = "/login";
         } catch (error) {
@@ -36,8 +51,6 @@ export default function ProfileSection({
             tabIndex={0} 
             onBlur={handleBlur}
         >
-            
-             
             <div
                 className={`
                     absolute bottom-full left-0 w-full bg-white border border-slate-100 
@@ -50,7 +63,9 @@ export default function ProfileSection({
                     }
                 `}
             >
-                <button className="w-full flex items-center gap-2 px-2.5 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors cursor-pointer text-left">
+                <button 
+                    onClick={() => router.push("/profile")}
+                    className="w-full flex items-center gap-2 px-2.5 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors cursor-pointer text-left">
                     <User size={14} className="text-slate-400" />
                     <span className={`${collapsed ? "hidden group-hover/sidebar:block" : "block"}`}>
                         Mon Profil
@@ -99,7 +114,6 @@ export default function ProfileSection({
                 </button>
             </div>
 
-            
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
@@ -114,12 +128,18 @@ export default function ProfileSection({
                 `}
             >
                 <div className="flex items-center gap-2.5">
-                     
-                    <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-[10px] shrink-0">
-                        MM
-                    </div>
+                    {user?.avatar ? (
+                        <img
+                            src={user.avatar}
+                            alt={user.fullname || ""}
+                            className="w-6 h-6 rounded-full object-cover shrink-0"
+                        />
+                    ) : (
+                        <div className="w-6 h-6 bg-slate-200 rounded-full flex items-center justify-center text-slate-600 font-bold text-[10px] shrink-0">
+                            {initials}
+                        </div>
+                    )}
 
-                     
                     <span
                         className={`
                             whitespace-nowrap transition-all duration-300
@@ -130,11 +150,10 @@ export default function ProfileSection({
                             }
                         `}
                     >
-                        Profil et paramètres
+                        {user?.fullname || "Profil et paramètres"}
                     </span>
                 </div>
 
-               
                 <ChevronRight
                     size={14}
                     className={`

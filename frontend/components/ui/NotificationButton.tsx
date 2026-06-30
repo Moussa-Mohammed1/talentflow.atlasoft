@@ -62,7 +62,7 @@ export default function NotificationButton() {
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         onClick={() => setIsOpen((open) => !open)}
-        className="relative rounded-full border border-slate-200/60 bg-slate-50 p-2 text-slate-500 transition-all hover:bg-slate-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
+        className="relative rounded-full border border-black bg-slate-50 p-2 text-slate-500 transition-all hover:bg-slate-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-slate-400"
       >
         <Bell size={18} />
         {unreadCount > 0 && (

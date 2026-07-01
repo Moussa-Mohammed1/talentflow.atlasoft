@@ -43,10 +43,10 @@ export default function PasswordChangeBanner() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-xs w-full animate-toast-enter motion-reduce:animate-none">
-      <div className="relative bg-white border border-amber-200 rounded-xl shadow-lg p-4">
+      <div className="relative bg-white border border-amber-200 mrc shadow-lg p-4">
         <button
           onClick={handleDismiss}
-          className="absolute top-2 right-2 p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+          className="absolute top-2 right-2 p-1  text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
           aria-label="Fermer"
         >
           <X size={14} />
@@ -68,7 +68,7 @@ export default function PasswordChangeBanner() {
             <Link
               href="/profile"
               onClick={handleDismiss}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-800 hover:bg-blue-600 text-white text-[11px] font-semibold transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5  bg-blue-800 hover:bg-blue-600 text-white text-[11px] font-semibold transition-colors"
             >
               Aller au profil
               <ArrowRight size={12} />

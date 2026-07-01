@@ -76,7 +76,7 @@ export default function NotificationButton() {
         <section
           role="dialog"
           aria-label="Notifications"
-          className="absolute right-0 z-50 mt-2 w-[22rem] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl"
+          className="absolute right-0 z-50 mt-2 w-[22rem] overflow-hidden mrc border border-slate-200 bg-white shadow-xl"
         >
           <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
             <div>
@@ -114,7 +114,7 @@ export default function NotificationButton() {
                   notification.is_read ? "bg-white" : "bg-indigo-50/40"
                 }`}
               >
-                <span className="mt-0.5 h-fit shrink-0 rounded-lg bg-slate-100 p-1.5">
+                <span className="mt-0.5 h-fit shrink-0  bg-slate-100 p-1.5">
                   {iconByType[notification.type]}
                 </span>
                 <span className="min-w-0 flex-1">

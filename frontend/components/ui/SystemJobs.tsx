@@ -77,7 +77,7 @@ export default function SystemJobs() {
     <div className="relative inline-block text-left" ref={dropdownRef}>
      <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex items-center px-3.5 py-2 rounded-lg transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`group relative flex items-center px-3.5 py-2 transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             isOpen
             ? "bg-slate-100 text-slate-800 border-slate-300 shadow-inner"
             : "bg-white text-slate-600 border-black hover:bg-slate-50 hover:text-slate-800 shadow-sm"
@@ -105,7 +105,7 @@ export default function SystemJobs() {
         </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-120 not-lg:w-screen rounded-lg border border-slate-200 bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transform opacity-100 scale-100 transition-all">
+        <div className="absolute right-0 mt-2 w-120 not-lg:w-screen  border border-slate-200 bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transform opacity-100 scale-100 transition-all">
           <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-xl">
             <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
               Tâches de Fond

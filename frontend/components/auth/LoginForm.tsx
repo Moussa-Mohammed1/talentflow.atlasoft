@@ -76,7 +76,7 @@ export default function LoginForm() {
     };
 
     return (
-        <div className="bg-white w-full max-w-lg mx-auto rounded-xl shadow-md p-6 sm:p-8 relative z-20">
+        <div className="bg-white w-full max-w-lg mx-auto rounded-lg shadow-md p-6 sm:p-8 relative z-20">
         <h2 className="text-xl font-semibold text-slate-900 mb-6">
             Connexion
         </h2>
@@ -101,7 +101,7 @@ export default function LoginForm() {
                 setEmail(e.target.value)
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                className="w-full px-4 py-2.5 rounded-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
             />
 
             <p className="text-xs text-slate-400 mt-1.5">
@@ -124,7 +124,7 @@ export default function LoginForm() {
                 setPassword(e.target.value)
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                className="w-full rounded-sm px-4 py-2.5  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
             />
 
 
@@ -150,7 +150,7 @@ export default function LoginForm() {
                 type="submit"
                 disabled={!isFormValid || loading}
                 className={`
-                    w-full mt-2 py-3 px-4 font-semibold rounded-xl text-sm transition-colors duration-200
+                    w-full mt-2 py-3 px-4 rounded-lg font-semibold mrc text-sm transition-colors duration-200
                     ${
                     !isFormValid || loading
                         ? "bg-slate-200 text-slate-400 cursor-not-allowed"

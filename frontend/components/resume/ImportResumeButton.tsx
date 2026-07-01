@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import { useResumeImport } from "@/hooks/useResumeImport";
-import ImportProgessModal from "./ImportProgressModal";
+import ImportProgessModal from "./ImportProgress/ImportProgressModal";
 import {
   Plus,
   X,
@@ -120,10 +120,10 @@ export default function ImportResumeButton() {
         <div className="selection:bg-slate-200">
             <button 
                 onClick={openModal}
-                className="flex cursor-pointer hover:border-yellow-500 border items-center gap-1.5 bg-white hover:bg-black hover:text-white text-black font-medium text-xs px-3.5 py-2 rounded-lg shadow-sm hover:shadow transition-all"
+                className="flex cursor-pointer hover:border-yellow-500 border items-center gap-1.5 bg-white hover:bg-black hover:text-white text-black font-medium text-xs px-3.5 py-2 shadow-sm hover:shadow transition-all"
             >
                 
-                <span>Importer un candidat</span><Plus size={14} />
+                <span className="not-lg:hidden">Importer un candidat</span><Plus size={14} />
             </button>
 
             <div 
@@ -134,7 +134,7 @@ export default function ImportResumeButton() {
                 }`}
             >
                  <div 
-                    className={`bg-white rounded-xl shadow-2xl w-full max-w-250 h-full flex flex-col overflow-hidden border border-slate-200 transition-all duration-300 ease-out transform ${
+                    className={`bg-white mrc shadow-2xl w-full max-w-250 h-full flex flex-col overflow-hidden border border-slate-200 transition-all duration-300 ease-out transform ${
                         isOpen 
                             ? "scale-100 translate-y-0 opacity-100" 
                             : "scale-95 translate-y-4 opacity-0"
@@ -144,7 +144,7 @@ export default function ImportResumeButton() {
                      <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/80 shrink-0">
                         <div className="flex justify-between items-center">
                             <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-lg bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0 border border-yellow-100">
+                                <div className="w-7 h-7  bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0 border border-yellow-100">
                                     <UploadCloud size={15} />
                                 </div>
                                 <div>
@@ -167,7 +167,7 @@ export default function ImportResumeButton() {
 
                             <button
                                 onClick={closeModal}
-                                className="p-1.5 rounded-lg hover:bg-slate-200/70 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                                className="p-1.5  hover:bg-slate-200/70 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
                             >
                                 <X size={15} />
                             </button>
@@ -190,7 +190,7 @@ export default function ImportResumeButton() {
                                 onDragLeave={handleDragLeave}
                                 onDrop={handleDrop}
                                 onClick={() => fileInputRef.current?.click()}
-                                className={`border-2 rounded-xl text-center transition-all flex flex-col items-center justify-center p-8 min-h-[340px] cursor-pointer ${
+                                className={`border-2 mrc text-center transition-all flex flex-col items-center justify-center p-8 min-h-[340px] cursor-pointer ${
                                     isDragging 
                                         ? "border-yellow-500 bg-yellow-50/40" 
                                         : "border-dashed border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/50"
@@ -205,7 +205,7 @@ export default function ImportResumeButton() {
                                 </p>
                             </div>
                         ) : (
-                             <div className="w-full flex flex-col border border-slate-200 rounded-xl bg-white shadow-xs overflow-hidden animate-fade-in">
+                             <div className="w-full flex flex-col border border-slate-200 mrc bg-white shadow-xs overflow-hidden animate-fade-in">
                                 
                                  <div className="flex items-center justify-between px-4 py-2 border-b border-slate-100 bg-slate-50/50">
                                     <div className="flex items-center gap-1.5 text-slate-500">
@@ -225,7 +225,7 @@ export default function ImportResumeButton() {
 
                                  <div className="p-4 bg-slate-100/40 flex justify-center items-center min-h-[380px] overflow-y-auto">
                                     {file?.type === "application/pdf" ? (
-                                        <div className="bg-white border border-slate-200 rounded-lg shadow-md overflow-hidden p-2 max-w-full">
+                                        <div className="bg-white border border-slate-200  shadow-md overflow-hidden p-2 max-w-full">
                                             <Document
                                                 file={file}
                                                 onLoadSuccess={({ numPages }) => setNumPages(numPages)}
@@ -241,7 +241,7 @@ export default function ImportResumeButton() {
                                             </Document>
                                         </div>
                                     ) : (
-                                        <div className="bg-white border border-slate-200 rounded-lg p-6 max-w-sm text-center shadow-xs">
+                                        <div className="bg-white border border-slate-200  p-6 max-w-sm text-center shadow-xs">
                                             <FileText size={28} className="mx-auto mb-2 text-yellow-600" />
                                             <p className="text-xs font-semibold text-slate-700">
                                                 Aperçu dynamique non disponible pour DOCX
@@ -259,7 +259,7 @@ export default function ImportResumeButton() {
                      <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/80 flex flex-col sm:flex-row sm:justify-end gap-2 shrink-0">
                         <button
                             onClick={closeModal}
-                            className="px-4 py-2 text-[11px] font-semibold text-slate-600 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer text-center border border-slate-200 bg-white"
+                            className="px-4 py-2 text-[11px] font-semibold text-slate-600 hover:bg-slate-200/60  transition-colors cursor-pointer text-center border border-slate-200 bg-white"
                         >
                             Annuler
                         </button>
@@ -268,7 +268,7 @@ export default function ImportResumeButton() {
                             <button
                                 disabled={!fileName}
                                 onClick={() => { if (file) void handleImport(file); }}
-                                className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-semibold rounded-lg text-black border transition-all shadow-xs ${
+                                className={`w-full sm:w-auto flex items-center justify-center gap-1.5 px-4 py-2 text-[11px] font-semibold  text-black border transition-all shadow-xs ${
                                     fileName 
                                         ? "bg-white hover:bg-black/10 cursor-pointer" 
                                         : "bg-white text-black/20 cursor-not-allowed"
@@ -280,7 +280,7 @@ export default function ImportResumeButton() {
                             </button>
 
                             {fileName && (
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-slate-950 text-white text-[10px] leading-normal rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none text-center">
+                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-2.5 bg-slate-950 text-white text-[10px] leading-normal  shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none text-center">
                                     <div className="flex items-start gap-1.5 text-left font-normal">
                                         <AlertCircle size={13} className="text-amber-400 shrink-0 mt-0.5" />
                                         <span>L&apos;extraction complète des données peut prendre un temps estimé à 5 minutes.</span>

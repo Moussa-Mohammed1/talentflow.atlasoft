@@ -69,8 +69,8 @@ export default function Toast({ toast, onRemove }: ToastProps) {
       role="alert"
       aria-live={toast.type === "error" ? "assertive" : "polite"}
       className={`
-        group pointer-events-auto relative flex w-full max-w-sm items-start gap-3
-        rounded-lg  border-white/[0.06] bg-zinc-900/90 p-3 pl-5
+        group pointer-events-auto relative rounded-lg flex w-full max-w-sm items-start gap-3
+          border-white/[0.06] bg-zinc-900/90 p-3 pl-5
          backdrop-blur-xl 
         ${
           isExiting
@@ -88,7 +88,7 @@ export default function Toast({ toast, onRemove }: ToastProps) {
       <button
         type="button"
         onClick={handleClose}
-        className="shrink-0 rounded-lg p-1 text-zinc-500 opacity-0 transition-opacity hover:bg-white/10 hover:text-zinc-300 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 group-hover:opacity-100"
+        className="shrink-0  p-1 text-zinc-500 opacity-0 transition-opacity hover:bg-white/10 hover:text-zinc-300 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 group-hover:opacity-100"
         aria-label="Dismiss notification"
       >
         <X className="h-4 w-4" />

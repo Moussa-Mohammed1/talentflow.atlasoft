@@ -226,7 +226,7 @@ export default function ProfilePage() {
 
         <main className="flex-1 px-6 pb-8 overflow-y-auto">
           <div className="max-w-2xl mx-auto space-y-6">
-            <div className="bg-white border border-slate-100 rounded-xl p-6">
+            <div className="bg-white border border-slate-100 mrc p-6">
               <div className="flex items-start gap-4 mb-6">
                 <div className="flex flex-col items-center gap-2">
                   <input
@@ -271,7 +271,7 @@ export default function ProfilePage() {
                       <button
                         onClick={handleAvatarSave}
                         disabled={isSavingAvatar}
-                        className="px-2.5 py-1 rounded-lg bg-blue-800 hover:bg-blue-600 text-white text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
+                        className="px-2.5 py-1  bg-blue-800 hover:bg-blue-600 text-white text-[10px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1"
                       >
                         {isSavingAvatar ? (
                           <Loader2 size={10} className="animate-spin" />
@@ -288,7 +288,7 @@ export default function ProfilePage() {
                           setAvatarError(null);
                         }}
                         disabled={isSavingAvatar}
-                        className="px-2 py-1 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-[10px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-2 py-1  border border-slate-200 text-slate-500 hover:bg-slate-50 text-[10px] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         Annuler
                       </button>
@@ -310,7 +310,7 @@ export default function ProfilePage() {
               </div>
 
               {user.must_change_password && (
-                <div className="flex items-start gap-2 p-3 rounded-lg bg-rose-50 border border-rose-200">
+                <div className="flex items-start gap-2 p-3  bg-rose-50 border border-rose-200">
                   <CircleAlert size={14} className="shrink-0 mt-0.5 text-rose-500" />
                   <p className="text-xs text-rose-700 leading-relaxed">
                     Vous devez changer votre premier mot de passe après votre première inscription.
@@ -349,7 +349,7 @@ export default function ProfilePage() {
                                     [field.key]: e.target.value,
                                   }))
                                 }
-                                className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                                className="w-full pl-9 pr-3 py-2  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                                 autoFocus
                                 disabled={isSaving}
                                 onKeyDown={(e) => {
@@ -362,7 +362,7 @@ export default function ProfilePage() {
                             <button
                               onClick={() => handleSave(field.key)}
                               disabled={isSaving}
-                              className="shrink-0 px-3 py-2 rounded-lg bg-blue-800 hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                              className="shrink-0 px-3 py-2  bg-blue-800 hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
                             >
                               {isSaving ? (
                                 <Loader2 size={12} className="animate-spin" />
@@ -375,7 +375,7 @@ export default function ProfilePage() {
                             <button
                               onClick={() => cancelEditing(field.key)}
                               disabled={isSaving}
-                              className="shrink-0 px-2 py-2 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              className="shrink-0 px-2 py-2  border border-slate-200 text-slate-500 hover:bg-slate-50 text-xs transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                             >
                               Annuler
                             </button>
@@ -390,14 +390,14 @@ export default function ProfilePage() {
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-100 bg-slate-50 text-sm text-slate-700">
+                          <div className="flex-1 flex items-center gap-2 px-3 py-2  border border-slate-100 bg-slate-50 text-sm text-slate-700">
                             <Icon size={14} className="shrink-0 text-slate-400" />
                             <span className="truncate">{currentValue || "-"}</span>
                           </div>
 
                           <button
                             onClick={() => startEditing(field.key)}
-                            className="shrink-0 p-2 rounded-lg border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
+                            className="shrink-0 p-2  border border-slate-200 text-slate-400 hover:text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
                             title={`Modifier ${field.label}`}
                           >
                             <PenLine size={14} />
@@ -410,7 +410,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-100 rounded-xl p-6">
+            <div className="bg-white border border-slate-100 mrc p-6">
               <h3 className="text-xs font-bold text-slate-900 mb-4 uppercase tracking-wider">
                 Mot de passe
               </h3>
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="Entrez votre mot de passe actuel"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                    className="w-full px-3 py-2  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     disabled={isSavingPassword}
                   />
                 </div>
@@ -439,7 +439,7 @@ export default function ProfilePage() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Entrez votre nouveau mot de passe"
-                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                    className="w-full px-3 py-2  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
                     disabled={isSavingPassword}
                   />
                 </div>
@@ -455,7 +455,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handlePasswordSave}
                     disabled={isSavingPassword || !currentPassword || !newPassword}
-                    className="px-4 py-2 rounded-lg bg-blue-800 hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
+                    className="px-4 py-2  bg-blue-800 hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
                   >
                     {isSavingPassword ? (
                       <Loader2 size={12} className="animate-spin" />
@@ -468,7 +468,7 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="bg-white border border-slate-100 rounded-xl p-6">
+            <div className="bg-white border border-slate-100 mrc p-6">
               <h3 className="text-xs font-bold text-slate-900 mb-4 uppercase tracking-wider">
                 Informations du compte
               </h3>
@@ -492,7 +492,7 @@ export default function ProfilePage() {
                       <label className="block text-xs font-medium text-slate-500 mb-1">
                         {field.label}
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-100 bg-slate-50 text-sm text-slate-700">
+                      <div className="flex items-center gap-2 px-3 py-2  border border-slate-100 bg-slate-50 text-sm text-slate-700">
                         <Icon size={14} className="shrink-0 text-slate-400" />
                         <span className="truncate capitalize">{displayValue}</span>
                       </div>

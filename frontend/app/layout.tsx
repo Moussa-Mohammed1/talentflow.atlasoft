@@ -1,5 +1,6 @@
 import { ModalProvider } from "@/context/ModalContext";
 import ToastProvider from "@/components/ui/toast/ToastProvider";
+import SessionProvider from "@/components/auth/SessionProvider";
 import PasswordChangeBanner from "@/components/ui/PasswordChangeBanner";
 import type { Metadata } from "next";
 import "./globals.css";
@@ -19,8 +20,10 @@ export default function RootLayout({
       <body className="min-h-full [scrollbar-width:none] flex flex-col font-sans">
         <ModalProvider>
           <ToastProvider>
-            {children}
-            <PasswordChangeBanner />
+            <SessionProvider>
+              {children}
+              <PasswordChangeBanner />
+            </SessionProvider>
           </ToastProvider>
         </ModalProvider>
       </body>

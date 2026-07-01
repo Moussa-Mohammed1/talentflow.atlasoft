@@ -35,7 +35,7 @@ export default function LoginPage() {
             </div>
 
             <p className="inline-block bg-blue-900 text-white font-bold text-xs max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
-              Optimisez l'identification et le suivi des talents
+              Recrutement intelligent, automatisé et entièrement traçable.
             </p>
           </div>
 

@@ -13,6 +13,8 @@ from app.models.user import User
 from app.schemas.experience_extraction import ResumeExperienceRead
 from app.schemas.identity_extraction import ResumeIdentityRead
 from app.schemas.language_extraction import ResumeLanguageRead
+from app.schemas.education_extraction import ResumeEducationRead
+from app.schemas.certification_extraction import ResumeCertificationRead
 from app.schemas.resume import (
     CandidatUpdateSchema,
     CertificationUpdateSchema,
@@ -30,6 +32,8 @@ from app.services.resume.analysis_service import ResumeAnalysisService
 from app.services.resume.identity_service import ResumeIdentityService
 from app.services.resume.experience_service import ResumeExperienceService
 from app.services.resume.language_service import ResumeLanguageService
+from app.services.resume.education_service import ResumeEducationService
+from app.services.resume.certification_service import ResumeCertificationService
 from app.services.resume.upload_service import ResumeUploadService
 from app.services.resume.preview_service import ResumePreviewService
 from app.services.resume.update_service import ResumeUpdateService
@@ -107,6 +111,24 @@ def extract_language(
     return ResumeLanguageService.extract(db=db, recruiter_id=current_user.id, background_tasks=background_tasks, path=payload.path)
 
 
+@router.post("/certification", response_model=ResumeCertificationRead, status_code=status.HTTP_200_OK)
+def extract_certification(
+    payload: ResumePathRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeCertificationService.extract(db=db, recruiter_id=current_user.id, path=payload.path)
+
+
+@router.post("/education", response_model=ResumeEducationRead, status_code=status.HTTP_200_OK)
+def extract_education(
+    payload: ResumePathRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeEducationService.extract(db=db, recruiter_id=current_user.id, path=payload.path)
+
+
 @router.patch("/{resume_id}/candidat", status_code=status.HTTP_200_OK)
 def update_candidat(
     resume_id: int,
@@ -154,12 +176,12 @@ def get_resumes(db: Session = Depends(get_db)):
 
 @router.get("/{resume_id}", response_model=ResumeFullDetailSchema | None, status_code=status.HTTP_200_OK)
 def get_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    return get_full_resume_detail(db, resume_id, recruiter_id=current_user.id)
+    return get_full_resume_detail(db, resume_id)
 
 
 @router.get("/{resume_id}/download", status_code=status.HTTP_200_OK)
 def download_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    resume = get_resume_detail(db, resume_id, recruiter_id=current_user.id)
+    resume = ResumeLoader.view_by_id(db, resume_id)
     file_path = resolve_stored_resume_path(resume.path)
     return FileResponse(path=file_path, filename=Path(resume.path).name)
 

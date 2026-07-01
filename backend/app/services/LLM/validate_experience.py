@@ -110,7 +110,7 @@ class LLMService:
             "Then scan the professional experience section for missing employment records.\n"
             "For each missing record, add one item with candidate_index set to null and action corrected.\n"
             "Accept records supported by the resume, correct only fields explicitly supported by the text, "
-            "and reject education, projects, certifications, or invented employment.\n"
+            "and reject projects, certifications, or invented employment.\n"
             "Never invent a numeric candidate_index that was not supplied. Never infer missing dates or duties.\n"
             "Every corrected or newly added record must include exact resume lines in evidence.\n"
             "Use null end_date for Present, Current, aujourd'hui, actuel, or en cours.\n"

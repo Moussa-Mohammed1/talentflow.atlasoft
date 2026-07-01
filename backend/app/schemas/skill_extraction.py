@@ -46,5 +46,7 @@ class ResumeAnalysisRead(BaseModel):
     analysis: ResumeSkillAnalysisRead
     experience: dict | None = None
     languages: dict | None = None
+    educations: dict | None = None
+    certifications: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)

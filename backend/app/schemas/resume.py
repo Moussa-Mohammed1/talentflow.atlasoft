@@ -32,6 +32,8 @@ class DocumentListSchema(BaseModel):
 	fileSize: str
 	category: str
 	previewUrl: str | None = None
+	recruiter_id: int
+	recruiter_name: str
 
 class ResumeDetailSchema(BaseModel):
 	id: str
@@ -93,6 +95,8 @@ class LanguageDetailSchema(BaseModel):
 
 class ResumeFullDetailSchema(BaseModel):
 	resume_id: int
+	recruiter_id: int
+	recruiter_name: str
 	candidat: CandidatDetailSchema
 	experiences: list[ExperienceDetailSchema]
 	educations: list[EducationDetailSchema]

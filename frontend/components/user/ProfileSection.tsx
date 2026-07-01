@@ -54,7 +54,7 @@ export default function ProfileSection({
             <div
                 className={`
                     absolute bottom-full left-0 w-full bg-white border border-slate-100 
-                    rounded-lg shadow-lg p-1.5 mb-2 flex flex-col gap-0.5
+                     shadow-lg p-1.5 mb-2 flex flex-col gap-0.5
                     transition-all duration-200 z-50 origin-bottom
                     ${
                         isOpen 
@@ -72,7 +72,9 @@ export default function ProfileSection({
                     </span>
                 </button>
                 
-                <button className="w-full flex items-center gap-2 px-2.5 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors cursor-pointer text-left">
+                <button
+                onClick={() => router.push('/settings')} 
+                className="w-full flex items-center gap-2 px-2.5 py-2 text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-md transition-colors cursor-pointer text-left">
                     <Settings size={14} className="text-slate-400" />
                     <span className={`${collapsed ? "hidden group-hover/sidebar:block" : "block"}`}>
                         Paramètres

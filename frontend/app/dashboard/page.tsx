@@ -58,7 +58,7 @@ export default function Dashboard() {
             {cardsData.map((card, index) => (
               <div 
                 key={index} 
-                className="bg-white border border-slate-100 rounded-xl p-4  flex flex-col justify-between min-h-[180px]"
+                className="bg-white border border-slate-100 mrc p-4  flex flex-col justify-between min-h-[180px]"
               >
                 
                 <div className="flex justify-between items-start mb-3">

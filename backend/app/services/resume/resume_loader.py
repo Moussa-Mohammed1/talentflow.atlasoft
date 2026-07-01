@@ -14,6 +14,7 @@ from app.services.resume_service import (
     delete_resume_and_file,
     resolve_stored_resume_path,
 )
+from app.models.user import User
 
 
 class ResumeLoader:
@@ -44,6 +45,13 @@ class ResumeLoader:
     @staticmethod
     def delete(db: Session, resume_id: int, recruiter_id: int):
         return delete_resume_and_file(db, resume_id, recruiter_id=recruiter_id)
+
+    @staticmethod
+    def view_by_id(db: Session, resume_id: int) -> Resume:
+        resume = db.query(Resume).filter(Resume.id == resume_id).first()
+        if resume is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+        return resume
 
     @staticmethod
     def resolve_path(path: str) -> Path:

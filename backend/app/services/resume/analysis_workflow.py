@@ -10,10 +10,14 @@ from sqlalchemy.orm import Session
 from app.schemas.experience_extraction import ResumeExperienceAnalysisRead
 from app.schemas.language_extraction import ResumeLanguageAnalysisRead
 from app.schemas.skill_extraction import ResumeAnalysisRead, ResumeSkillAnalysisRead
+from app.schemas.education_extraction import ResumeEducationAnalysisRead
+from app.schemas.certification_extraction import ResumeCertificationAnalysisRead
 from app.services.experience_extraction.pipeline import PretrainedBilingualExperienceExtractor
+from app.services.education_extraction.pipeline import PretrainedBilingualEducationExtractor
 from app.services.language_extraction.pipeline import ResumeLanguageExtractionPipeline
 from app.services.resume_extraction.extractor import TextExtractionService, UnsupportedFileTypeError
 from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
+from app.services.certification_extraction.pipeline import PretrainedBilingualCertificationExtractor
 
 from .job_manager import AnalysisJobs, JobManager
 from .notification_helper import NotificationHelper
@@ -53,6 +57,8 @@ class ResumeAnalysisWorkflow:
         self._skill_analysis: ResumeSkillAnalysisRead | None = None
         self._experience_analysis: ResumeExperienceAnalysisRead | None = None
         self._language_analysis: ResumeLanguageAnalysisRead | None = None
+        self._education_analysis: ResumeEducationAnalysisRead | None = None
+        self._certification_analysis: ResumeCertificationAnalysisRead | None = None
         self._persistence_stats: dict | None = None
         self._jobs: AnalysisJobs | None = None
 
@@ -102,6 +108,26 @@ class ResumeAnalysisWorkflow:
             "stats": result.get("stats", {}),
         })
 
+    def _extract_educations(self):
+        result = PretrainedBilingualEducationExtractor().extract_education(self._raw_text)
+        count = len(result.get("educations", []))
+        JobManager(self.db, self.recruiter_id).complete_educations(self._jobs.education_id, count)
+        self._education_analysis = ResumeEducationAnalysisRead.model_validate({
+            "sections": result.get("sections", []),
+            "educations": result.get("educations", []),
+            "stats": result.get("stats", {}),
+        })
+
+    def _extract_certifications(self):
+        result = PretrainedBilingualCertificationExtractor().extract_certifications(self._raw_text)
+        count = len(result.get("certifications", []))
+        JobManager(self.db, self.recruiter_id).complete_certifications(self._jobs.certification_id, count)
+        self._certification_analysis = ResumeCertificationAnalysisRead.model_validate({
+            "sections": result.get("sections", []),
+            "certifications": result.get("certifications", []),
+            "stats": result.get("stats", {}),
+        })
+
     def _persist(self):
         self._skill_analysis = ResumeSkillAnalysisRead.model_validate(self._converted_skills)
         candidat = PersistenceService.get_candidat_or_none(self.db, self._resume.id)
@@ -116,12 +142,15 @@ class ResumeAnalysisWorkflow:
                 "skills_persisted_count": 0,
                 "persisted_count": 0,
                 "languages_persisted_count": 0,
+                "educations_persisted_count": 0,
                 "persistence_reason": "candidate_identity_not_extracted",
             }
             return
 
         self._persistence_stats = PersistenceService.persist_all(
             self.db, candidat.id, self._skill_analysis, self._experience_analysis, self._language_analysis,
+            educations=self._education_analysis,
+            certifications=self._certification_analysis,
         )
 
     def _build_response(self) -> ResumeAnalysisRead:
@@ -132,6 +161,8 @@ class ResumeAnalysisWorkflow:
             analysis=ResumeSkillAnalysisRead.model_validate(self._converted_skills),
             experience=self._experience_analysis.model_dump(),
             languages=self._language_analysis.model_dump(),
+            educations=self._education_analysis.model_dump() if self._education_analysis else None,
+            certifications=self._certification_analysis.model_dump() if self._certification_analysis else None,
         )
 
     def execute(self) -> ResumeAnalysisRead:
@@ -141,6 +172,8 @@ class ResumeAnalysisWorkflow:
             self._extract_text()
             self._extract_skills()
             self._extract_experiences()
+            self._extract_educations()
+            self._extract_certifications()
             self._extract_languages()
             self._persist()
             NotificationHelper.notify_analysis_completed(

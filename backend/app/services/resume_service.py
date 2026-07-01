@@ -88,17 +88,19 @@ def resolve_stored_resume_path(path: str) -> Path:
 	return resolved_path
 
 import os
-import random
 from app.repositories.resumer_repository import ResumeRepository
+from app.models.user import User
 
 def get_resumes_list(db: Session):
-    
-    records = ResumeRepository.get_all(db)
-    
+    records = (
+        db.query(Resume, Candidat, User)
+        .outerjoin(Candidat, Candidat.resume_id == Resume.id)
+        .join(User, User.id == Resume.recruiter_id)
+    )
+
     docs = []
 
-    for resume, candidat in records:
-        
+    for resume, candidat, recruiter in records:
         try:
             size_bytes = os.path.getsize(resume.path)
             if size_bytes >= 1024 * 1024:
@@ -107,22 +109,22 @@ def get_resumes_list(db: Session):
                 file_size = f"{size_bytes / 1024:.0f} KB"
         except OSError:
             file_size = "Unknown"
-        
 
-        
         file_name = Path(resume.path).name
-        
+
         docs.append({
             "id": str(resume.id),
             "name": file_name,
             "candidateName": candidat.fullname if candidat else "Inconnu",
-            "role": "Candidat" if candidat else "En cours de traitement", 
+            "role": "Candidat" if candidat else "En cours de traitement",
             "importDate": resume.created_at.strftime("%d/%m/%Y") if resume.created_at else "",
             "fileSize": file_size,
             "category": "PDF" if str(resume.path).lower().endswith(".pdf") else "DOCX",
-            "previewUrl": f"/api/resumes/{resume.id}/preview"
+            "previewUrl": f"/api/resumes/{resume.id}/preview",
+            "recruiter_id": resume.recruiter_id,
+            "recruiter_name": recruiter.fullname,
         })
-        
+
     return docs
 
 def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
@@ -133,10 +135,13 @@ def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
     return resume
 
 
-def get_full_resume_detail(db: Session, resume_id: int, recruiter_id: int):
-    resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
+def get_full_resume_detail(db: Session, resume_id: int):
+    resume = db.query(Resume).filter(Resume.id == resume_id).first()
     if not resume:
         raise HTTPException(status_code=404, detail="Resume not found")
+
+    recruiter = db.query(User).filter(User.id == resume.recruiter_id).first()
+    recruiter_name = recruiter.fullname if recruiter else "Inconnu"
 
     candidat = db.query(Candidat).filter(Candidat.resume_id == resume.id).first()
 
@@ -171,6 +176,8 @@ def get_full_resume_detail(db: Session, resume_id: int, recruiter_id: int):
 
     return ResumeFullDetailSchema(
         resume_id=resume.id,
+        recruiter_id=resume.recruiter_id,
+        recruiter_name=recruiter_name,
         candidat=CandidatDetailSchema(
             id=candidat.id,
             fullname=candidat.fullname,

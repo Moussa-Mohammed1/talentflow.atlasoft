@@ -9,7 +9,7 @@ class EmailService:
         token: str
     ):
         invitation_link = (
-            f"{os.getenv("FRONTEND_URL")}"
+            f"{os.getenv("INVITATION_FRONTEND_URL")}"
             f"/accept-invitation?token={token}"
         )
         html = f"""

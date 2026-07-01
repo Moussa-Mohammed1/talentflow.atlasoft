@@ -11,11 +11,15 @@ class AnalysisJobs:
     skill_id: int
     experience_id: int
     language_id: int
+    education_id: int
+    certification_id: int
 
-    def __init__(self, skill_id: int, experience_id: int, language_id: int):
+    def __init__(self, skill_id: int, experience_id: int, language_id: int, education_id: int, certification_id: int):
         self.skill_id = skill_id
         self.experience_id = experience_id
         self.language_id = language_id
+        self.education_id = education_id
+        self.certification_id = certification_id
 
 
 class JobManager:
@@ -55,12 +59,20 @@ class JobManager:
         lang_id = self.create(
             JobType.LANGUAGE_EXTRACTION, filename, "Extracting languages from resume"
         )
-        return AnalysisJobs(skill_id, exp_id, lang_id)
+        edu_id = self.create(
+            JobType.EDUCATION_EXTRACTION, filename, "Extracting education from resume"
+        )
+        cert_id = self.create(
+            JobType.CERTIFICATION_EXTRACTION, filename, "Extracting certifications from resume"
+        )
+        return AnalysisJobs(skill_id, exp_id, lang_id, edu_id, cert_id)
 
     def start_analysis_jobs(self, jobs: AnalysisJobs) -> None:
         self.start(jobs.skill_id, "Extracting skills from resume")
         self.start(jobs.experience_id, "Extracting experience from resume")
         self.start(jobs.language_id, "Extracting languages from resume")
+        self.start(jobs.education_id, "Extracting education from resume")
+        self.start(jobs.certification_id, "Extracting certifications from resume")
 
     def complete_skills(self, job_id: int, count: int) -> None:
         self.complete(job_id, f"Found {count} skills")
@@ -70,3 +82,9 @@ class JobManager:
 
     def complete_languages(self, job_id: int, count: int) -> None:
         self.complete(job_id, f"Found {count} language(s)")
+
+    def complete_educations(self, job_id: int, count: int) -> None:
+        self.complete(job_id, f"Found {count} education(s)")
+
+    def complete_certifications(self, job_id: int, count: int) -> None:
+        self.complete(job_id, f"Found {count} certification(s)")

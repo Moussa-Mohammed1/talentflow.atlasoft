@@ -168,6 +168,7 @@ class InvitationService:
             fullname=fullname,
             email=invitation.email,
             hashed_password=hash_password(password),
+            must_change_password=False
         )
 
         db.add(user)

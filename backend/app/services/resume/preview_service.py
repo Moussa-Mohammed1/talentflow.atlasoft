@@ -12,7 +12,7 @@ class ResumePreviewService:
 
     @staticmethod
     def generate(db: Session, resume_id: int, recruiter_id: int) -> Response:
-        resume = ResumeLoader.detail(db, resume_id, recruiter_id)
+        resume = ResumeLoader.view_by_id(db, resume_id)
         file_path = ResumeLoader.resolve_path(resume.path)
         try:
             import fitz

@@ -20,7 +20,7 @@ import {
 import { useModal } from "@/context/ModalContext";
 
 export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
     const { isModalOpen } = useModal();
@@ -39,7 +39,7 @@ export default function Sidebar() {
       { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
-      { icon: <MailPlus size={16} />, label: "Inviter", href: "/inviter" },
+      { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
     ];
 
     return (
@@ -47,7 +47,7 @@ export default function Sidebar() {
         {/* Mobile hamburger button */}
         <button
           onClick={() => setMobileOpen(true)}
-          className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg bg-white border border-slate-200 shadow-md hover:bg-slate-50 transition-colors cursor-pointer"
+          className="fixed top-4 left-4 z-50 md:hidden p-2  bg-white border border-slate-200 shadow-md hover:bg-slate-50 transition-colors cursor-pointer"
           aria-label="Ouvrir le menu"
         >
           <Menu size={20} />
@@ -90,7 +90,7 @@ export default function Sidebar() {
                 <Link
                   key={index}
                   href={item.href}
-                  className={`w-full flex items-center focus:scale-95 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  className={`w-full flex items-center focus:scale-95 px-2.5 py-2  text-xs font-medium transition-colors ${
                     pathname === item.href
                       ? "bg-slate-50 text-slate-900 border"
                       : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
@@ -120,16 +120,16 @@ export default function Sidebar() {
         >
           <aside
             className={`
-              bg-white border-r border-slate-100 flex flex-col justify-between p-3 h-screen top-0 left-0
+              bg-white border-r border-gray-500  flex flex-col justify-between  h-screen top-0 left-0
               ${collapsed 
-                ? "absolute w-16 group-hover/sidebar:w-56 z-50 shadow-md group-hover/sidebar:shadow-xl shadow-none transition-all duration-300 ease-in-out" 
-                : "sticky w-56 shadow-xl shadow-none transition-none"
+                ? "absolute w-16 group-hover/sidebar:w-56 z-50   group-hover/sidebar:shadow-xl shadow-none transition-all duration-300 ease-in-out" 
+                : "sticky w-56   transition-none"
               }
             `}
           >    
             <div>
               
-              <div className="flex items-center justify-between px-1.5 py-3 mb-2 select-none">
+              <div className="flex items-center justify-between py-3 px-2.5 my-2 select-none">
                 <Image
                   src="/images/logo.png"
                   alt="3GCOM Logo"
@@ -138,7 +138,7 @@ export default function Sidebar() {
                   className="object-contain"
                   priority
                 />
-{/* 
+
                 <button
                   onClick={() => setCollapsed(!collapsed)}
                   className={`
@@ -151,7 +151,7 @@ export default function Sidebar() {
                   ) : (
                     <ChevronLeft size={18} />
                   )}
-                </button> */}
+                </button>
               </div>
 
                
@@ -160,10 +160,10 @@ export default function Sidebar() {
                   <Link
                     key={index}
                     href={item.href}
-                    className={`w-full flex items-center focus:scale-95 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    className={`w-full flex items-center focus:scale-95 focus:border px-5.5 py-2 text-xs font-medium transition-all ${
                       pathname === item.href
-                        ? "bg-slate-50 text-slate-900 border "
-                        : "text-slate-600 hover:bg-slate-200 hover:text-black  duration-500"
+                        ? "bg-slate-50 text-slate-900 border-t border-b "
+                        : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -187,7 +187,7 @@ export default function Sidebar() {
               </nav>
             </div>
  
-            <div className="border-t border-slate-100 pt-3 w-full">
+            <div className="border-t border-slate-100 py-3  w-full">
               <ProfileSection collapsed={collapsed} />
             </div>
           </aside>

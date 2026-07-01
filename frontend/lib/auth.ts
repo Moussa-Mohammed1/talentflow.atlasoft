@@ -1,5 +1,5 @@
 import { AuthService } from "@/services/auth.service";
-import { useAuthStore } from "@/store/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 export async function restoreSession() {
   const token =
@@ -11,7 +11,7 @@ export async function restoreSession() {
     const user =
       await AuthService.me();
 
-    useAuthStore.getState().setUser(user);
+    useAuthStore.getState().setUser(user.user);
     useAuthStore.getState().setToken(token);
   } catch {
     localStorage.removeItem(

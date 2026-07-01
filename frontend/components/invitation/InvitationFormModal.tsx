@@ -55,7 +55,7 @@ export default function InvitationFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-      <div className="w-full max-w-md overflow-hidden rounded-xl border border-gray-200/80 bg-white shadow-xl">
+      <div className="w-full max-w-md overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl">
         <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             
@@ -72,7 +72,7 @@ export default function InvitationFormModal({
             type="button"
             onClick={onClose}
             disabled={sending}
-            className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="text-gray-400 hover:text-gray-600 p-1  hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -95,7 +95,7 @@ export default function InvitationFormModal({
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="recruteur@entreprise.com"
                 disabled={sending}
-                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full  border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors disabled:bg-gray-50 disabled:text-gray-500"
               />
               <p className="text-xs text-gray-400 mt-1.5">
                 L&apos;invitation sera valable 48 heures
@@ -112,14 +112,14 @@ export default function InvitationFormModal({
               type="button"
               onClick={onClose}
               disabled={sending}
-              className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className=" border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               Annuler
             </button>
             <button
               type="submit"
               disabled={sending || !email.trim()}
-              className="inline-flex items-center gap-2 rounded-lg bg-white border text-black px-4 py-2 text-sm font-medium hover:text-white shadow-xs hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2  bg-white border text-black px-4 py-2 text-sm font-medium hover:text-white shadow-xs hover:bg-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sending ? (
                 <>

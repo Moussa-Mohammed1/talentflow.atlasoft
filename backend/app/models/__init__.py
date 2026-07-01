@@ -14,3 +14,4 @@ from app.models.skills_category import SkillsCategory
 from app.models.invitation import Invitation
 from app.models.notification import Notification, NotificationType
 from app.models.job import Job, JobStatus, JobType
+from app.models.user_preference import UserPreference

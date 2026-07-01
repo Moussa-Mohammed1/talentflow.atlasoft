@@ -24,6 +24,8 @@ class JobType(str, Enum):
     SKILL_EXTRACTION = "skill_extraction"
     EXPERIENCE_EXTRACTION = "experience_extraction"
     LANGUAGE_EXTRACTION = "language_extraction"
+    EDUCATION_EXTRACTION = "education_extraction"
+    CERTIFICATION_EXTRACTION = "certification_extraction"
 
 
 class Job(Base):

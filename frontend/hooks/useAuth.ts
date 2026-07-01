@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/store/auth.store";
+import { useAuthStore } from "@/stores/auth.store";
 import { AuthService } from "@/services/auth.service";
 
 export const useAuth = () => {

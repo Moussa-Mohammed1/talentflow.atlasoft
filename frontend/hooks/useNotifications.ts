@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo } from "react";
 
 import { notificationService } from "@/services/notification.service";
-import { useAuthStore } from "@/store/auth.store";
-import { useNotificationStore } from "@/store/notification.store";
+import { useAuthStore } from "@/stores/auth.store";
+import { useNotificationStore } from "@/stores/notification.store";
 import type { Notification, NotificationSocketMessage } from "@/types/notification";
 
 function userIdFromToken(token: string | null): number | null {

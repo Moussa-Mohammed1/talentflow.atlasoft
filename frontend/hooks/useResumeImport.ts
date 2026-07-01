@@ -1,11 +1,13 @@
 import { useState } from "react";
 import api from "@/lib/axios";
+import { useToast } from "./useToast";
+
 export type ImportStatus =
   | "idle"
   | "uploading"
   | "uploaded"
-  | "analyzing"
   | "extracting"
+  | "analyzing"
   | "success"
   | "error";
 
@@ -28,7 +30,7 @@ export interface ResumeIdentityResult {
   stats?: Record<string, unknown>;
 }
 
-export interface ResumeAnalysisResult {
+export interface ResumeFullAnalysisResult {
   raw_text?: string;
   analysis?: {
     sections?: unknown[];
@@ -37,11 +39,7 @@ export interface ResumeAnalysisResult {
     skills_by_category?: Record<string, unknown[]>;
     flattened_skills?: string[];
   };
-}
-
-export interface ResumeExperienceResult {
-  raw_text?: string;
-  analysis?: {
+  experience?: {
     sections?: unknown[];
     experiences?: Array<{
       title: string;
@@ -70,10 +68,11 @@ interface UploadResponse {
 export function useResumeImport() {
   const [loading, setLoading] = useState(false);
   const [identityResult, setIdentityResult] = useState<ResumeIdentityResult | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<ResumeAnalysisResult | null>(null);
-  const [experienceResult, setExperienceResult] = useState<ResumeExperienceResult | null>(null);
-  const [error, setError] = useState<Error | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<ResumeFullAnalysisResult | null>(null);
+  const [error, setError] = useState<any | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
+  const toast = useToast();
+
   const importResume = async ({
     file,
   }: ImportResumeParams) => {
@@ -82,7 +81,6 @@ export function useResumeImport() {
       setError(null);
       setIdentityResult(null);
       setAnalysisResult(null);
-      setExperienceResult(null);
       setStatus("uploading");
 
       const formData = new FormData();
@@ -114,26 +112,23 @@ export function useResumeImport() {
       await new Promise((resolve) =>
         setTimeout(resolve, 2000)
       );
-      setStatus("analyzing")
-      
-      const [analyzeResponse, experienceResponse] = await Promise.all([
-        api.post<ResumeAnalysisResult>("/resumes/analyze", {
+      setStatus("analyzing");
+
+      const analyzeResponse = await api.post<ResumeFullAnalysisResult>(
+        "/resumes/analyze",
+        {
           path: uploadResponse.data.path,
-        }),
-        api.post<ResumeExperienceResult>("/resumes/experience", {
-          path: uploadResponse.data.path,
-        }),
-      ]);
+        }
+      );
       setAnalysisResult(analyzeResponse.data);
-      setExperienceResult(experienceResponse.data);
       setStatus("success");
       return {
         identity: identityResponse.data,
         analysis: analyzeResponse.data,
-        experience: experienceResponse.data,
       };
     } catch (err) {
       setStatus("error");
+      toast.error("Une erreur est survenue lors de l'extraction du CV");
       setError(err as Error);
       throw err;
     } finally {
@@ -144,7 +139,6 @@ export function useResumeImport() {
   const reset = () => {
     setIdentityResult(null);
     setAnalysisResult(null);
-    setExperienceResult(null);
     setError(null);
     setStatus("idle");
   };
@@ -154,7 +148,6 @@ export function useResumeImport() {
     result: identityResult,
     identityResult,
     analysisResult,
-    experienceResult,
     error,
     status,
     importResume,

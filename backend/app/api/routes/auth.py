@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Response, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, Response, HTTPException, status, UploadFile, File, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from pathlib import Path
 import shutil
@@ -7,17 +8,20 @@ import os
 from app.core.database import get_db
 from app.models.user import User
 from app.repositories.candidat_repository import CandidatRepository
-from app.core.security import get_current_user
+from app.core.security import get_current_user, create_access_token
 from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
     ValidateInvitationResponse,
     AcceptInvitationRequest,
+    InvitationResponse,
 )
 
-from app.services.auth_service import AuthService
+from app.services.auth_service import AuthService, build_avatar_url, download_external_avatar
 from app.services.invitation_service import InvitationService
+from app.services.linkedin_service import LinkedInService
+from app.core.config import settings
 
 AVATAR_DIR = Path("storage/avatars")
 
@@ -80,6 +84,20 @@ async def invite_user(
 
 
 @router.get(
+    "/invitations",
+    response_model=list[InvitationResponse],
+)
+def get_invitations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return InvitationService.get_invitations(
+        db=db,
+        invited_by=current_user.id,
+    )
+
+
+@router.get(
     "/invite/{token}",
     response_model=ValidateInvitationResponse
 )
@@ -103,7 +121,7 @@ async def get_me(
             "role": current_user.role,
             "is_active": current_user.is_active,
             "must_change_password": current_user.must_change_password,
-            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "avatar": build_avatar_url(current_user.avatar),
             "email_verified": current_user.email_verified,
             "email_verified_at": current_user.email_verified_at,
             "created_at": current_user.created_at,
@@ -130,7 +148,7 @@ async def update_profile(
             "role": current_user.role,
             "is_active": current_user.is_active,
             "must_change_password": current_user.must_change_password,
-            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "avatar": build_avatar_url(current_user.avatar),
             "email_verified": current_user.email_verified,
             "email_verified_at": current_user.email_verified_at,
             "created_at": current_user.created_at,
@@ -168,12 +186,94 @@ async def upload_avatar(
             "role": current_user.role,
             "is_active": current_user.is_active,
             "must_change_password": current_user.must_change_password,
-            "avatar": f"{os.getenv('APP_URL')}{current_user.avatar}",
+            "avatar": build_avatar_url(current_user.avatar),
             "email_verified": current_user.email_verified,
             "email_verified_at": current_user.email_verified_at,
             "created_at": current_user.created_at,
         }
     }
+
+@router.get("/linkedin/login")
+async def linkedin_login():
+    state = LinkedInService.generate_state()
+    signed_state = LinkedInService.sign_state(state)
+
+    auth_url = LinkedInService.get_authorization_url(state)
+
+    redirect = RedirectResponse(url=auth_url, status_code=status.HTTP_302_FOUND)
+    redirect.set_cookie(
+        key="oauth_state",
+        value=signed_state,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=600,
+        path="/api/auth/linkedin/callback",
+    )
+    return redirect
+
+
+@router.get("/linkedin/callback")
+async def linkedin_callback(
+    code: str,
+    state: str,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    signed_state = request.cookies.get("oauth_state")
+    if not signed_state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Missing OAuth state",
+        )
+
+    expected_state = LinkedInService.verify_signed_state(signed_state)
+    if not expected_state or expected_state != state:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OAuth state",
+        )
+
+    response.delete_cookie(
+        key="oauth_state",
+        path="/api/auth/linkedin/callback",
+    )
+
+    token_data = await LinkedInService.exchange_code(code)
+    access_token = token_data.get("access_token")
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Failed to obtain access token from LinkedIn",
+        )
+
+    user_info = await LinkedInService.get_user_info(access_token)
+
+    linkedin_picture = user_info.get("picture", "")
+    local_avatar = await download_external_avatar(linkedin_picture) if linkedin_picture else None
+
+    user = AuthService.handle_linkedin_user(
+        db=db,
+        linkedin_data=user_info,
+        local_avatar=local_avatar,
+    )
+
+    jwt_token = create_access_token(user.id, user.role)
+
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 60 * 24,
+        path="/",
+    )
+
+    redirect_url = f"{settings.frontend_url}/login?token={jwt_token}"
+    return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+
 
 @router.post("/logout")
 def logout(response: Response):

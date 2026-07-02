@@ -75,6 +75,7 @@ export default function ProfilePage() {
       AuthService.me()
         .then((data) => {
           setUser(data.user);
+          console.log(data.user);
         })
         .catch(() => {
           router.push("/login");
@@ -84,7 +85,8 @@ export default function ProfilePage() {
         });
     }
   }, [user, setUser, router]);
-
+  console.log(user);
+  
   const startEditing = useCallback((key: string) => {
     setEditingField(key);
     setDraftValues((prev) => ({

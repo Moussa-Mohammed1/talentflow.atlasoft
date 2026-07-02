@@ -4,7 +4,7 @@ from sqlalchemy import (
     DateTime,
     Column,
     Boolean,
-    Enum as SQLEnum
+    Enum as SQLEnum,
 )
 
 from datetime import datetime
@@ -27,6 +27,18 @@ class User(Base):
     avatar = Column(
         String,
         nullable=True
+    )
+
+    linkedin_id = Column(
+        String,
+        nullable=True,
+        unique=True
+    )
+
+    auth_provider = Column(
+        String,
+        nullable=False,
+        default="local"
     )
     
     role = Column(

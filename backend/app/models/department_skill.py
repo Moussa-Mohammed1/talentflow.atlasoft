@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, String
 from app.core.database import Base
 
 class DepartmentSkills(Base):
@@ -6,6 +6,6 @@ class DepartmentSkills(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    candidat_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
+    departement_id = Column(Integer, ForeignKey("departments.id"), nullable=False)
 
-    skill_id = Column(Integer, ForeignKey("skills.id"), nullable=False)
+    title = Column(String, nullable=False)

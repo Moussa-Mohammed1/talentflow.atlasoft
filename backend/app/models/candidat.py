@@ -13,6 +13,8 @@ class Candidat(Base):
 
     phone = Column(String, nullable=False, index=True)
 
+    photo = Column(String, nullable=True)
+
     resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)

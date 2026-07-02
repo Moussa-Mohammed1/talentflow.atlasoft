@@ -11,6 +11,7 @@ import {
   Calendar,
   BadgeCheck,
   Bell,
+  LucideSend,
   Lock,
   Save,
   Moon,
@@ -25,11 +26,12 @@ import { SettingsService, type NotificationPreferences, type UIPreferences } fro
 import { useAuthStore } from "@/stores/auth.store";
 import { useToast } from "@/hooks/useToast";
 
-type Tab = "notifications" | "security";
+type Tab = "notifications" | "security" | "invitations";
 
 const tabs: { key: Tab; label: string; icon: typeof Bell | typeof Lock }[] = [
   { key: "notifications", label: "Notifications", icon: Bell },
   { key: "security", label: "Sécurité", icon: Lock },
+  { key: "invitations", label: "Invitations", icon: LucideSend }
 ];
 
 function formatDate(dateStr: string | null | undefined): string {

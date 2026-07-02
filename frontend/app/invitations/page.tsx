@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Clock,
   CheckCircle2,
@@ -21,7 +21,6 @@ import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
 import InvitationFormModal from "@/components/invitation/InvitationFormModal";
 import { useToast } from "@/hooks/useToast";
-import { useAuthStore } from "@/stores/auth.store";
 import type { Invitation, InvitationStatus } from "@/types/invitation";
 
 function getStatus(inv: Invitation): InvitationStatus {
@@ -94,23 +93,28 @@ export default function InvitationsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toast = useToast();
-  const user = useAuthStore((s) => s.user);
+
+  const loadInvitations = useCallback(async () => {
+    try {
+      const { InvitationService } = await import(
+        "@/services/invitation.service"
+      );
+      const data = await InvitationService.getAll();
+      setInvitations(data);
+    } catch {
+      // silently fail; show empty list
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInvitations();
+  }, [loadInvitations]);
 
   const handleInviteSuccess = useCallback(
-    (email: string) => {
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-      const newInv: Invitation = {
-        id: Date.now(),
-        email,
-        accepted: false,
-        expires_at: expiresAt.toISOString(),
-        invited_by_name: user?.fullname || "Vous",
-        created_at: now.toISOString(),
-      };
-      setInvitations((prev) => [newInv, ...prev]);
+    (_email: string) => {
+      loadInvitations();
     },
-    [user?.fullname]
+    [loadInvitations]
   );
 
   const handleResend = useCallback(
@@ -249,7 +253,7 @@ export default function InvitationsPage() {
 
           <div className="flex flex-col gap-3 mrc border border-slate-100 bg-white p-3 shadow-xs md:flex-row md:items-center md:justify-between">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 h-full w-4" />
+              <Search className="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 h-full w-8" />
               <input
                 type="text"
                 value={searchQuery}

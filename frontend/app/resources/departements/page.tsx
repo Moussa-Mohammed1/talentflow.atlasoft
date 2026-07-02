@@ -37,8 +37,6 @@ export default function DepartementsPage() {
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [detailDept, setDetailDept] = useState<Department | null>(null);
-  const [page, setPage] = useState(1);
-  const PAGE_SIZE = 8;
 
   const toast = useToast();
 
@@ -58,10 +56,6 @@ export default function DepartementsPage() {
     loadDepartments();
   }, [loadDepartments]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, sortBy]);
-
   const filteredDepartments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return departments
@@ -71,12 +65,6 @@ export default function DepartementsPage() {
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
   }, [departments, searchQuery, sortBy]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredDepartments.length / PAGE_SIZE));
-  const paginatedDepartments = useMemo(
-    () => filteredDepartments.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [filteredDepartments, page]
-  );
 
   const metrics = useMemo(
     () => ({
@@ -155,10 +143,10 @@ export default function DepartementsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleOpenCreate}
-              className="inline-flex items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
+              className="inline-flex items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
             >
               <Plus className="h-4 w-4" />
-              Nouveau département
+              <p className="sm:hidden">Nouveau département</p>
             </button>
             <NotificationButton />
           </div>
@@ -208,7 +196,7 @@ export default function DepartementsPage() {
             <div className="space-y-2">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="h-14 bg-white border border-slate-100 mrc p-4 shadow-xs animate-pulse flex items-center">
-                  <div className="h-4 bg-slate-100 rounded w-48" />
+                  <div className="h-4 bg-slate-100  w-48" />
                 </div>
               ))}
             </div>
@@ -250,7 +238,7 @@ export default function DepartementsPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {paginatedDepartments.map((dept) => (
+                      {filteredDepartments.map((dept) => (
                         <tr
                           key={dept.id}
                           onClick={() => setDetailDept(dept)}
@@ -271,10 +259,10 @@ export default function DepartementsPage() {
                           <td className="px-6 py-4">
                             {dept.required_skills && dept.required_skills.length > 0 ? (
                               <div className="flex flex-wrap gap-1.5">
-                                {dept.required_skills.slice(0, 3).map((skill, i) => (
+                                {dept.required_skills.slice(0, 3).map((skill) => (
                                   <span
-                                    key={`${skill}-${i}`}
-                                    className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                                    key={skill}
+                                    className="inline-flex items-center rounded-xs bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
                                   >
                                     {skill}
                                   </span>
@@ -338,7 +326,7 @@ export default function DepartementsPage() {
               </div>
 
               <div className="space-y-3 md:hidden">
-                {paginatedDepartments.map((dept) => (
+                {filteredDepartments.map((dept) => (
                   <div
                     key={dept.id}
                     onClick={() => setDetailDept(dept)}
@@ -366,9 +354,9 @@ export default function DepartementsPage() {
                     </div>
                     {dept.required_skills && dept.required_skills.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 border-t border-slate-50 pt-2">
-                        {dept.required_skills.map((skill, i) => (
+                        {dept.required_skills.map((skill) => (
                           <span
-                            key={`${skill}-${i}`}
+                            key={skill}
                             className="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
                           >
                             {skill}
@@ -412,43 +400,6 @@ export default function DepartementsPage() {
                   </div>
                 ))}
               </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-slate-100 bg-white px-4 py-3 mrc shadow-xs">
-                  <p className="text-xs text-slate-500">
-                    Page {page} sur {totalPages} ({filteredDepartments.length} département{filteredDepartments.length > 1 ? "s" : ""})
-                  </p>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page <= 1}
-                      className="px-3 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Précédent
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                      <button
-                        key={p}
-                        onClick={() => setPage(p)}
-                        className={`min-w-[32px] px-2 py-1.5 text-xs font-medium border transition-colors ${
-                          p === page
-                            ? "border-slate-900 bg-slate-900 text-white"
-                            : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                        }`}
-                      >
-                        {p}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page >= totalPages}
-                      className="px-3 py-1.5 text-xs font-medium border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Suivant
-                    </button>
-                  </div>
-                </div>
-              )}
             </>
           )}
         </main>
@@ -460,11 +411,7 @@ export default function DepartementsPage() {
         onClose={handleCloseModal}
         onSave={handleSave}
       />
-
-      <DepartmentDetailModal
-        department={detailDept}
-        onClose={() => setDetailDept(null)}
-      />
+ 
     </div>
   );
 }
@@ -586,105 +533,6 @@ function DepartmentModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
-  );
-}
-
-function DepartmentDetailModal({
-  department,
-  onClose,
-}: {
-  department: Department | null;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    if (department) {
-      const handler = (e: KeyboardEvent) => {
-        if (e.key === "Escape") onClose();
-      };
-      document.addEventListener("keydown", handler);
-      return () => document.removeEventListener("keydown", handler);
-    }
-  }, [department, onClose]);
-
-  if (!department) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/30 backdrop-blur-xs p-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Building2 className="h-5 w-5 text-slate-400" />
-            <h3 className="text-base font-semibold text-gray-900">{department.name}</h3>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="p-6 space-y-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Expérience requise</p>
-              <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
-                <Briefcase className="h-4 w-4 text-slate-400" />
-                {department.required_exp_years} an{department.required_exp_years > 1 ? "s" : ""}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Date de création</p>
-              <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 text-slate-400" />
-                {formatDate(department.created_at)}
-              </p>
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Compétences requises
-              {department.required_skills && department.required_skills.length > 0 && (
-                <span className="ml-1.5 text-xs font-normal text-gray-300">
-                  ({department.required_skills.length})
-                </span>
-              )}
-            </p>
-            {department.required_skills && department.required_skills.length > 0 ? (
-              <div className="flex flex-wrap gap-1.5">
-                {department.required_skills.map((skill) => (
-                  <span
-                    key={skill}
-                    className="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-300">Aucune compétence requise</p>
-            )}
-          </div>
-        </div>
-
-        <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex items-center justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors"
-          >
-            Fermer
-          </button>
-        </div>
       </div>
     </div>
   );

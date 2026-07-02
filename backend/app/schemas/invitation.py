@@ -23,6 +23,5 @@ class InvitationResponse(BaseModel):
     email: EmailStr
     accepted: bool
     expires_at: datetime
-
-    class Config:
-        from_attributes = True
+    created_at: datetime
+    invited_by_name: str

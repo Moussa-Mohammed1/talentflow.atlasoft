@@ -1,7 +1,12 @@
 import api from "@/lib/axios";
-import type { AcceptInvitationRequest, AcceptInvitationResponse, InviteUserResponse, ValidateInvitationResponse } from "@/types/invitation";
+import type { AcceptInvitationRequest, AcceptInvitationResponse, Invitation, InviteUserResponse, ValidateInvitationResponse } from "@/types/invitation";
 
 export const InvitationService = {
+  getAll: async (): Promise<Invitation[]> => {
+    const response = await api.get<Invitation[]>("/auth/invitations");
+    return response.data;
+  },
+
   invite: async (email: string): Promise<InviteUserResponse> => {
     const response = await api.post<InviteUserResponse>("/auth/invite", { email });
     return response.data;

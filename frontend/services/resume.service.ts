@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { ResumeDetails } from "@/components/resume/DocumentResumeInfos";
+import { ResumeDetails } from "@/components/resume/documents/DocumentResumeInfos";
 
 export interface DocumentListItem {
   id: string;

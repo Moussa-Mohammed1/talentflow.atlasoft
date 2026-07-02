@@ -50,6 +50,7 @@ class CandidatDetailSchema(BaseModel):
 	fullname: str
 	email: str
 	phone: str
+	photo: str | None = None
 	created_at: datetime | None = None
 
 

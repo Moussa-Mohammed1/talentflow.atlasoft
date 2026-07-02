@@ -26,3 +26,4 @@ class ResumeIdentityRead(BaseModel):
     name: NameExtractionRead = Field(default_factory=NameExtractionRead)
     email: IdentityFieldRead = Field(default_factory=IdentityFieldRead)
     phone: IdentityFieldRead = Field(default_factory=IdentityFieldRead)
+    photo: str | None = None

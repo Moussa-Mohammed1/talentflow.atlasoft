@@ -24,6 +24,19 @@ export default function LoginForm() {
     const { setUser, setToken } = useAuthStore();
 
     useEffect(() => {
+        const tokenParam = searchParams.get("token");
+        if (tokenParam) {
+            localStorage.setItem("access_token", tokenParam);
+            document.cookie = `access_token=${tokenParam}; path=/; max-age=86400; SameSite=Lax`;
+            useAuthStore.getState().setToken(tokenParam);
+            AuthService.me().then((res) => {
+                useAuthStore.getState().setUser(res.user);
+                router.replace("/dashboard");
+            }).catch(() => {
+                router.replace("/login");
+            });
+            return;
+        }
         if (searchParams.get("expired") === "true") {
             addToast({
                 type: "warning",
@@ -61,7 +74,8 @@ export default function LoginForm() {
         setToken(token);
 
         const user = await AuthService.me();
-
+        console.log(user);
+        
         setUser(response.user);
         router.push("/dashboard");
 
@@ -161,6 +175,28 @@ export default function LoginForm() {
                 {loading ? "Connexion..." : "Se connecter"}
             </button>
         </form>
+
+        <div className="relative my-6">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-200" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-4 text-slate-400">ou continuer avec</span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => {
+            window.location.href = "http://localhost:8000/api/auth/linkedin/login";
+          }}
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          <span>S&apos;authentifier avec LinkedIn</span>
+        </button>
 
         <hr className="my-6 border-slate-100" />
 

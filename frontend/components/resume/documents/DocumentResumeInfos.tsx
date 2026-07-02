@@ -531,42 +531,58 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
           </div>
 
          
-          {data.certifications.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
-                <Award size={14} className="text-slate-500" />
-                Certifications Émises
-              </h4>
+          <div className="space-y-3">
+            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 pb-2 border-b border-slate-100">
+              <Award size={14} className="text-slate-500" />
+              Certifications Émises
+            </h4>
+            {data.certifications.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {data.certifications.map((cert) => (
-                  <div key={cert.id} className="p-3 border border-slate-100 hover:border-slate-200  bg-white space-y-1.5">
-                    <div>
-                      <span className="text-slate-400 font-medium block text-[10px]">Nom</span>
-                      <EditableField value={cert.name ?? ""} onSave={(v) => handleSaveCertification(cert.id, "name", v)} placeholder="—" inputClassName="w-full" readOnly={!isOwner} />
-                    </div>
-                    <div>
-                      <span className="text-slate-400 font-medium block text-[10px]">Organisation</span>
-                      <EditableField value={cert.organization ?? ""} onSave={(v) => handleSaveCertification(cert.id, "organization", v)} placeholder="—" inputClassName="w-full" readOnly={!isOwner} />
-                    </div>
-                    <div className="flex gap-3 text-[10px]">
-                      {cert.issue_date !== undefined && (
-                        <div className="flex-1">
-                          <span className="text-slate-400 font-medium block">Délivré le</span>
-                          <EditableField value={cert.issue_date || ""} onSave={(v) => handleSaveCertification(cert.id, "issue_date", v)} placeholder="—" readOnly={!isOwner} />
+                  <div key={cert.id} className="p-3 border border-slate-100 hover:border-slate-200 bg-white space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                      <div className="col-span-2">
+                        <span className="text-slate-400 font-medium block">Nom</span>
+                        <EditableField value={cert.name ?? ""} onSave={(v) => handleSaveCertification(cert.id, "name", v)} placeholder="—" inputClassName="w-full" readOnly={!isOwner} />
+                      </div>
+                      <div className="col-span-2">
+                        <span className="text-slate-400 font-medium block">Organisation</span>
+                        <EditableField value={cert.organization ?? ""} onSave={(v) => handleSaveCertification(cert.id, "organization", v)} placeholder="—" inputClassName="w-full" readOnly={!isOwner} />
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-medium block">Délivré le</span>
+                        <EditableField value={cert.issue_date || ""} onSave={(v) => handleSaveCertification(cert.id, "issue_date", v)} placeholder="—" readOnly={!isOwner} />
+                      </div>
+                      <div>
+                        <span className="text-slate-400 font-medium block">Expire le</span>
+                        <EditableField value={cert.expiration_date || ""} onSave={(v) => handleSaveCertification(cert.id, "expiration_date", v)} placeholder="—" readOnly={!isOwner} />
+                      </div>
+                      {cert.credential_id !== undefined && (
+                        <div>
+                          <span className="text-slate-400 font-medium block">ID Crédential</span>
+                          <EditableField value={cert.credential_id ?? ""} onSave={(v) => handleSaveCertification(cert.id, "credential_id", v)} placeholder="—" readOnly={!isOwner} />
                         </div>
                       )}
-                      {cert.expiration_date !== undefined && (
-                        <div className="flex-1">
-                          <span className="text-slate-400 font-medium block">Expire le</span>
-                          <EditableField value={cert.expiration_date || ""} onSave={(v) => handleSaveCertification(cert.id, "expiration_date", v)} placeholder="—" readOnly={!isOwner} />
+                      {cert.credential_url !== undefined && (
+                        <div>
+                          <span className="text-slate-400 font-medium block">URL Crédential</span>
+                          <EditableField value={cert.credential_url ?? ""} onSave={(v) => handleSaveCertification(cert.id, "credential_url", v)} placeholder="—" readOnly={!isOwner} />
                         </div>
                       )}
                     </div>
+                    {cert.description !== undefined && (
+                      <div>
+                        <span className="text-slate-400 font-medium block text-[10px]">Description</span>
+                        <EditableTextArea value={cert.description ?? ""} onSave={(v) => handleSaveCertification(cert.id, "description", v)} placeholder="—" readOnly={!isOwner} />
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <p className="text-[11px] text-slate-400 italic">Aucune certification détectée.</p>
+            )}
+          </div>
           </div>
 
           

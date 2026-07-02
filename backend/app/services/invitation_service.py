@@ -18,6 +18,37 @@ class InvitationService:
     INVITATION_EXPIRATION_HOURS = 48
 
     @staticmethod
+    def get_invitations(
+        db: Session,
+        invited_by: int,
+    ):
+        results = (
+            db.query(
+                Invitation.id,
+                Invitation.email,
+                Invitation.accepted,
+                Invitation.expires_at,
+                Invitation.created_at,
+                User.fullname.label("invited_by_name"),
+            )
+            .join(User, Invitation.invited_by == User.id)
+            .filter(Invitation.invited_by == invited_by)
+            .order_by(Invitation.created_at.desc())
+            .all()
+        )
+        return [
+            {
+                "id": r.id,
+                "email": r.email,
+                "accepted": r.accepted,
+                "expires_at": r.expires_at,
+                "created_at": r.created_at,
+                "invited_by_name": r.invited_by_name,
+            }
+            for r in results
+        ]
+
+    @staticmethod
     async def invite_user(
         db: Session,
         email: str,

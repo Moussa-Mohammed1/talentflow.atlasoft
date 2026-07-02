@@ -1,15 +1,59 @@
+import secrets
+import os
+import uuid
+from pathlib import Path
+
+import httpx
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.schemas.auth import UserResponse
-import os
 from app.models.user import User
 from app.core.security import (
     verify_password,
-    create_access_token
+    create_access_token,
+    hash_password,
 )
 
+AVATAR_DIR = Path("storage/avatars")
+
 EMAIL_SUFFIX = os.getenv("EMAIL_SUFFIX")
-PASSWORD_PATTERN= os.getenv("PASSWORD_PATTERN")
+PASSWORD_PATTERN = os.getenv("PASSWORD_PATTERN")
+APP_URL = os.getenv("APP_URL")
+
+
+def build_avatar_url(avatar: str | None) -> str | None:
+    if not avatar:
+        return None
+    if avatar.startswith("/"):
+        return f"{APP_URL}{avatar}"
+    return avatar
+
+
+async def download_external_avatar(url: str) -> str | None:
+    if not url or not url.startswith(("http://", "https://")):
+        return None
+    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            content_type = response.headers.get("content-type", "")
+            ext = ".jpg"
+            if "png" in content_type:
+                ext = ".png"
+            elif "gif" in content_type:
+                ext = ".gif"
+            elif "webp" in content_type:
+                ext = ".webp"
+            unique_name = f"{uuid.uuid4()}{ext}"
+            file_path = AVATAR_DIR / unique_name
+            with open(file_path, "wb") as f:
+                f.write(response.content)
+            return f"/storage/avatars/{unique_name}"
+    except Exception:
+        return None
+
+
 class AuthService:
 
     @staticmethod
@@ -71,7 +115,7 @@ class AuthService:
                 "role": user.role,
                 "is_active": user.is_active,
                 "must_change_password": user.must_change_password,
-                "avatar": f"{os.getenv('APP_URL')}{user.avatar}",
+                "avatar": build_avatar_url(user.avatar),
                 "email_verified": user.email_verified,
                 "email_verified_at": user.email_verified_at,
                 "created_at": user.created_at,
@@ -79,3 +123,60 @@ class AuthService:
             "must_change_password":
                 user.must_change_password
         }
+
+    @staticmethod
+    def handle_linkedin_user(
+        db: Session,
+        linkedin_data: dict,
+        local_avatar: str | None = None,
+    ) -> User:
+        email = linkedin_data.get("email", "")
+        linkedin_id = linkedin_data.get("sub", "")
+        given_name = linkedin_data.get("given_name", "")
+        family_name = linkedin_data.get("family_name", "")
+        fullname = f"{given_name} {family_name}".strip()
+        if not fullname:
+            fullname = linkedin_data.get("name", "LinkedIn User")
+        avatar_path = local_avatar or linkedin_data.get("picture", "")
+
+        user = db.query(User).filter(
+            User.linkedin_id == linkedin_id
+        ).first()
+        if user:
+            if avatar_path:
+                user.avatar = avatar_path
+            db.commit()
+            db.refresh(user)
+            return user
+
+        if email:
+            user = db.query(User).filter(
+                User.email == email
+            ).first()
+            if user:
+                user.linkedin_id = linkedin_id
+                user.auth_provider = "linkedin"
+                if avatar_path:
+                    user.avatar = avatar_path
+                user.email_verified = True
+                db.commit()
+                db.refresh(user)
+                return user
+
+        random_password = secrets.token_urlsafe(32)
+        user = User(
+            fullname=fullname,
+            email=email or f"linkedin_{linkedin_id}@placeholder.com",
+            hashed_password=hash_password(random_password),
+            linkedin_id=linkedin_id,
+            auth_provider="linkedin",
+            avatar=avatar_path,
+            email_verified=True,
+            is_active=True,
+            must_change_password=False,
+            role="RECRUITER",
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return user

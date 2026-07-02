@@ -143,7 +143,7 @@ export default function DepartementsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleOpenCreate}
-              className="inline-flex items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
+git               className="inline-flex items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
             >
               <Plus className="h-4 w-4" />
               <p className="sm:hidden">Nouveau département</p>

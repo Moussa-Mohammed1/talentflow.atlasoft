@@ -183,6 +183,7 @@ def get_full_resume_detail(db: Session, resume_id: int):
             fullname=candidat.fullname,
             email=candidat.email,
             phone=candidat.phone,
+            photo=candidat.photo,
             created_at=candidat.created_at,
         ),
         experiences=[

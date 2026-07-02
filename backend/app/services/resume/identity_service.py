@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from fastapi import BackgroundTasks, HTTPException, status
@@ -12,10 +13,13 @@ from app.schemas.identity_extraction import ResumeIdentityRead
 from app.services.candidat_service import update_candidat_from_identity
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
 from app.services.resume_extraction.extractor import TextExtractionService, UnsupportedFileTypeError
+from app.services.resume_photo_service import ResumePhotoService
 
 from .job_manager import JobManager
 from .notification_helper import NotificationHelper
 from .resume_loader import ResumeLoader
+
+logger = logging.getLogger(__name__)
 
 
 class ResumeIdentityService:
@@ -34,7 +38,8 @@ class ResumeIdentityService:
 
         try:
             jm.start(job_id, "Extracting candidate identity")
-            text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            resume_full_path = ResumeLoader.resolve_path(resume.path)
+            text = TextExtractionService().extract(str(resume_full_path))
             identity = ResumeIdentityPipeline().analyze(text)
             jm.complete(job_id, "Identity extraction completed")
         except UnsupportedFileTypeError as e:
@@ -55,7 +60,18 @@ class ResumeIdentityService:
             NotificationHelper.notify_duplicate(background_tasks, db, recruiter_id=recruiter_id, message=detail)
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
-        CandidatRepository.upsert_from_identity(db, resume_id=resume.id, identity=validated)
+        candidat = CandidatRepository.upsert_from_identity(db, resume_id=resume.id, identity=validated)
+
+        photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
+        if photo_path:
+            try:
+                candidat.photo = photo_path
+                db.commit()
+                validated.photo = photo_path
+            except Exception as e:
+                logger.warning("Failed to save photo path: %s", e)
+                db.rollback()
+
         NotificationHelper.notify_identity_completed(background_tasks, db, recruiter_id=recruiter_id, candidate_name=validated.name.full_name)
         return validated
 
@@ -72,7 +88,8 @@ class ResumeIdentityService:
 
         try:
             jm.start(job_id, "Re-extracting candidate identity")
-            text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            resume_full_path = ResumeLoader.resolve_path(resume.path)
+            text = TextExtractionService().extract(str(resume_full_path))
             identity = ResumeIdentityPipeline().analyze(text)
             jm.complete(job_id, "Identity re-extraction completed")
         except UnsupportedFileTypeError as e:
@@ -93,5 +110,24 @@ class ResumeIdentityService:
             update_candidat_from_identity(db, candidat, validated)
             notify = NotificationHelper.notify_identity_completed
 
+        photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
+        if photo_path:
+            try:
+                candidat.photo = photo_path
+                db.commit()
+                validated.photo = photo_path
+            except Exception as e:
+                logger.warning("Failed to save photo path: %s", e)
+                db.rollback()
+
         notify(background_tasks, db, recruiter_id=recruiter_id, candidate_name=validated.name.full_name)
         return validated
+
+    @staticmethod
+    def _extract_photo(resume_path: Path, candidate_id: int) -> str | None:
+        try:
+            service = ResumePhotoService()
+            return service.extract_candidate_photo(resume_path, candidate_id)
+        except Exception as e:
+            logger.warning("Candidate photo extraction failed: %s", e)
+            return None

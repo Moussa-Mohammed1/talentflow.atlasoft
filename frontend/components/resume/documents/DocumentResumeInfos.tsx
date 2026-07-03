@@ -74,6 +74,7 @@ export interface ResumeDetails {
     fullname: string;
     email: string;
     phone: string;
+    photo: string | null;
     created_at: string;
   } | null;
   experiences: ExtractedExperience[] | null;
@@ -210,7 +211,7 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
   data.resume_id ??= 0;
   data.recruiter_id ??= 0;
   data.recruiter_name ??= "";
-  data.candidat ??= { id: 0, fullname: "", email: "", phone: "", created_at: "" };
+  data.candidat ??= { id: 0, fullname: "", email: "", phone: "", photo: null, created_at: "" };
   data.experiences ??= [];
   data.educations ??= [];
   data.certifications ??= [];
@@ -382,8 +383,20 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
                 Informations Personnelles
               </h4>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+
+            <div className="flex gap-4">
+              {data.candidat?.photo && (
+                <div className="shrink-0">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200">
+                    <img
+                      src={`/storage/${data.candidat.photo}`}
+                      alt="Photo du candidat"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs flex-1">
               <div className="space-y-1">
                 <span className="text-slate-400 font-medium block">Nom complet</span>
                 <EditableField value={data.candidat?.fullname ?? ""} onSave={(v) => handleSaveCandidat("fullname", v)} placeholder="—" readOnly={!isOwner} />
@@ -397,6 +410,7 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
                 <EditableField value={data.candidat?.phone ?? ""} onSave={(v) => handleSaveCandidat("phone", v)} placeholder="—" readOnly={!isOwner} />
               </div>
             </div>
+          </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

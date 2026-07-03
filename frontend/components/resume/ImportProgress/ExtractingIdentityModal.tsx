@@ -1,5 +1,5 @@
 import { useModal } from "@/context/ModalContext";
-import { Loader2, User, Mail, Phone } from "lucide-react";
+import { Loader2, User, Mail, Phone, Camera } from "lucide-react";
 
 interface ExtractingIdentityModalProps {
   isOpen: boolean;
@@ -76,6 +76,17 @@ export default function ExtractingIdentityModal({
               <div className="flex-1 space-y-2">
                 <div className="h-2 bg-gray-200 rounded w-14" />
                 <div className="h-3 bg-gray-200 rounded w-32" />
+              </div>
+            </div>
+
+            
+            <div className="flex items-center gap-4 animate-pulse">
+              <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-400">
+                <Camera className="w-4 h-4"/>
+              </div>
+              <div className="flex-1 space-y-2">
+                <div className="h-2 bg-gray-200 rounded w-16" />
+                <div className="h-3 bg-gray-200 rounded w-28" />
               </div>
             </div>
           </div>

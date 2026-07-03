@@ -1,6 +1,5 @@
-import { CheckCircle2, User, Mail, Phone, X } from "lucide-react";
+import { CheckCircle2, User, Mail, Phone, Camera, X } from "lucide-react";
 
-// Define the interface mapping exactly to your extracted schema
 interface IdentityData {
   name?: {
     full_name?: string;
@@ -11,6 +10,7 @@ interface IdentityData {
   phone?: {
     value?: string;
   };
+  photo?: string | null;
 }
 
 interface SuccessExtractingIdentityModalProps {
@@ -27,6 +27,7 @@ export default function SuccessExtractingIdentityModal({
   const fullName = data?.name?.full_name || "Non spécifié";
   const email = data?.email?.value || "Non spécifié";
   const phone = data?.phone?.value || "Non spécifié";
+  const photoUrl = data?.photo ? `/storage/${data.photo}` : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300">
@@ -57,6 +58,18 @@ export default function SuccessExtractingIdentityModal({
         </div>
 
         <div className="p-6 space-y-6">
+          {photoUrl && (
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-green-200">
+                <img
+                  src={photoUrl}
+                  alt="Photo du candidat"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <h3 className="text-sm font-semibold text-gray-800">Données extraites</h3>
@@ -93,11 +106,20 @@ export default function SuccessExtractingIdentityModal({
                 <p className="text-sm font-semibold text-gray-900">{phone}</p>
               </div>
             </div>
+
+            {photoUrl && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+                  <Camera className="w-4 h-4" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Photo</p>
+                  <p className="text-xs font-medium text-green-600">Photo extraite avec succès</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
- 
-    
-     
       </div>
     </div>
   );

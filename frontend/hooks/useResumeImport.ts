@@ -27,6 +27,7 @@ export interface ResumeIdentityResult {
     confidence?: number;
     evidence?: string[];
   };
+  photo?: string | null;
   stats?: Record<string, unknown>;
 }
 

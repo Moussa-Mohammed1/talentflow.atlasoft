@@ -1,6 +1,8 @@
 "use client";
+import { Suspense } from 'react';
 import Head from 'next/head';
 import LoginForm from '@/components/auth/LoginForm';
+import Image from 'next/image';
 export default function LoginPage() {
   return (
     <> 
@@ -10,8 +12,13 @@ export default function LoginPage() {
       </Head>
 
        
-      <div className="min-h-screen lg:h-screen w-full bg-white bg-cover bg-center bg-no-repeat text-slate-800 relative overflow-y-auto lg:overflow-hidden select-none">
-        
+      <div className='min-h-screen lg:h-screen w-full bg-white  text-slate-800 relative overflow-y-auto lg:overflow-hidden select-none'>
+        <Image
+          src="/static/bg-login.svg"
+          alt=""
+          fill
+          className="object-cover rotate-180"
+        />
         <div className="absolute inset-0 bg-black/10 z-0" />
         
      
@@ -45,7 +52,9 @@ export default function LoginPage() {
             <div className="w-full flex flex-col items-center justify-center py-2 lg:py-4">
               
                
-                <LoginForm/>
+                <Suspense fallback={<div className="w-full h-40 flex items-center justify-center text-sm text-slate-400">Chargement...</div>}>
+                  <LoginForm/>
+                </Suspense>
             </div>
           </div>
 

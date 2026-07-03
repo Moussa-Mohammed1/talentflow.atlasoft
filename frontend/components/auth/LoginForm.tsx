@@ -16,7 +16,11 @@ export default function LoginForm() {
         password.trim() !== "";
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
-
+    const linkedin_redirect_url = process.env.NEXT_PUBLIC_LINKEDIN_LOGIN_URL;
+    
+    if (!linkedin_redirect_url) {
+        throw new Error("LI redirect url is missing")
+    }
     const router = useRouter();
     const searchParams = useSearchParams();
     const { addToast } = useToastStore();
@@ -188,7 +192,7 @@ export default function LoginForm() {
         <button
           type="button"
           onClick={() => {
-            window.location.href = "http://localhost:8000/api/auth/linkedin/login";
+            window.location.href = linkedin_redirect_url!;
           }}
           className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 hover:border-slate-300 transition-all cursor-pointer"
         >

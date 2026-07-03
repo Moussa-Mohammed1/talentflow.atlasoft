@@ -16,6 +16,10 @@ import {
     FolderOpen,
     MailPlus,
     LampDesk,
+    HelpingHand,
+    HelpingHandIcon,
+    Info,
+    BadgeQuestionMarkIcon,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 
@@ -40,6 +44,7 @@ export default function Sidebar() {
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
       { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
+      { icon: <BadgeQuestionMarkIcon size={16} />, label: "Aide", href: "/help" },
     ];
 
     return (
@@ -92,7 +97,7 @@ export default function Sidebar() {
                   href={item.href}
                   className={`w-full flex items-center focus:scale-95 px-2.5 py-2  text-xs font-medium transition-colors ${
                     pathname === item.href
-                      ? "bg-slate-50 text-slate-900 border"
+                      ? "bg-slate-200 text-slate-900 border-l-3 border-l-blue-500"
                       : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
                   }`}
                 >
@@ -129,7 +134,7 @@ export default function Sidebar() {
           >    
             <div>
               
-              <div className="flex items-center justify-between py-3 px-2.5 my-2 select-none">
+              <div className="flex items-center justify-between py-3 px-4 my-2 select-none">
                 <Image
                   src="/images/logo.png"
                   alt="3GCOM Logo"
@@ -160,9 +165,9 @@ export default function Sidebar() {
                   <Link
                     key={index}
                     href={item.href}
-                    className={`w-full flex items-center focus:scale-95 focus:border px-5.5 py-2 text-xs font-medium transition-all ${
+                    className={`w-full flex items-center focus:scale-99 focus:border px-5.5 py-2 text-xs font-medium transition-all ${
                       pathname === item.href
-                        ? "bg-slate-50 text-slate-900 border-t border-b "
+                        ? "bg-slate-200 text-slate-900 border-l-3 border-l-blue-500 "
                         : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
                     }`}
                   >

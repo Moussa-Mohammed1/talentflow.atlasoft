@@ -95,6 +95,17 @@ export default function DepartementsPage() {
     setEditingDept(null);
   }, []);
 
+  const handleCloseDetail = useCallback(() => {
+    setDetailDept(null);
+    setDeleteConfirmId(null);
+  }, []);
+
+  const handleEditFromDetail = useCallback((dept: Department) => {
+    setDetailDept(null);
+    setEditingDept(dept);
+    setIsModalOpen(true);
+  }, []);
+
   const handleSave = useCallback(
     async (name: string, requiredExpYears: number, requiredSkills: string) => {
       try {
@@ -143,10 +154,10 @@ export default function DepartementsPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleOpenCreate}
-git               className="inline-flex items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
+              className="flex  items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
             >
               <Plus className="h-4 w-4" />
-              <p className="sm:hidden">Nouveau département</p>
+              <p className="not-lg:hidden ">Nouveau département</p>
             </button>
             <NotificationButton />
           </div>
@@ -234,7 +245,6 @@ git               className="inline-flex items-center justify-center gap-2 borde
                         <th className="px-6 py-3.5">Exp. requise (ans)</th>
                         <th className="px-6 py-3.5">Compétences requises</th>
                         <th className="px-6 py-3.5">Date de création</th>
-                        <th className="px-6 py-3.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -283,41 +293,6 @@ git               className="inline-flex items-center justify-center gap-2 borde
                               {formatDate(dept.created_at)}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleOpenEdit(dept); }}
-                                className="p-1 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-indigo-50 transition-colors"
-                                title="Modifier"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </button>
-                              {deleteConfirmId === dept.id ? (
-                                <div className="flex items-center gap-1">
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleDelete(dept.id); }}
-                                    className="px-2 py-1 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors"
-                                  >
-                                    Confirmer
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
-                                    className="p-1 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition-colors"
-                                  >
-                                    <X className="h-4 w-4" />
-                                  </button>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(dept.id); }}
-                                  className="p-1 text-slate-400 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors"
-                                  title="Supprimer"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -364,39 +339,7 @@ git               className="inline-flex items-center justify-center gap-2 borde
                         ))}
                       </div>
                     )}
-                    <div className="flex items-center justify-end gap-2 border-t border-slate-50 pt-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleOpenEdit(dept); }}
-                        className="inline-flex items-center gap-1 border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-700"
-                      >
-                        <Pencil className="h-3 w-3" />
-                        Modifier
-                      </button>
-                      {deleteConfirmId === dept.id ? (
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(dept.id); }}
-                            className="px-2.5 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded"
-                          >
-                            Confirmer
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(null); }}
-                            className="p-1.5 text-slate-400 hover:text-slate-600"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(dept.id); }}
-                          className="inline-flex items-center gap-1 border border-rose-100 bg-rose-50/50 px-2.5 py-1.5 text-xs font-medium text-rose-700"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Supprimer
-                        </button>
-                      )}
-                    </div>
+
                   </div>
                 ))}
               </div>
@@ -411,7 +354,21 @@ git               className="inline-flex items-center justify-center gap-2 borde
         onClose={handleCloseModal}
         onSave={handleSave}
       />
- 
+
+      {detailDept && (
+        <DepartmentDetailModal
+          department={detailDept}
+          onClose={handleCloseDetail}
+          onEdit={handleEditFromDetail}
+          onDelete={() => setDeleteConfirmId(detailDept.id)}
+          deleteConfirmId={deleteConfirmId}
+          onConfirmDelete={async () => {
+            await handleDelete(detailDept.id);
+            handleCloseDetail();
+          }}
+          onCancelDelete={() => setDeleteConfirmId(null)}
+        />
+      )}
     </div>
   );
 }
@@ -533,6 +490,117 @@ function DepartmentModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function DepartmentDetailModal({
+  department,
+  onClose,
+  onEdit,
+  onDelete,
+  deleteConfirmId,
+  onConfirmDelete,
+  onCancelDelete,
+}: {
+  department: Department;
+  onClose: () => void;
+  onEdit: (dept: Department) => void;
+  onDelete: () => void;
+  deleteConfirmId: number | null;
+  onConfirmDelete: () => void;
+  onCancelDelete: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/30 backdrop-blur-xs p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-gray-900">{department.name}</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Expérience requise</label>
+              <p className="text-sm text-gray-900">
+                {department.required_exp_years} an{department.required_exp_years > 1 ? "s" : ""}
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1">Date de création</label>
+              <p className="text-sm text-gray-900">{formatDate(department.created_at)}</p>
+            </div>
+          </div>
+
+          {department.required_skills && department.required_skills.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-700 mb-1.5">Compétences requises</label>
+              <div className="flex flex-wrap gap-1.5">
+                {department.required_skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className="inline-flex items-center rounded-xs bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex items-center justify-end gap-2">
+          {deleteConfirmId === department.id ? (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={onConfirmDelete}
+                className="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded transition-colors"
+              >
+                Confirmer la suppression
+              </button>
+              <button
+                onClick={onCancelDelete}
+                className="border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                onClick={() => onEdit(department)}
+                className="inline-flex items-center gap-2 border bg-white px-4 py-2 text-sm font-medium text-black shadow-xs hover:bg-black hover:text-white transition-colors"
+              >
+                <Pencil className="h-4 w-4" />
+                Modifier
+              </button>
+              <button
+                onClick={onDelete}
+                className="inline-flex items-center gap-2 border bg-white px-4 py-2 text-sm font-medium text-black shadow-xs hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Supprimer
+              </button>
+              <button
+                onClick={onClose}
+                className="border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors"
+              >
+                Fermer
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

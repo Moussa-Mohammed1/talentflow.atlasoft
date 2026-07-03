@@ -1,21 +1,25 @@
 "use client";
 
-import { useState } from 'react';
-import { 
-  Briefcase, 
-  BarChart2, 
-  Bell, 
-  ArrowRight,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Sidebar from '@/components/layouts/Sidebar';
 import NotificationButton from '@/components/ui/NotificationButton';
 import PasswordChangeBanner from '@/components/ui/PasswordChangeBanner';
-
+import { useRouter } from 'next/navigation';
 export default function Dashboard() {
-  
+  const router = useRouter();
   const cardsData = [
+    {
+    title: "Guide de démarrage",
+    path: "/help",
+    buttonText: "Commencer",
+    subtitle: "Prenez en main TalentFlow",
+    description:
+      "Découvrez étape par étape comment gérer vos recrutements, analyser les candidatures et exploiter les fonctionnalités de la plateforme.",
+    illustration: "/static/Acceuil/help.svg"
+  },
   {
     title: "Gestion des talents",
+    path: "/talents",
     buttonText: "Accéder",
     subtitle: "Consulter et gérer les profils talents",
     description:
@@ -24,6 +28,7 @@ export default function Dashboard() {
   },
   {
     title: "Analyse & Statistiques",
+    path: "/evalutaions",
     buttonText: "Voir",
     subtitle: "Suivre les indicateurs clés de recrutement",
     description:
@@ -32,12 +37,13 @@ export default function Dashboard() {
   },
   {
     title: "Documents & Ressources",
+    path: "/documents",
     buttonText: "Accéder",
     subtitle: "Centraliser les ressources et documents",
     description:
       "Retrouvez les CV, rapports d'évaluation et autres documents nécessaires à la gestion des talents et des recrutements.",
     illustration: "/static/Acceuil/documents.svg"
-  }
+  }  
 ];
 
   return (
@@ -47,45 +53,45 @@ export default function Dashboard() {
  
       <div className="flex-1 flex flex-col min-h-screen">
         
-        
         <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
           <h1 className="text-lg font-bold text-slate-900">Accueil</h1>
           <NotificationButton/>
         </header>
        
-        <main className="flex-1 px-6 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
+        <main className="flex-1 px-6 py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
             {cardsData.map((card, index) => (
-              <div 
-                key={index} 
-                className="bg-white border border-slate-100 mrc p-4  flex flex-col justify-between min-h-[180px]"
+              <div
+                key={index}
+                className="group bg-white border border-slate-100 mrc cursor-pointer h-52 overflow-hidden relative"
               >
-                
-                <div className="flex justify-between items-start mb-3">
-                  <h2 className="text-sm font-bold text-indigo-900">{card.title}</h2>
-                  <button className="flex items-center gap-1 cursor-pointer text-xs font-semibold text-indigo-600 border border-slate-200 rounded px-2.5 py-1 hover:bg-indigo-50 transition-colors">
-                    {card.buttonText}
-                    <ArrowRight size={12} />
-                  </button>
-                </div>
-
-                 <div className="flex gap-4 items-start flex-1">
+                <div className="absolute inset-0 p-5 flex flex-col items-center justify-center gap-3 transition-all duration-300 opacity-100 group-hover:opacity-0 group-hover:scale-95">
                   {card.illustration && (
-                    <div className="hidden sm:block flex-shrink-0">
+                    <div className="flex-shrink-0">
                       <img
                         src={card.illustration}
                         alt={card.title}
-                        className="w-20 h-20 object-contain"
+                        className="w-14 h-14 object-contain"
                       />
                     </div>
                   )}
-                  <div className="space-y-1 flex-1">
-                    <h3 className="text-xs font-bold text-slate-900 leading-tight">
-                      {card.subtitle}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      {card.description}
-                    </p>
+                  <h2 className="text-sm font-bold text-indigo-900 text-center">{card.title}</h2>
+                </div>
+
+                <div className="absolute inset-0 p-4 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-95 group-hover:scale-100">
+                  <h3 className="text-xs font-bold text-slate-900 leading-tight text-center mb-1">
+                    {card.subtitle}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 leading-relaxed text-center line-clamp-3">
+                    {card.description}
+                  </p>
+                  <div className="flex justify-center mt-2">
+                    <button 
+                    onClick={() => router.push(card.path)}
+                    className="flex items-center gap-1 cursor-pointer text-xs font-semibold text-indigo-600 border border-slate-200 rounded px-2.5 py-1 hover:bg-indigo-50 transition-colors">
+                      {card.buttonText}
+                      <ArrowRight size={12} />
+                    </button>
                   </div>
                 </div>
               </div>

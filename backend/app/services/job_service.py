@@ -55,6 +55,9 @@ class JobService:
             ),
         )
 
+    def delete_all_jobs(self, recruiter_id: int) -> int:
+        return self.repo.delete_all_by_recruiter(recruiter_id)
+
     def fail_job(self, job_id: int, recruiter_id: int, message: str | None = None) -> JobRead | None:
         return self.update_job_status(
             job_id,

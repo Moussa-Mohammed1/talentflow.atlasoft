@@ -10,10 +10,14 @@ from app.models.evaluation_result import EvaluationResult
 from app.models.experience import Experience
 from app.models.department import Department
 from app.models.department_skill import DepartmentSkills
+from app.models.candidat_skill import CandidatSkills
+from app.models.candidat_language import CandidatLanguages
+from app.models.resume import Resume
 from app.repositories.evaluation_repository import EvaluationRepository
 from app.schemas.evaluate import (
     DepartmentEvaluation,
     EvaluateResponse,
+    EvaluatedCandidateCard,
     RequirementScore,
 )
 
@@ -56,6 +60,80 @@ class EvaluationService:
             },
             evaluations=evaluations,
         )
+
+    # ------------------------------------------------------------------
+    # Get evaluated candidates with stats
+    # ------------------------------------------------------------------
+    def get_evaluated_candidates(self) -> list[EvaluatedCandidateCard]:
+        evaluated_ids = (
+            self.db.query(EvaluationResult.candidate_id)
+            .distinct()
+            .all()
+        )
+        if not evaluated_ids:
+            return []
+
+        candidate_ids = [row[0] for row in evaluated_ids]
+        candidates = (
+            self.db.query(Candidat)
+            .filter(Candidat.id.in_(candidate_ids))
+            .all()
+        )
+
+        result: list[EvaluatedCandidateCard] = []
+        for candidate in candidates:
+            skills_count = (
+                self.db.query(CandidatSkills)
+                .filter(CandidatSkills.candidat_id == candidate.id)
+                .count()
+            )
+            languages_count = (
+                self.db.query(CandidatLanguages)
+                .filter(CandidatLanguages.candidat_id == candidate.id)
+                .count()
+            )
+            experiences = (
+                self.db.query(Experience)
+                .filter(Experience.candidat_id == candidate.id)
+                .all()
+            )
+            total_years = sum(
+                self._compute_years(exp.start_date, exp.end_date)
+                for exp in experiences
+            )
+
+            resume = (
+                self.db.query(Resume)
+                .filter(Resume.id == candidate.resume_id)
+                .first()
+            )
+            resume_id = resume.id if resume else 0
+
+            last_eval = (
+                self.db.query(EvaluationResult.created_at)
+                .filter(EvaluationResult.candidate_id == candidate.id)
+                .order_by(EvaluationResult.created_at.desc())
+                .first()
+            )
+
+            result.append(
+                EvaluatedCandidateCard(
+                    candidate_id=candidate.id,
+                    resume_id=resume_id,
+                    fullname=candidate.fullname,
+                    photo=candidate.photo,
+                    preview_url=f"/resumes/{resume_id}/preview",
+                    skills_count=skills_count,
+                    total_experience_years=round(total_years, 1),
+                    languages_count=languages_count,
+                    last_evaluation_date=(
+                        last_eval[0].isoformat() if last_eval else ""
+                    ),
+                )
+            )
+
+        result.sort(key=lambda c: c.last_evaluation_date, reverse=True)
+        return result
 
     # ------------------------------------------------------------------
     # Persistence

@@ -25,3 +25,15 @@ class DepartmentEvaluation(BaseModel):
 class EvaluateResponse(BaseModel):
     candidate: dict
     evaluations: list[DepartmentEvaluation]
+
+
+class EvaluatedCandidateCard(BaseModel):
+    candidate_id: int
+    resume_id: int
+    fullname: str
+    photo: str | None = None
+    preview_url: str
+    skills_count: int
+    total_experience_years: float
+    languages_count: int
+    last_evaluation_date: str

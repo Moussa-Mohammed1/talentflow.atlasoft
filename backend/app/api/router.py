@@ -7,6 +7,7 @@ from app.api.routes.job import router as job_router
 from app.api.routes.settings import router as settings_router
 from app.api.routes.department import router as department_router
 from app.api.routes.activity import router as activity_router
+from app.api.routes.evaluate import router as evaluate_router
 
 api_router = APIRouter()
 
@@ -17,3 +18,4 @@ api_router.include_router(job_router)
 api_router.include_router(settings_router)
 api_router.include_router(department_router)
 api_router.include_router(activity_router)
+api_router.include_router(evaluate_router)

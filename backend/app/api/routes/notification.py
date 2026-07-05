@@ -56,6 +56,15 @@ def mark_notification_as_read(
     return NotificationRead.model_validate(notification)
 
 
+@router.delete("", status_code=status.HTTP_200_OK)
+def delete_all_notifications(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    count = NotificationRepository.delete_all_by_recruiter(db, recruiter_id=current_user.id)
+    return {"deleted": count}
+
+
 @router.patch("/read-all", response_model=NotificationMarkAllRead)
 def mark_all_notifications_as_read(
     db: Session = Depends(get_db),

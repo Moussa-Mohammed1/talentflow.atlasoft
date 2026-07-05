@@ -47,6 +47,15 @@ class JobRepository:
         )
         return self.db.execute(stmt).scalar_one()
 
+    def delete_all_by_recruiter(self, recruiter_id: int) -> int:
+        stmt = select(Job).where(Job.recruiter_id == recruiter_id)
+        jobs = self.db.execute(stmt).scalars().all()
+        count = len(jobs)
+        for job in jobs:
+            self.db.delete(job)
+        self.db.commit()
+        return count
+
     def update_status(self, job: Job, update_in: JobStatusUpdate) -> Job:
         if update_in.status is not None:
             job.status = update_in.status

@@ -73,6 +73,17 @@ class NotificationRepository:
         return notification
 
     @staticmethod
+    def delete_all_by_recruiter(db: Session, *, recruiter_id: int) -> int:
+        notifications = db.scalars(
+            select(Notification).where(Notification.recruiter_id == recruiter_id)
+        ).all()
+        count = len(notifications)
+        for n in notifications:
+            db.delete(n)
+        db.commit()
+        return count
+
+    @staticmethod
     def mark_all_as_read(db: Session, *, recruiter_id: int) -> int:
         result = db.execute(
             update(Notification)

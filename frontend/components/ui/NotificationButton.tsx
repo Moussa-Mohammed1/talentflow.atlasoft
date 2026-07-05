@@ -41,7 +41,7 @@ function relativeTime(value: string): string {
 export default function NotificationButton() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead } =
+  const { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead, deleteAll } =
     useNotifications();
 
   useEffect(() => {
@@ -136,6 +136,16 @@ export default function NotificationButton() {
                 )}
               </button>
             ))}
+          </div>
+
+          <div className="border-t border-slate-100 bg-slate-50/30 p-2 text-center">
+            <button
+              type="button"
+              onClick={() => void deleteAll()}
+              className="w-full rounded-lg py-1 text-xs text-rose-500 transition-all hover:bg-red-500 hover:text-white"
+            >
+              Supprimer Tout
+            </button>
           </div>
         </section>
       )}

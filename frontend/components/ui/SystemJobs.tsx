@@ -8,7 +8,7 @@ import { useJobs } from "@/hooks/useJobs";
 export default function SystemJobs() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { jobs, runningCount, isLoading, error, refresh } = useJobs();
+  const { jobs, runningCount, isLoading, error, refresh, deleteAll } = useJobs();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -113,12 +113,15 @@ export default function SystemJobs() {
                 {jobs.length} total
               </span>
             </h3>
-            <button
-                  onClick={refresh}
-                  className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
-                >
-                  Réessayer
-                </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={refresh}
+                className="text-xs text-blue-600 hover:text-blue-700 underline"
+              >
+                Réessayer
+              </button>
+              
+            </div>
           </div>
 
           <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
@@ -176,9 +179,14 @@ export default function SystemJobs() {
           </div>
 
           <div className="p-2 border-t border-slate-100 bg-slate-50/30 text-center rounded-b-xl">
-            <button className="text-xs text-blue-600 hover:text-blue-700 font-medium py-1 px-3 rounded-md hover:bg-blue-50 transition-colors w-full">
-              View all task history
-            </button>
+
+                <button
+                  onClick={() => deleteAll()}
+                  className="text-xs text-rose-500 hover:bg-red-500 w-full hover:text-white py-1 rounded-lg transition-all"
+                >
+                  Supprimer Tout
+                </button>
+            
           </div>
         </div>
       )}

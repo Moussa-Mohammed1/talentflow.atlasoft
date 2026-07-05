@@ -12,6 +12,7 @@ import {
   Sparkles, 
   RefreshCw,
   Check,
+  CheckCircle,
   Loader2,
   AlertCircle,
   MoreVertical,
@@ -245,7 +246,8 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
   const menuRef = useRef<HTMLDivElement>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reanalyzingAll, setReanalyzingAll] = useState(false);
-
+  const [evaluating, setEvaluating] = useState(false);
+  const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -282,6 +284,19 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
       toast.error("Erreur lors du lancement de la réanalyse complète.");
     } finally {
       setReanalyzingAll(false);
+    }
+  };
+
+  const handleEvaluate = async () => {
+    if (!data.candidat?.id) return;
+    setEvaluating(true);
+    try {
+      await api.post("/evaluate", { candidate_id: data.candidat.id });
+      toast.success("Évaluation du candidat lancée avec succès.");
+    } catch {
+      toast.error("Erreur lors de l'évaluation du candidat.");
+    } finally {
+      setEvaluating(false);
     }
   };
 
@@ -337,6 +352,9 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
             <div>
               <h3 className="font-bold text-slate-900 text-sm">Données du CV Extraites</h3>
               <p className="text-[10px] text-slate-500">Importé par {data.recruiter_name} — Vérifiez et modifiez les informations lues par l'intelligence artificielle.</p>
+              <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 px-3 py-2 rounded mt-2 leading-relaxed">
+                Veuillez vous assurer d'avoir bien examiné les compétences et expériences de ce candidat avant de l'évaluer.
+              </p>
             </div>
           </div>
           <div className="relative" ref={menuRef}>
@@ -389,7 +407,7 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
                 <div className="shrink-0">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200">
                     <img
-                      src={`/storage/${data.candidat.photo}`}
+                      src={`${storage_url}${data.candidat.photo}`}
                       alt="Photo du candidat"
                       className="w-full h-full object-cover"
                     />
@@ -648,6 +666,17 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
             >
               <Sparkles size={13} className={reanalyzingAll ? "animate-spin" : ""} />
               <span>{reanalyzingAll ? "Réanalyse en cours..." : "Réanalyser tout"}</span>
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleEvaluate}
+              disabled={evaluating || !data.candidat?.id}
+              className="bg-emerald-600 text-white px-4 py-2  text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CheckCircle size={14} className={evaluating ? "animate-pulse" : ""} />
+              <span>{evaluating ? "Évaluation en cours..." : "Évaluer"}</span>
             </button>
           )}
 

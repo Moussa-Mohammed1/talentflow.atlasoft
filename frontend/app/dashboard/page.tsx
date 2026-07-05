@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import Sidebar from '@/components/layouts/Sidebar';
 import NotificationButton from '@/components/ui/NotificationButton';
 import PasswordChangeBanner from '@/components/ui/PasswordChangeBanner';
+import RecentActivities from '@/components/ui/RecentActivities';
 import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const router = useRouter();
@@ -96,6 +97,10 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="max-w-6xl mx-auto mt-8">
+            <RecentActivities />
           </div>
         </main>
       </div>

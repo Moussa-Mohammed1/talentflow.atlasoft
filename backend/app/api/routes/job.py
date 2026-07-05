@@ -49,6 +49,16 @@ def update_job_status(
     return job
 
 
+@router.delete("", status_code=status.HTTP_200_OK)
+def delete_all_jobs(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> dict:
+    service = JobService(db)
+    count = service.delete_all_jobs(current_user.id)
+    return {"deleted": count}
+
+
 @router.post("/{job_id}/start", response_model=JobRead)
 def start_job(
     job_id: int,

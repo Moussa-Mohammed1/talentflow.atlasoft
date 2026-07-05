@@ -56,6 +56,16 @@ export function useJobs() {
     };
   }, [hydrate, recruiterId, setError, setLoading, token]);
 
+  const deleteAll = useCallback(async () => {
+    if (!token || !recruiterId) return;
+    try {
+      await jobService.deleteAll();
+      hydrate([], 0);
+    } catch {
+      setError("Unable to delete all jobs.");
+    }
+  }, [hydrate, recruiterId, setError, token]);
+
   const refresh = useCallback(async () => {
     if (!token || !recruiterId) return;
     setLoading(true);
@@ -67,5 +77,5 @@ export function useJobs() {
     }
   }, [hydrate, recruiterId, setError, setLoading, token]);
 
-  return { jobs, runningCount, isLoading, error, refresh };
+  return { jobs, runningCount, isLoading, error, refresh, deleteAll };
 }

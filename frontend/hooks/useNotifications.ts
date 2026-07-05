@@ -122,6 +122,16 @@ export function useNotifications() {
     }
   }, [hydrate, markRead]);
 
+  const deleteAll = useCallback(async () => {
+    if (!token || !recruiterId) return;
+    try {
+      await notificationService.deleteAll();
+      hydrate([], 0);
+    } catch {
+      setError("Unable to delete all notifications.");
+    }
+  }, [hydrate, recruiterId, setError, token]);
+
   const markAllAsRead = useCallback(async () => {
     markAllRead();
     try {
@@ -132,5 +142,5 @@ export function useNotifications() {
     }
   }, [hydrate, markAllRead]);
 
-  return { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead };
+  return { notifications, unreadCount, isLoading, error, markAsRead, markAllAsRead, deleteAll };
 }

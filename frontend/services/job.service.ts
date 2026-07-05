@@ -39,4 +39,9 @@ export const jobService = {
     });
     return response.data;
   },
+
+  async deleteAll(): Promise<{ deleted: number }> {
+    const response = await api.delete<{ deleted: number }>("/jobs");
+    return response.data;
+  },
 };

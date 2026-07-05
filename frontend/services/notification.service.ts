@@ -19,6 +19,11 @@ export const notificationService = {
     return response.data;
   },
 
+  async deleteAll(): Promise<{ deleted: number }> {
+    const response = await api.delete<{ deleted: number }>("/notifications");
+    return response.data;
+  },
+
   websocketUrl(recruiterId: number, token: string): string {
     const configuredBase = process.env.NEXT_PUBLIC_WS_URL;
     const websocketBase = configuredBase

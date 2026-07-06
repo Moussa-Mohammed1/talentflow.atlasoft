@@ -19,14 +19,14 @@ export default function ResourcesPage() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
+        <header className="bg-white px-6 py-4 flex justify-between items-center">
           <h1 className="text-lg font-bold text-slate-900">Resources</h1>
           <NotificationButton />
         </header>
-        <main className="flex-1 px-6 pb-8">
+        <main className="flex-1 px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
             {resources.map((resource, index) => (
               <div

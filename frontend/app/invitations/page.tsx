@@ -195,11 +195,11 @@ export default function InvitationsPage() {
   const hasFilters = searchQuery || statusFilter !== "all" || sortBy !== "recent";
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
             <h1 className="text-lg font-bold text-slate-900">
                 Invitations
             </h1>

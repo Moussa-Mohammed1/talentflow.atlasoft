@@ -116,10 +116,10 @@ export default function DocumentsPage() {
   }, [filteredDocuments, currentPage]);
 
   return (
-    <div className="flex min-h-screen bg-slate-50  text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100  text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen [scrollbar-width:none]">
-        <header className="bg-slate-50 border-b border-slate-100 px-6 pt-4 pb-3 flex justify-between items-center z-30">
+        <header className="bg-white border-b border-slate-100 px-6 pt-4 pb-3 flex justify-between items-center z-30">
           <h1 className="text-lg font-bold text-slate-900 shrink-0">Documents</h1>
           <div className="relative max-w-md w-full hidden md:block mx-4">
             <Search

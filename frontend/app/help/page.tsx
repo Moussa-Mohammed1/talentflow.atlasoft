@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Home,
   Building2,
@@ -11,9 +11,55 @@ import {
   List,
   BookOpen,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
+
+function escapeRegExp(string: string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function HighlightText({ text, query }: { text: string; query: string }) {
+  if (!query.trim()) return <>{text}</>;
+  const escaped = escapeRegExp(query.trim());
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  const lowerQuery = query.trim().toLowerCase();
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.toLowerCase() === lowerQuery ? (
+          <mark key={i} className="bg-yellow-500 px-0.5 rounded">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
+
+function highlightTree(node: React.ReactNode, query: string): React.ReactNode {
+  if (!query.trim()) return node;
+  if (typeof node === "string") {
+    return <HighlightText text={node} query={query} />;
+  }
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) {
+    const children = node.props.children;
+    if (children !== undefined && children !== null) {
+      return React.cloneElement(node, {
+        ...node.props,
+        children: React.Children.map(children, (child: React.ReactNode) =>
+          highlightTree(child, query)
+        ),
+      });
+    }
+    return node;
+  }
+  return node;
+}
 
 interface DocSection {
   id: string;
@@ -30,44 +76,54 @@ const sections: DocSection[] = [
   { id: "features", label: "Fonctionnalités" },
 ];
 
-function HelpContent({ section }: { section: string }) {
+function HelpContent({ section, searchQuery }: { section: string; searchQuery: string }) {
   switch (section) {
     case "dashboard":
-      return <DashboardDoc />;
+      return <DashboardDoc searchQuery={searchQuery} />;
     case "departements":
-      return <DepartementsDoc />;
+      return <DepartementsDoc searchQuery={searchQuery} />;
     case "documents":
-      return <DocumentsDoc />;
+      return <DocumentsDoc searchQuery={searchQuery} />;
     case "invitations":
-      return <InvitationsDoc />;
+      return <InvitationsDoc searchQuery={searchQuery} />;
     case "profile":
-      return <ProfileDoc />;
+      return <ProfileDoc searchQuery={searchQuery} />;
     case "settings":
-      return <SettingsDoc />;
+      return <SettingsDoc searchQuery={searchQuery} />;
     case "features":
-      return <FeaturesDoc />;
+      return <FeaturesDoc searchQuery={searchQuery} />;
     default:
-      return <DashboardDoc />;
+      return <DashboardDoc searchQuery={searchQuery} />;
   }
 }
 
-function DashboardDoc() {
+function DocHeader({ title, description, searchQuery }: { title: string; description: string; searchQuery: string }) {
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-slate-900">
+        <HighlightText text={title} query={searchQuery} />
+      </h2>
+      <p className="text-sm text-slate-500 mt-1">
+        <HighlightText text={description} query={searchQuery} />
+      </p>
+    </div>
+  );
+}
+
+function DashboardDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Tableau de bord</h2>
-        <p className="text-sm text-slate-500 mt-1">Page d&apos;accueil de TalentFlow</p>
-      </div>
+      <DocHeader title="Tableau de bord" description="Page d'accueil de TalentFlow" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           Le tableau de bord est la première page que vous voyez après connexion. Il sert de hub central
           pour accéder rapidement aux différentes sections de l&apos;application.
         </Section>
-        <Section title="Cartes d&apos;accès rapide">
+        <Section title="Cartes d&apos;accès rapide" searchQuery={searchQuery}>
           Chaque carte représente une section clé de l&apos;application. Passez la souris sur une carte
           pour voir les détails et cliquez sur le bouton pour accéder directement à la section.
         </Section>
-        <Section title="Sections disponibles">
+        <Section title="Sections disponibles" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Gestion des talents</strong> — Consulter et gérer les profils talents</li>
             <li><strong>Analyse &amp; Statistiques</strong> — Suivre les indicateurs clés de recrutement</li>
@@ -79,19 +135,16 @@ function DashboardDoc() {
   );
 }
 
-function DepartementsDoc() {
+function DepartementsDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Départements</h2>
-        <p className="text-sm text-slate-500 mt-1">Gestion des départements de l&apos;entreprise</p>
-      </div>
+      <DocHeader title="Départements" description="Gestion des départements de l'entreprise" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Départements vous permet de structurer votre organisation en créant et gérant
           les départements de votre entreprise, chacun avec ses propres exigences.
         </Section>
-        <Section title="Fonctionnalités">
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Recherche</strong> — Filtrez les départements par nom</li>
             <li><strong>Tri</strong> — Triez par nom ou par date de création</li>
@@ -102,7 +155,7 @@ function DepartementsDoc() {
             <li><strong>Détails</strong> — Cliquez sur une ligne pour voir tous les détails dans un modal</li>
           </ul>
         </Section>
-        <Section title="Compétences requises">
+        <Section title="Compétences requises" searchQuery={searchQuery}>
           Les compétences sont saisies sous forme de texte séparé par le symbole <code className="bg-slate-100 px-1 rounded">+</code>.
           Dans le tableau, seules les 3 premières compétences sont affichées pour une meilleure lisibilité.
         </Section>
@@ -111,19 +164,16 @@ function DepartementsDoc() {
   );
 }
 
-function DocumentsDoc() {
+function DocumentsDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Documents</h2>
-        <p className="text-sm text-slate-500 mt-1">Centralisation et gestion des CV et documents</p>
-      </div>
+      <DocHeader title="Documents" description="Centralisation et gestion des CV et documents" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Documents vous permet d&apos;importer, consulter et gérer tous les CV et documents
           liés aux candidatures et aux talents.
         </Section>
-        <Section title="Fonctionnalités">
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Import de CV</strong> — Importez un fichier PDF pour analyse automatique</li>
             <li><strong>Recherche</strong> — Filtrez les documents par nom ou contenu</li>
@@ -136,19 +186,16 @@ function DocumentsDoc() {
   );
 }
 
-function InvitationsDoc() {
+function InvitationsDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Invitations</h2>
-        <p className="text-sm text-slate-500 mt-1">Gestion des invitations des recruteurs</p>
-      </div>
+      <DocHeader title="Invitations" description="Gestion des invitations des recruteurs" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Invitations vous permet d&apos;inviter des recruteurs à rejoindre votre espace de travail
           et de suivre le statut de chaque invitation envoyée.
         </Section>
-        <Section title="Fonctionnalités">
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Inviter</strong> — Envoyez une invitation par email à un nouveau recruteur</li>
             <li><strong>Statuts</strong> — Suivez les invitations (En attente, Acceptée, Expirée)</li>
@@ -157,7 +204,7 @@ function InvitationsDoc() {
             <li><strong>Actions</strong> — Renvoyez, copiez le lien ou révoquez une invitation depuis le modal de détails</li>
           </ul>
         </Section>
-        <Section title="Statuts des invitations">
+        <Section title="Statuts des invitations" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>En attente</strong> — L&apos;invitation a été envoyée mais pas encore acceptée</li>
             <li><strong>Acceptée</strong> — Le recruteur a rejoint l&apos;espace de travail</li>
@@ -169,19 +216,16 @@ function InvitationsDoc() {
   );
 }
 
-function ProfileDoc() {
+function ProfileDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Profil</h2>
-        <p className="text-sm text-slate-500 mt-1">Gestion de votre compte utilisateur</p>
-      </div>
+      <DocHeader title="Profil" description="Gestion de votre compte utilisateur" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Profil vous permet de consulter et modifier les informations de votre compte,
           ainsi que de gérer votre photo de profil.
         </Section>
-        <Section title="Fonctionnalités">
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Photo de profil</strong> — Modifiez votre avatar depuis l&apos;interface</li>
             <li><strong>Informations personnelles</strong> — Modifiez votre nom complet et votre adresse email</li>
@@ -193,19 +237,16 @@ function ProfileDoc() {
   );
 }
 
-function SettingsDoc() {
+function SettingsDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Paramètres</h2>
-        <p className="text-sm text-slate-500 mt-1">Configuration de votre espace de travail</p>
-      </div>
+      <DocHeader title="Paramètres" description="Configuration de votre espace de travail" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Paramètres regroupe la configuration de vos préférences de notification,
           les options de sécurité et la gestion des invitations.
         </Section>
-        <Section title="Onglets disponibles">
+        <Section title="Onglets disponibles" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Notifications</strong> — Activez ou désactivez les notifications par email pour chaque type d&apos;événement</li>
             <li><strong>Sécurité</strong> — Modifiez votre mot de passe et consultez les informations de connexion</li>
@@ -217,15 +258,12 @@ function SettingsDoc() {
   );
 }
 
-function FeaturesDoc() {
+function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
   return (
     <article className="space-y-6">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">Fonctionnalités implémentées</h2>
-        <p className="text-sm text-slate-500 mt-1">Liste complète des fonctionnalités disponibles</p>
-      </div>
+      <DocHeader title="Fonctionnalités implémentées" description="Liste complète des fonctionnalités disponibles" searchQuery={searchQuery} />
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Authentification et comptes">
+        <Section title="Authentification et comptes" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Connexion sécurisée avec email et mot de passe</li>
             <li>Protection des routes par authentification</li>
@@ -236,7 +274,7 @@ function FeaturesDoc() {
           </ul>
         </Section>
 
-        <Section title="Départements">
+        <Section title="Départements" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Liste paginée des départements (8 par page)</li>
             <li>Recherche par nom</li>
@@ -249,7 +287,7 @@ function FeaturesDoc() {
           </ul>
         </Section>
 
-        <Section title="Documents et CV">
+        <Section title="Documents et CV" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Import de CV au format PDF</li>
             <li>Analyse automatique des documents</li>
@@ -261,7 +299,7 @@ function FeaturesDoc() {
           </ul>
         </Section>
 
-        <Section title="Invitations">
+        <Section title="Invitations" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Invitation de recruteurs par email</li>
             <li>Suivi des statuts (en attente, acceptée, expirée)</li>
@@ -272,7 +310,7 @@ function FeaturesDoc() {
           </ul>
         </Section>
 
-        <Section title="Paramètres et configuration">
+        <Section title="Paramètres et configuration" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Gestion des préférences de notification par email</li>
             <li>Modification du mot de passe</li>
@@ -281,7 +319,7 @@ function FeaturesDoc() {
           </ul>
         </Section>
 
-        <Section title="Interface et navigation">
+        <Section title="Interface et navigation" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Barre latérale de navigation responsive</li>
             <li>Indicateur de page active</li>
@@ -296,11 +334,13 @@ function FeaturesDoc() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children, searchQuery }: { title: string; children: React.ReactNode; searchQuery: string }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-slate-800 mb-2">{title}</h3>
-      <div className="text-slate-600">{children}</div>
+      <h3 className="text-sm font-semibold text-slate-800 mb-2">
+        <HighlightText text={title} query={searchQuery} />
+      </h3>
+      <div className="text-slate-600">{highlightTree(children, searchQuery)}</div>
     </div>
   );
 }
@@ -308,12 +348,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function HelpPage() {
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+        <header className="grid grid-cols-3 items-center border-b border-slate-100 bg-white px-6 py-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -321,9 +362,23 @@ export default function HelpPage() {
             >
               <BookOpen className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold text-slate-900">Guide d&apos;utilisation</h1>
+            <h1 className="text-lg font-bold text-slate-900 whitespace-nowrap">Guide d&apos;utilisation</h1>
           </div>
-          <NotificationButton />
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-1 focus:ring-slate-400 bg-slate-50"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end">
+            <NotificationButton />
+          </div>
         </header>
 
         <main className="flex-1 px-6 max-w-7xl mx-auto w-full py-6">
@@ -340,7 +395,7 @@ export default function HelpPage() {
                         : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
                     }`}
                   >
-                    <span>{s.label}</span>
+                    <span><HighlightText text={s.label} query={searchQuery} /></span>
                     {activeSection === s.id && (
                       <ChevronRight className="h-3.5 w-3.5 ml-auto text-slate-400" />
                     )}
@@ -350,7 +405,7 @@ export default function HelpPage() {
             </aside>
 
             <div className="flex-1 min-w-0 bg-white border border-slate-100 mrc p-6 shadow-xs">
-              <HelpContent section={activeSection} />
+              <HelpContent section={activeSection} searchQuery={searchQuery} />
             </div>
           </div>
         </main>

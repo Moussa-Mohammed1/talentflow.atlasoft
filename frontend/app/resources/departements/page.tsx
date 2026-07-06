@@ -146,10 +146,10 @@ export default function DepartementsPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
+        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
           <h1 className="text-lg font-bold text-slate-900">Départements</h1>
           <div className="flex items-center gap-3">
             <button
@@ -163,7 +163,7 @@ export default function DepartementsPage() {
           </div>
         </header>
 
-        <main className="flex-1 px-6 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full space-y-6">
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-slate-600">
             <div>
               <span className="font-medium">Total:</span>{" "}

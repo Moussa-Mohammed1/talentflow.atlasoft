@@ -24,7 +24,7 @@ import {
 import { useModal } from "@/context/ModalContext";
 
 export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
+    const [collapsed, setCollapsed] = useState(true);
     const [mobileOpen, setMobileOpen] = useState(false);
     const pathname = usePathname();
     const { isModalOpen } = useModal();

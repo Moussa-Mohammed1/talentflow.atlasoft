@@ -1,0 +1,258 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { X, Loader2, AlertCircle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import { useModal } from "@/context/ModalContext";
+import api from "@/lib/axios";
+import type { EvaluatedCandidate } from "./EvaluatedCandidateCard";
+
+interface RequirementScore {
+  experience: string;
+  required_years: number;
+  candidate_years: number;
+  score: number;
+  matched: boolean;
+}
+
+interface DepartmentEvaluation {
+  department_id: number;
+  department_name: string;
+  compatibility: number;
+  requirements: RequirementScore[];
+  missing_experiences: string[];
+  candidate_extra_experiences: string[];
+}
+
+interface EvaluationDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  candidate: EvaluatedCandidate;
+}
+
+export default function EvaluationDetailModal({
+  isOpen,
+  onClose,
+  candidate,
+}: EvaluationDetailModalProps) {
+  const [evaluations, setEvaluations] = useState<DepartmentEvaluation[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const [expandedDepartments, setExpandedDepartments] = useState<Set<number>>(new Set());
+  const { setModalOpen } = useModal();
+
+  useEffect(() => {
+    setModalOpen(isOpen);
+    return () => setModalOpen(false);
+  }, [isOpen, setModalOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !candidate) return;
+    setLoading(true);
+    setError(false);
+    api
+      .post<{ candidate: unknown; evaluations: DepartmentEvaluation[] }>(
+        "/evaluate",
+        { candidate_id: candidate.candidate_id }
+      )
+      .then((res) => {
+        setEvaluations(res.data.evaluations);
+        setExpandedDepartments(new Set());
+        setLoading(false);
+      })
+      .catch(() => {
+        setError(true);
+        setLoading(false);
+      });
+  }, [isOpen, candidate?.candidate_id]);
+
+  const toggleDepartment = (deptId: number) => {
+    setExpandedDepartments((prev) => {
+      const next = new Set(prev);
+      if (next.has(deptId)) next.delete(deptId);
+      else next.add(deptId);
+      return next;
+    });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
+      <div className="w-full max-w-2xl overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl">
+        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">
+              {candidate.fullname}
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              Détails de l&apos;évaluation par département
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={loading}
+            className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 max-h-[60vh] overflow-y-auto space-y-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12 text-slate-400">
+              <Loader2 size={24} className="animate-spin mr-2" />
+              <span className="text-sm">Évaluation en cours...</span>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <AlertCircle size={32} className="mb-2" />
+              <span className="text-sm">
+                Impossible de charger l&apos;évaluation.
+              </span>
+            </div>
+          ) : evaluations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+              <span className="text-sm">
+                Aucune évaluation disponible pour ce candidat.
+              </span>
+            </div>
+          ) : (
+            evaluations.map((dept) => (
+              <div
+                key={dept.department_id}
+                className="border border-slate-100 mrc overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleDepartment(dept.department_id)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronDown
+                      size={14}
+                      className={`text-slate-400 transition-transform duration-200 ${
+                        expandedDepartments.has(dept.department_id)
+                          ? "rotate-0"
+                          : "-rotate-90"
+                      }`}
+                    />
+                    <h4 className="text-sm font-semibold text-slate-900">
+                      {dept.department_name}
+                    </h4>
+                  </div>
+                  <span
+                    className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      dept.compatibility >= 70
+                        ? "bg-emerald-50 text-emerald-700"
+                        : dept.compatibility >= 40
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {dept.compatibility.toFixed(0)}%
+                  </span>
+                </button>
+
+                {expandedDepartments.has(dept.department_id) && (
+                <div className="p-4 space-y-3">
+                  {dept.requirements.map((req, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {req.matched ? (
+                          <CheckCircle2
+                            size={14}
+                            className="text-emerald-500 shrink-0"
+                          />
+                        ) : (
+                          <XCircle
+                            size={14}
+                            className="text-red-400 shrink-0"
+                          />
+                        )}
+                        <span className="text-xs text-slate-700 truncate">
+                          {req.experience}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-4">
+                        <span className="text-[11px] text-slate-400">
+                          {req.candidate_years.toFixed(1)}yr /{" "}
+                          {req.required_years}yr
+                        </span>
+                        <div className="w-16 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              req.matched ? "bg-emerald-500" : "bg-red-300"
+                            }`}
+                            style={{ width: `${Math.min(req.score, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {dept.missing_experiences.length > 0 && (
+                    <div className="pt-2 border-t border-slate-50">
+                      <p className="text-[11px] font-semibold text-red-500 mb-1">
+                        Expériences manquantes
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {dept.missing_experiences.map((m, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded"
+                          >
+                            {m}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {dept.candidate_extra_experiences.length > 0 && (
+                    <div className="pt-2 border-t border-slate-50">
+                      <p className="text-[11px] font-semibold text-emerald-600 mb-1">
+                        Expériences supplémentaires
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {dept.candidate_extra_experiences.map((e, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded"
+                          >
+                            {e}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="border-t border-gray-100 gap-4 bg-gray-50/70 px-6 py-4 flex items-center justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="border border-gray-200 bg-indigo-800 text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-indigo-900 transition-colors"
+          >
+            Definir comme un <span className="  font-semibold">Talent</span>
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors"
+          >
+            Fermer
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

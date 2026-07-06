@@ -18,7 +18,7 @@ export interface EvaluatedCandidate {
 
 const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
 
-export default function EvaluatedCandidateCard({ candidate }: { candidate: EvaluatedCandidate }) {
+export default function EvaluatedCandidateCard({ candidate, onClick }: { candidate: EvaluatedCandidate; onClick?: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewError, setPreviewError] = useState(false);
 
@@ -38,7 +38,7 @@ export default function EvaluatedCandidateCard({ candidate }: { candidate: Evalu
   }, [candidate.preview_url]);
 
   return (
-    <div className="bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden">
+    <div className="bg-white border cursor-pointer border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col overflow-hidden" onClick={onClick}>
       <div className="relative h-44 overflow-hidden bg-slate-100">
         {previewUrl && !previewError ? (
           <img
@@ -76,17 +76,17 @@ export default function EvaluatedCandidateCard({ candidate }: { candidate: Evalu
 
       <div className="grid grid-cols-3 divide-x divide-slate-100 border-t border-slate-100 bg-white">
         <div className="flex flex-col items-center gap-0.5 py-2.5 px-1">
-          <Code size={14} className="text-indigo-500 mb-0.5" />
+          {/* <Code size={14} className="text-indigo-500 mb-0.5" /> */}
           <span className="text-xs font-bold text-slate-800">{candidate.skills_count}</span>
           <span className="text-[9px] text-slate-400 uppercase tracking-wide">Compétences</span>
         </div>
         <div className="flex flex-col items-center gap-0.5 py-2.5 px-1">
-          <Briefcase size={14} className="text-emerald-500 mb-0.5" />
+          {/* <Briefcase size={14} className="text-emerald-500 mb-0.5" /> */}
           <span className="text-xs font-bold text-slate-800">{candidate.total_experience_years} yr</span>
           <span className="text-[9px] text-slate-400 uppercase tracking-wide">Expérience</span>
         </div>
         <div className="flex flex-col items-center gap-0.5 py-2.5 px-1">
-          <Globe size={14} className="text-amber-500 mb-0.5" />
+          {/* <Globe size={14} className="text-amber-500 mb-0.5" /> */}
           <span className="text-xs font-bold text-slate-800">{candidate.languages_count}</span>
           <span className="text-[9px] text-slate-400 uppercase tracking-wide">Langues</span>
         </div>

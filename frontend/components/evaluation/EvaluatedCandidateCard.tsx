@@ -14,6 +14,7 @@ export interface EvaluatedCandidate {
   total_experience_years: number;
   languages_count: number;
   last_evaluation_date: string;
+  is_talent?: boolean;
 }
 
 const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;

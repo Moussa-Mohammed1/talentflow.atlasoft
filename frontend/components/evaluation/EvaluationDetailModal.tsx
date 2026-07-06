@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Loader2, AlertCircle, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
+import { useToast } from "@/hooks/useToast";
 import api from "@/lib/axios";
 import type { EvaluatedCandidate } from "./EvaluatedCandidateCard";
 
@@ -37,8 +38,11 @@ export default function EvaluationDetailModal({
   const [evaluations, setEvaluations] = useState<DepartmentEvaluation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [togglingTalent, setTogglingTalent] = useState(false);
+  const [currentIsTalent, setCurrentIsTalent] = useState(candidate?.is_talent ?? false);
   const [expandedDepartments, setExpandedDepartments] = useState<Set<number>>(new Set());
   const { setModalOpen } = useModal();
+  const toast = useToast();
 
   useEffect(() => {
     setModalOpen(isOpen);
@@ -237,13 +241,32 @@ export default function EvaluationDetailModal({
         </div>
 
         <div className="border-t border-gray-100 gap-4 bg-gray-50/70 px-6 py-4 flex items-center justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="border border-gray-200 bg-indigo-800 text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-indigo-900 transition-colors"
-          >
-            Definir comme un <span className="  font-semibold">Talent</span>
-          </button>
+          {!currentIsTalent && (
+            <button
+              type="button"
+              onClick={async () => {
+                setTogglingTalent(true);
+                try {
+                  const res = await api.patch(`/evaluate/${candidate.candidate_id}/talent`, {
+                    is_talent: true,
+                  });
+                  setCurrentIsTalent(res.data.is_talent);
+                  toast.success(`${candidate.fullname} est désormais un Talent`);
+                } catch {
+                  toast.error("Erreur lors de la mise à jour du statut Talent");
+                } finally {
+                  setTogglingTalent(false);
+                }
+              }}
+              disabled={togglingTalent}
+              className="border border-gray-200 bg-indigo-800 text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-indigo-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {togglingTalent ? (
+                <Loader2 size={14} className="animate-spin mr-1 inline" />
+              ) : null}
+              Definir comme un <span className="font-semibold">Talent</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}

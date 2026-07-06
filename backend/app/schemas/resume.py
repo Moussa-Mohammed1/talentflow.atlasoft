@@ -46,12 +46,13 @@ class ResumeDetailSchema(BaseModel):
 
 
 class CandidatDetailSchema(BaseModel):
-	id: int
-	fullname: str
-	email: str
-	phone: str
-	photo: str | None = None
-	created_at: datetime | None = None
+    id: int
+    fullname: str
+    email: str
+    phone: str
+    photo: str | None = None
+    created_at: datetime | None = None
+    is_talent: bool = False
 
 
 class ExperienceDetailSchema(BaseModel):
@@ -107,9 +108,10 @@ class ResumeFullDetailSchema(BaseModel):
 
 
 class CandidatUpdateSchema(BaseModel):
-	fullname: str | None = None
-	email: str | None = None
-	phone: str | None = None
+    fullname: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    is_talent: bool | None = None
 
 
 class ExperienceUpdateSchema(BaseModel):

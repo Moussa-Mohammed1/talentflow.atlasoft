@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, DateTime, String, Column, ForeignKey
+from sqlalchemy import Boolean, Integer, DateTime, String, Column, ForeignKey
 from app.core.database import Base
 from datetime import datetime
 
@@ -18,4 +18,6 @@ class Candidat(Base):
     resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    is_talent = Column(Boolean, default=False, nullable=False)
     

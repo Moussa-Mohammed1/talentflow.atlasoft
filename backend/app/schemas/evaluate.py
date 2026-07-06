@@ -37,3 +37,4 @@ class EvaluatedCandidateCard(BaseModel):
     total_experience_years: float
     languages_count: int
     last_evaluation_date: str
+    is_talent: bool = False

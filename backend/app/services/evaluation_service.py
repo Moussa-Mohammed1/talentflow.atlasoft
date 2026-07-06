@@ -129,6 +129,7 @@ class EvaluationService:
                     last_evaluation_date=(
                         last_eval[0].isoformat() if last_eval else ""
                     ),
+                    is_talent=candidate.is_talent,
                 )
             )
 

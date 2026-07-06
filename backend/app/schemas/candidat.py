@@ -5,5 +5,6 @@ class CandidateCreate(BaseModel):
     email: str | None
     phone: str | None
     resume_id: int
+    is_talent: bool = False
     
 

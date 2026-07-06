@@ -5,12 +5,14 @@ import { Loader2, AlertCircle } from "lucide-react";
 import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
 import EvaluatedCandidateCard, { type EvaluatedCandidate } from "@/components/evaluation/EvaluatedCandidateCard";
+import EvaluationDetailModal from "@/components/evaluation/EvaluationDetailModal";
 import api from "@/lib/axios";
 
 export default function EvaluationsPage() {
   const [candidates, setCandidates] = useState<EvaluatedCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<EvaluatedCandidate | null>(null);
 
   useEffect(() => {
     api
@@ -26,22 +28,24 @@ export default function EvaluationsPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
+    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
+        <header className="bg-white px-6 py-4 flex justify-between items-center">
           <h1 className="text-lg font-bold text-slate-900">Évaluations</h1>
-          <NotificationButton />
+          <NotificationButton/>
         </header>
 
-        <main className="flex-1 px-6 py-6">
+        <main className="flex-1 px-6 py-3">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
               <h2 className="text-sm font-bold text-slate-800">Candidats évalués</h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Consultez les profils déjà évalués par l&apos;intelligence artificielle.
               </p>
+              <p className="text-[11px]  mt-0.5">
+                <span className="font-bold text-black">* </span> Après avoir consulté les résultats détaillés de l'évaluation du candidat, vous pouvez décider de le désigner comme un talent ou non. Pour en savoir plus sur les privilèges associés au statut de talent, veuillez consulter la page d'aide.</p>
             </div>
 
             {loading ? (
@@ -61,13 +65,19 @@ export default function EvaluationsPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {candidates.slice(0, 4).map((candidate) => (
-                  <EvaluatedCandidateCard key={candidate.candidate_id} candidate={candidate} />
+                  <EvaluatedCandidateCard key={candidate.candidate_id} candidate={candidate} onClick={() => setSelectedCandidate(candidate)} />
                 ))}
               </div>
             )}
           </div>
         </main>
       </div>
+
+      <EvaluationDetailModal
+        isOpen={selectedCandidate !== null}
+        onClose={() => setSelectedCandidate(null)}
+        candidate={selectedCandidate!}
+      />
     </div>
   );
 }

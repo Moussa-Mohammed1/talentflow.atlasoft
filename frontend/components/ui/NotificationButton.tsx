@@ -93,7 +93,7 @@ export default function NotificationButton() {
             </button>
           </header>
 
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+          <div className="max-h-100 overflow-y-auto divide-y divide-slate-100">
             {isLoading && notifications.length === 0 && (
               <div className="flex items-center justify-center gap-2 p-8 text-xs text-slate-500">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading notifications…
@@ -110,13 +110,10 @@ export default function NotificationButton() {
                 type="button"
                 key={notification.id}
                 onClick={() => void markAsRead(notification.id)}
-                className={`flex w-full gap-3 p-3 text-left transition-colors hover:bg-slate-50 ${
+                className={`flex w-full gap-3 p-4 text-left transition-colors hover:bg-slate-50 ${
                   notification.is_read ? "bg-white" : "bg-indigo-50/40"
                 }`}
               >
-                <span className="mt-0.5 h-fit shrink-0  bg-slate-100 p-1.5">
-                  {iconByType[notification.type]}
-                </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-xs font-semibold text-slate-900">
                     {notification.title}

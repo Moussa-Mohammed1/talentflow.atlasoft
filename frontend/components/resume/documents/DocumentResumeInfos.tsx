@@ -291,8 +291,9 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
     if (!data.candidat?.id) return;
     setEvaluating(true);
     try {
-      await api.post("/evaluate", { candidate_id: data.candidat.id });
       toast.success("Évaluation du candidat lancée avec succès.");
+      await api.post("/evaluate", { candidate_id: data.candidat.id });
+      toast.success("Évaluation du candidat terminée avec succès")
     } catch {
       toast.error("Erreur lors de l'évaluation du candidat.");
     } finally {

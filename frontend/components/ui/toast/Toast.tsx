@@ -12,7 +12,7 @@ import {
 
 import type { Toast as ToastType } from "@/stores/toast-store";
 
-const DEFAULT_DURATION = 8000;
+const DEFAULT_DURATION = 4000;
 
 const config = {
   success: {

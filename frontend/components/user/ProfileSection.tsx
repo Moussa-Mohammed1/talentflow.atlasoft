@@ -120,7 +120,7 @@ export default function ProfileSection({
                 onClick={() => setIsOpen(!isOpen)}
                 className={`
                     w-full flex items-center rounded-md text-xs font-medium cursor-pointer
-                    text-slate-700 hover:bg-slate-50 transition-all duration-300
+                    text-slate-700 hover:bg-slate-50 transition-all duration-300 overflow-hidden
                     ${
                         collapsed
                             ? "justify-center px-0 py-2 group-hover/sidebar:justify-between group-hover/sidebar:px-2"
@@ -129,7 +129,7 @@ export default function ProfileSection({
                     ${isOpen ? "bg-slate-50 text-slate-900" : ""}
                 `}
             >
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
                     {user?.avatar ? (
                         <img
                             src={user.avatar}
@@ -144,7 +144,7 @@ export default function ProfileSection({
 
                     <span
                         className={`
-                            whitespace-nowrap transition-all duration-300
+                            truncate min-w-0 transition-all duration-300
                             ${
                                 collapsed
                                     ? "opacity-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-auto"

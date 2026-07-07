@@ -48,6 +48,13 @@ export default function LoginForm() {
                 duration: 5000,
             });
         }
+        if (searchParams.get("linkedin_error") === "unauthorized_email") {
+            addToast({
+                type: "error",
+                message: "L'authentification via LinkedIn est réservée aux utilisateurs autorisés",
+                duration: 5000,
+            });
+        }
     }, [searchParams, addToast]);
 
     const handleLogin = async (
@@ -201,7 +208,9 @@ export default function LoginForm() {
           </svg>
           <span>S&apos;authentifier avec LinkedIn</span>
         </button>
-
+       <p className="text-xs pt-4 text-slate-500">
+        * Remarque : L’authentification via LinkedIn est réservée aux utilisateurs autorisés.
+        </p>
         <hr className="my-6 border-slate-100" />
 
         <div className="space-y-3">
@@ -210,24 +219,10 @@ export default function LoginForm() {
             </h3>
 
             <p className="text-xs text-slate-500">
-            Si vous ne disposez pas encore d’un
-            compte ou de vos identifiants de
-            connexion, veuillez contacter :
+            Si vous ne disposez pas encore d’un compte ou de vos identifiants de connexion, veuillez demander un lien d’invitation auprès de votre responsable ou de votre administrateur de recrutement.
             </p>
 
-            <ul className="space-y-2 text-xs text-slate-600 pl-1">
-            <li className="flex items-start">
-                <span className="mr-2 text-slate-400">
-                •
-                </span>
-                <span>
-                votre responsable ou administrateur
-                si vous êtes un recruteur
-                </span>
-            </li>
-
-           
-            </ul>
+            
         </div>
         </div>
     );

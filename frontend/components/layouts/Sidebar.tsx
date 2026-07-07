@@ -37,12 +37,12 @@ export default function Sidebar() {
 
     const sidebarItems = [
       { icon: <Home size={16} />, label: "Accueil", href: "/dashboard", active: true },
-      { icon: <Users size={16} />, label: "Talents", href: "/talents" },
-      { icon: <Briefcase size={16} />, label: "Offre d'emploi", href: "/jobs" },
-      { icon: <LampDesk size={16} />, label: "Recruter", href: "/recrutement" },
-      { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
+      { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
+      { icon: <Users size={16} />, label: "Talents", href: "/talents" },
+      { icon: <Briefcase size={16} />, label: "Offre d'emploi", href: "/jobs" },
+      { icon: <LampDesk size={16} />, label: "Recruter", href: "/recruitments" },
       { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
       { icon: <BadgeQuestionMarkIcon size={16} />, label: "Aide", href: "/help" },
     ];

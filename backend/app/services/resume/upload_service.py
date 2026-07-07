@@ -23,7 +23,4 @@ class ResumeUploadService:
     ) -> ResumeRead:
         display_name = Path(file.filename or "resume").name
         resume = create_resume(file=file, recruiter_id=recruiter_id, db=db)
-        NotificationHelper.notify_upload(
-            background_tasks, db, recruiter_id=recruiter_id, filename=display_name,
-        )
         return ResumeRead.model_validate(resume)

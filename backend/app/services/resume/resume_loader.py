@@ -24,14 +24,14 @@ class ResumeLoader:
     def by_path(db: Session, path: str, recruiter_id: int) -> Resume:
         resume = get_resume_by_path(path=path, recruiter_id=recruiter_id, db=db)
         if resume is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume was not found for this recruiter")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CV introuvable pour ce recruteur")
         return resume
 
     @staticmethod
     def by_id(db: Session, resume_id: int, recruiter_id: int) -> Resume:
         resume = get_resume_by_id(resume_id=resume_id, recruiter_id=recruiter_id, db=db)
         if resume is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume was not found for this recruiter")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CV introuvable pour ce recruteur")
         return resume
 
     @staticmethod
@@ -50,7 +50,7 @@ class ResumeLoader:
     def view_by_id(db: Session, resume_id: int) -> Resume:
         resume = db.query(Resume).filter(Resume.id == resume_id).first()
         if resume is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Resume not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="CV introuvable")
         return resume
 
     @staticmethod

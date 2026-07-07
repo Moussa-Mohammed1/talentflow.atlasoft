@@ -27,16 +27,16 @@ class ResumeCertificationService:
     ) -> ResumeCertificationRead:
         resume = ResumeLoader.by_path(db, path, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.CERTIFICATION_EXTRACTION, Path(resume.path).name, "Extracting certifications from resume")
+        job_id = jm.create(JobType.CERTIFICATION_EXTRACTION, Path(resume.path).name, "Extraction des certifications du CV")
 
         try:
-            jm.start(job_id, "Extracting certifications from resume")
+            jm.start(job_id, "Extraction des certifications du CV")
             raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
             extracted = PretrainedBilingualCertificationExtractor().extract_certifications(raw_text)
             count = len(extracted.get("certifications", []))
-            jm.complete(job_id, f"Found {count} certifications")
+            jm.complete(job_id, f"{count} certification(s) trouvée(s)")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to extract certifications: {str(e)}")
+            jm.fail(job_id, f"Échec de l'extraction des certifications : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         analysis = ResumeCertificationAnalysisRead.model_validate({

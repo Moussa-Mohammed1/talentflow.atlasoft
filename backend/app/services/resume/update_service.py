@@ -27,7 +27,7 @@ class ResumeUpdateService:
         resume = ResumeLoader.detail(db, resume_id, recruiter_id)
         candidat = db.query(Candidat).filter(Candidat.resume_id == resume.id).first()
         if not candidat:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No candidate found for this resume")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Aucun candidat trouvé pour ce CV")
         if payload.fullname is not None:
             candidat.fullname = payload.fullname
         if payload.email is not None:
@@ -36,7 +36,7 @@ class ResumeUpdateService:
             candidat.phone = payload.phone
         db.commit()
         db.refresh(candidat)
-        return {"status": "success", "message": "Candidate updated"}
+        return {"status": "success", "message": "Candidat mis à jour"}
 
     @staticmethod
     def update_experience(
@@ -46,7 +46,7 @@ class ResumeUpdateService:
     ) -> dict:
         exp = db.query(Experience).filter(Experience.id == experience_id).first()
         if not exp:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Experience not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Expérience introuvable")
         if payload.title is not None:
             exp.title = payload.title
         if payload.description is not None:
@@ -56,7 +56,7 @@ class ResumeUpdateService:
         if payload.end_date is not None:
             exp.end_date = datetime.strptime(payload.end_date, "%Y-%m-%d") if payload.end_date else None
         db.commit()
-        return {"status": "success", "message": "Experience updated"}
+        return {"status": "success", "message": "Expérience mise à jour"}
 
     @staticmethod
     def update_education(
@@ -66,7 +66,7 @@ class ResumeUpdateService:
     ) -> dict:
         edu = db.query(Education).filter(Education.id == education_id).first()
         if not edu:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Education not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Formation introuvable")
         if payload.institution is not None:
             edu.institution = payload.institution
         if payload.degree is not None:
@@ -80,7 +80,7 @@ class ResumeUpdateService:
         if payload.description is not None:
             edu.description = payload.description
         db.commit()
-        return {"status": "success", "message": "Education updated"}
+        return {"status": "success", "message": "Formation mise à jour"}
 
     @staticmethod
     def update_certification(
@@ -90,7 +90,7 @@ class ResumeUpdateService:
     ) -> dict:
         cert = db.query(Certification).filter(Certification.id == certification_id).first()
         if not cert:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Certification introuvable")
         if payload.name is not None:
             cert.name = payload.name
         if payload.organization is not None:
@@ -106,4 +106,4 @@ class ResumeUpdateService:
         if payload.description is not None:
             cert.description = payload.description
         db.commit()
-        return {"status": "success", "message": "Certification updated"}
+        return {"status": "success", "message": "Certification mise à jour"}

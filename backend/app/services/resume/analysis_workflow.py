@@ -136,7 +136,7 @@ class ResumeAnalysisWorkflow:
             if self.require_candidat:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="No candidate associated with this resume. Please extract identity first.",
+                    detail="Aucun candidat associé à ce CV. Veuillez d'abord extraire l'identité.",
                 )
             self._persistence_stats = {
                 "skills_persisted_count": 0,
@@ -187,12 +187,12 @@ class ResumeAnalysisWorkflow:
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
         except HTTPException:
             NotificationHelper.notify_analysis_failed(
-                self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="Analysis failed",
+                self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="L'analyse a échoué",
             )
             raise
         except Exception:
             logger.exception("Resume analysis failed for resume %s", getattr(self._resume, "id", "unknown"))
             NotificationHelper.notify_analysis_failed(
-                self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="An unexpected processing error occurred.",
+                self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="Une erreur de traitement inattendue s'est produite.",
             )
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Resume analysis failed")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="L'analyse du CV a échoué")

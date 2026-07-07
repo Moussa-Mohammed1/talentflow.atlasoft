@@ -27,16 +27,16 @@ class ResumeExperienceService:
     ) -> ResumeExperienceRead:
         resume = ResumeLoader.by_path(db, path, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.EXPERIENCE_EXTRACTION, Path(resume.path).name, "Extracting experience from resume")
+        job_id = jm.create(JobType.EXPERIENCE_EXTRACTION, Path(resume.path).name, "Extraction des expériences du CV")
 
         try:
-            jm.start(job_id, "Extracting experience from resume")
+            jm.start(job_id, "Extraction des expériences du CV")
             raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
             extracted = PretrainedBilingualExperienceExtractor().extract_experiences(raw_text)
             count = len(extracted.get("experiences", []))
-            jm.complete(job_id, f"Found {count} experiences")
+            jm.complete(job_id, f"{count} expérience(s) trouvée(s)")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to extract experience: {str(e)}")
+            jm.fail(job_id, f"Échec de l'extraction des expériences : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         analysis = ResumeExperienceAnalysisRead.model_validate({

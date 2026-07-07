@@ -27,17 +27,17 @@ class ResumeEducationService:
     ) -> ResumeEducationRead:
         resume = ResumeLoader.by_path(db, path, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.EDUCATION_EXTRACTION, Path(resume.path).name, "Extracting education from resume")
+        job_id = jm.create(JobType.EDUCATION_EXTRACTION, Path(resume.path).name, "Extraction des formations du CV")
 
         try:
-            jm.start(job_id, "Extracting education from resume")
+            jm.start(job_id, "Extraction des formations du CV")
             resume_path = str(ResumeLoader.resolve_path(resume.path))
             raw_text = TextExtractionService().extract(resume_path)
             extracted = PretrainedBilingualEducationExtractor().extract_education(resume_path, raw_text)
             count = len(extracted.get("educations", []))
-            jm.complete(job_id, f"Found {count} educations")
+            jm.complete(job_id, f"{count} formation(s) trouvée(s)")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to extract education: {str(e)}")
+            jm.fail(job_id, f"Échec de l'extraction des formations : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         analysis = ResumeEducationAnalysisRead.model_validate({

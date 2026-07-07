@@ -29,16 +29,16 @@ class ResumeLanguageService:
     ) -> ResumeLanguageRead:
         resume = ResumeLoader.by_path(db, path, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.LANGUAGE_EXTRACTION, Path(resume.path).name, "Extracting languages from resume")
+        job_id = jm.create(JobType.LANGUAGE_EXTRACTION, Path(resume.path).name, "Extraction des langues du CV")
 
         try:
-            jm.start(job_id, "Extracting languages from resume")
+            jm.start(job_id, "Extraction des langues du CV")
             raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
             extracted = ResumeLanguageExtractionPipeline().extract_languages(raw_text)
             lang_count = len(extracted.get("languages", []))
-            jm.complete(job_id, f"Found {lang_count} language(s)")
+            jm.complete(job_id, f"{lang_count} langue(s) trouvée(s)")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to extract languages: {str(e)}")
+            jm.fail(job_id, f"Échec de l'extraction des langues : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         analysis = ResumeLanguageAnalysisRead.model_validate({

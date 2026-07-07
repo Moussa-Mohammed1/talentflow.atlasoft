@@ -51,40 +51,40 @@ class JobManager:
 
     def create_analysis_jobs(self, filename: str) -> AnalysisJobs:
         skill_id = self.create(
-            JobType.SKILL_EXTRACTION, filename, "Extracting skills from resume"
+            JobType.SKILL_EXTRACTION, filename, "Extraction des compétences du CV"
         )
         exp_id = self.create(
-            JobType.EXPERIENCE_EXTRACTION, filename, "Extracting experience from resume"
+            JobType.EXPERIENCE_EXTRACTION, filename, "Extraction des expériences du CV"
         )
         lang_id = self.create(
-            JobType.LANGUAGE_EXTRACTION, filename, "Extracting languages from resume"
+            JobType.LANGUAGE_EXTRACTION, filename, "Extraction des langues du CV"
         )
         edu_id = self.create(
-            JobType.EDUCATION_EXTRACTION, filename, "Extracting education from resume"
+            JobType.EDUCATION_EXTRACTION, filename, "Extraction des formations du CV"
         )
         cert_id = self.create(
-            JobType.CERTIFICATION_EXTRACTION, filename, "Extracting certifications from resume"
+            JobType.CERTIFICATION_EXTRACTION, filename, "Extraction des certifications du CV"
         )
         return AnalysisJobs(skill_id, exp_id, lang_id, edu_id, cert_id)
 
     def start_analysis_jobs(self, jobs: AnalysisJobs) -> None:
-        self.start(jobs.skill_id, "Extracting skills from resume")
-        self.start(jobs.experience_id, "Extracting experience from resume")
-        self.start(jobs.language_id, "Extracting languages from resume")
-        self.start(jobs.education_id, "Extracting education from resume")
-        self.start(jobs.certification_id, "Extracting certifications from resume")
+        self.start(jobs.skill_id, "Extraction des compétences du CV")
+        self.start(jobs.experience_id, "Extraction des expériences du CV")
+        self.start(jobs.language_id, "Extraction des langues du CV")
+        self.start(jobs.education_id, "Extraction des formations du CV")
+        self.start(jobs.certification_id, "Extraction des certifications du CV")
 
     def complete_skills(self, job_id: int, count: int) -> None:
-        self.complete(job_id, f"Found {count} skills")
+        self.complete(job_id, f"{count} compétence(s) trouvée(s)")
 
     def complete_experiences(self, job_id: int, count: int) -> None:
-        self.complete(job_id, f"Found {count} experiences")
+        self.complete(job_id, f"{count} expérience(s) trouvée(s)")
 
     def complete_languages(self, job_id: int, count: int) -> None:
-        self.complete(job_id, f"Found {count} language(s)")
+        self.complete(job_id, f"{count} langue(s) trouvée(s)")
 
     def complete_educations(self, job_id: int, count: int) -> None:
-        self.complete(job_id, f"Found {count} education(s)")
+        self.complete(job_id, f"{count} formation(s) trouvée(s)")
 
     def complete_certifications(self, job_id: int, count: int) -> None:
-        self.complete(job_id, f"Found {count} certification(s)")
+        self.complete(job_id, f"{count} certification(s) trouvée(s)")

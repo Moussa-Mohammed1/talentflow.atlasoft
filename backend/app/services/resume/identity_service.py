@@ -34,16 +34,16 @@ class ResumeIdentityService:
     ) -> ResumeIdentityRead:
         resume = ResumeLoader.by_path(db, path, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.IDENTITY_EXTRACTION, resume.path, "Extracting candidate identity")
+        job_id = jm.create(JobType.IDENTITY_EXTRACTION, resume.path, "Extraction de l'identité du candidat")
 
         try:
-            jm.start(job_id, "Extracting candidate identity")
+            
             resume_full_path = ResumeLoader.resolve_path(resume.path)
             text = TextExtractionService().extract(str(resume_full_path))
             identity = ResumeIdentityPipeline().analyze(text)
-            jm.complete(job_id, "Identity extraction completed")
+            jm.complete(job_id, "Extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to extract identity: {str(e)}")
+            jm.fail(job_id, f"Échec de l'extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         validated = ResumeIdentityRead.model_validate(identity)
@@ -54,9 +54,9 @@ class ResumeIdentityService:
         if duplicate is not None:
             if duplicate is False:
                 ResumeLoader.delete(db, resume.id, recruiter_id)
-                detail = f'Duplicate candidate: this identity already belongs to "{validated.name.full_name}" resume; the new resume was deleted.'
+                detail = f'Candidat en double : cette identité appartient déjà au CV de "{validated.name.full_name}" ; le nouveau CV a été supprimé.'
             else:
-                detail = f"Duplicate candidate: this identity is already saved for this resume {validated.name.full_name}."
+                detail = f"Candidat en double : cette identité est déjà enregistrée pour ce CV de {validated.name.full_name}."
             NotificationHelper.notify_duplicate(background_tasks, db, recruiter_id=recruiter_id, message=detail)
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
@@ -84,16 +84,16 @@ class ResumeIdentityService:
     ) -> ResumeIdentityRead:
         resume = ResumeLoader.detail(db, resume_id, recruiter_id)
         jm = JobManager(db, recruiter_id)
-        job_id = jm.create(JobType.IDENTITY_EXTRACTION, resume.path, "Re-extracting candidate identity")
+        job_id = jm.create(JobType.IDENTITY_EXTRACTION, resume.path, "Ré-extraction de l'identité du candidat")
 
         try:
-            jm.start(job_id, "Re-extracting candidate identity")
+            jm.start(job_id, "Ré-extraction de l'identité du candidat")
             resume_full_path = ResumeLoader.resolve_path(resume.path)
             text = TextExtractionService().extract(str(resume_full_path))
             identity = ResumeIdentityPipeline().analyze(text)
-            jm.complete(job_id, "Identity re-extraction completed")
+            jm.complete(job_id, "Ré-extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
-            jm.fail(job_id, f"Failed to re-extract identity: {str(e)}")
+            jm.fail(job_id, f"Échec de la ré-extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
 
         validated = ResumeIdentityRead.model_validate(identity)

@@ -11,6 +11,7 @@ from typing import Any
 
 from app.services.education_extraction.models import EducationMention
 from app.services.experience_extraction.date_parser import BilingualDateRangeParser
+from app.services.experience_extraction.models import ParsedDateRange
 
 try:
     from dotenv import load_dotenv
@@ -47,9 +48,9 @@ class LLMEducationVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen"}
+        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def review(self, text: str, candidates: list[EducationMention]) -> LLMEducationReview:
+    def review(self, file_path: str, text: str, candidates: list[EducationMention]) -> LLMEducationReview:
         if not self.available:
             logger.info("Education LLM verification skipped: provider is not configured")
             return LLMEducationReview(
@@ -59,7 +60,7 @@ class LLMEducationVerifier:
         serialized = [self._serialize(index, candidate) for index, candidate in enumerate(candidates)]
         try:
             from app.services.LLM.validate_education import LLMService
-            payload = LLMService.validate(text, serialized)
+            payload = LLMService.validate(file_path, serialized)
         except Exception as exc:
             logger.warning("Education LLM verification failed: %s", type(exc).__name__)
             return LLMEducationReview(
@@ -124,19 +125,25 @@ class LLMEducationVerifier:
         if not institution or not evidence:
             return None
 
+        date_range = self._evidence_date_range(evidence)
+
         start_date = self._supported_date(item.get("start_date"), evidence, "start")
+        if start_date is None and date_range is not None:
+            start_date = date_range.start_date
         if start_date is None:
-            return None
+            start_date = self._extract_year_date(evidence)
 
         raw_end = item.get("end_date")
+        end_date = None
         if raw_end is None:
-            if not self._evidence_means_present(evidence):
-                return None
-            end_date = None
+            if date_range is not None and date_range.end_date is not None:
+                end_date = date_range.end_date
         else:
             end_date = self._supported_date(raw_end, evidence, "end")
-            if end_date is None or end_date < start_date:
-                return None
+            if end_date is None and date_range is not None:
+                end_date = date_range.end_date
+            if end_date is not None and start_date is not None and end_date < start_date:
+                end_date = start_date
 
         degree = str(item["degree"]).strip() if item.get("degree") else None
         field_of_study = str(item["field_of_study"]).strip() if item.get("field_of_study") else None
@@ -156,6 +163,21 @@ class LLMEducationVerifier:
             section="llm_review",
             evidence=evidence,
         )
+
+    @staticmethod
+    def _extract_year_date(evidence: list[str]) -> datetime | None:
+        for line in evidence:
+            match = re.search(r"(?:19|20)\d{2}", line)
+            if match:
+                return datetime(int(match.group()), 1, 1)
+        return None
+
+    def _evidence_date_range(self, evidence: list[str]) -> ParsedDateRange | None:
+        for line in evidence:
+            date_range = self.date_parser.find(line)
+            if date_range is not None:
+                return date_range
+        return None
 
     @staticmethod
     def _serialize(index: int, candidate: EducationMention) -> dict[str, Any]:

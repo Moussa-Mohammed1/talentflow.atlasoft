@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from datetime import datetime
 
 from app.services.education_extraction.extractor import EducationBlockExtractor
 from app.services.education_extraction.llm_verifier import LLMEducationVerifier
@@ -19,7 +20,7 @@ class ResumeEducationExtractionPipeline:
         institution = re.sub(r"\W+", " ", mention.institution.casefold()).strip()
         return institution, mention.start_date, mention.end_date
 
-    def analyze(self, text: str) -> EducationExtractionResult:
+    def analyze(self, file_path: str, text: str) -> EducationExtractionResult:
         if not text or not text.strip():
             return EducationExtractionResult(
                 raw_text=text or "",
@@ -31,7 +32,7 @@ class ResumeEducationExtractionPipeline:
         sections = self.section_analyzer.analyze(text)
         candidates, rejected = self.extractor.extract(text, sections)
         deterministic_candidate_count = len(candidates)
-        llm_review = self.llm_verifier.review(text, candidates)
+        llm_review = self.llm_verifier.review(file_path, text, candidates)
         candidates = llm_review.educations
 
         deduped: dict[tuple[str, object, object], EducationMention] = {}
@@ -43,7 +44,11 @@ class ResumeEducationExtractionPipeline:
 
         educations = sorted(
             deduped.values(),
-            key=lambda item: (item.end_date is None, item.end_date or item.start_date, item.start_date),
+            key=lambda item: (
+                item.end_date is None,
+                item.end_date if item.end_date is not None else item.start_date or datetime.min,
+                item.start_date or datetime.min,
+            ),
             reverse=True,
         )
 
@@ -83,5 +88,5 @@ class PretrainedBilingualEducationExtractor:
     def __init__(self) -> None:
         self.pipeline = ResumeEducationExtractionPipeline()
 
-    def extract_education(self, text: str) -> dict[str, object]:
-        return self.pipeline.analyze(text).to_dict()
+    def extract_education(self, file_path: str, text: str) -> dict[str, object]:
+        return self.pipeline.analyze(file_path, text).to_dict()

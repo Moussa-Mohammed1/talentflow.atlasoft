@@ -20,7 +20,7 @@ class ParsedDateRange:
 class ExperienceMention:
     title: str
     description: str | None
-    start_date: datetime
+    start_date: datetime | None
     end_date: datetime | None
     confidence: float
     section: str

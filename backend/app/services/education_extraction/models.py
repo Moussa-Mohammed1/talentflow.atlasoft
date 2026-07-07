@@ -12,7 +12,7 @@ class EducationMention:
     institution: str
     degree: str | None
     field_of_study: str | None
-    start_date: datetime
+    start_date: datetime | None
     end_date: datetime | None
     description: str | None
     confidence: float
@@ -24,7 +24,7 @@ class EducationMention:
             "institution": self.institution,
             "degree": self.degree,
             "field_of_study": self.field_of_study,
-            "start_date": self.start_date.isoformat(),
+            "start_date": self.start_date.isoformat() if self.start_date else None,
             "end_date": self.end_date.isoformat() if self.end_date else None,
             "description": self.description,
             "confidence": self.confidence,

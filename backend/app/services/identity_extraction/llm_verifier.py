@@ -36,7 +36,7 @@ class LLMIdentityVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen"}
+        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
     def review_resume_identity(self, text: str, identity: dict[str, Any]) -> LLMIdentityReview:
         print("verfiying")

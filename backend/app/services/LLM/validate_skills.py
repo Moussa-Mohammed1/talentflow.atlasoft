@@ -25,7 +25,7 @@ class LLMService:
     @classmethod
     def validate(cls, text: str, skills: list[dict[str, Any]] | list[str]) -> dict[str, Any]:
         prompt = cls._build_skill_review_prompt(text, skills)
-        print("calling deepseek...")
+        print("calling deepseek...", flush=True)
         response = cls._client().chat.completions.create(
             model=cls.model(),
             messages=[{"role": "user", "content": prompt}],
@@ -34,8 +34,8 @@ class LLMService:
             max_tokens=int(os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "4096")),
         )
         content = response.choices[0].message.content or ""
-        print("printing result...")
-        print(content)
+        print("printing result...", flush=True)
+        print(content, flush=True)
         return cls._parse_json_response(content)
 
     @staticmethod
@@ -229,7 +229,8 @@ class LLMService:
         print(
             f"\n\nLLM review: "
             f"{len(parsed['skills'])} accepted, "
-            f"{len(parsed['rejected'])} rejected"
+            f"{len(parsed['rejected'])} rejected",
+            flush=True,
         )
 
         return parsed

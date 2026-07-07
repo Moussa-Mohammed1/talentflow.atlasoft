@@ -4,20 +4,24 @@ import json
 import os
 from typing import Any
 
-import requests
+from openai import OpenAI
 
 
 class LLMService:
-    DEFAULT_ENDPOINT = "http://localhost:11434/api/generate"
-    DEFAULT_MODEL = "qwen3:8b"
+    DEFAULT_MODEL = "deepseek-chat"
+    DEFAULT_ENDPOINT = "https://api.deepseek.com/v1"
 
     @classmethod
-    def endpoint(cls) -> str:
-        return (
+    def _client(cls) -> OpenAI:
+        api_key = os.getenv("LLM_API_KEY", "").strip()
+        endpoint = (
             os.getenv("TALENTFLOW_IDENTITY_LLM_ENDPOINT")
             or os.getenv("TALENTFLOW_SKILL_LLM_ENDPOINT")
             or cls.DEFAULT_ENDPOINT
         ).strip() or cls.DEFAULT_ENDPOINT
+        if not api_key:
+            raise ValueError("LLM_API_KEY is not set in .env")
+        return OpenAI(api_key=api_key, base_url=endpoint)
 
     @classmethod
     def model(cls) -> str:
@@ -29,54 +33,38 @@ class LLMService:
 
     @classmethod
     def validate(cls, text: str, identity: dict[str, Any]) -> dict[str, Any]:
-        print("validating entereddd")
         prompt = cls._build_identity_review_prompt(text, identity)
-        print("calling ollama...")
-        response = requests.post(
-            cls.endpoint(),
-            json={
-                "model": cls.model(),
-                "prompt": prompt,
-                "think": False,
-                "stream": False,
-                "options": {
-                    "temperature": float(
-                        os.getenv(
-                            "TALENTFLOW_IDENTITY_LLM_TEMPERATURE",
-                            os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1"),
-                        )
-                    ),
-                    "top_p": float(
-                        os.getenv(
-                            "TALENTFLOW_IDENTITY_LLM_TOP_P",
-                            os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8"),
-                        )
-                    ),
-                    "num_predict": int(
-                        os.getenv(
-                            "TALENTFLOW_IDENTITY_LLM_NUM_PREDICT",
-                            os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "2048"),
-                        )
-                    ),
-                },
-            },
-            timeout=float(
+        print("calling deepseek...", flush=True)
+        response = cls._client().chat.completions.create(
+            model=cls.model(),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=float(
                 os.getenv(
-                    "TALENTFLOW_IDENTITY_LLM_TIMEOUT",
-                    os.getenv("TALENTFLOW_SKILL_LLM_TIMEOUT", "300"),
+                    "TALENTFLOW_IDENTITY_LLM_TEMPERATURE",
+                    os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1"),
+                )
+            ),
+            top_p=float(
+                os.getenv(
+                    "TALENTFLOW_IDENTITY_LLM_TOP_P",
+                    os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8"),
+                )
+            ),
+            max_tokens=int(
+                os.getenv(
+                    "TALENTFLOW_IDENTITY_LLM_NUM_PREDICT",
+                    os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "4096"),
                 )
             ),
         )
-        response.raise_for_status()
-        payload = response.json()
-        return cls._parse_json_response(str(payload.get("response", "")))
+        content = response.choices[0].message.content or ""
+        print("printing result...", flush=True)
+        print(content, flush=True)
+        return cls._parse_json_response(content)
 
     @staticmethod
     def _build_identity_review_prompt(text: str, identity: dict[str, Any]) -> str:
-        print("build entered")
         serialized_identity = json.dumps(identity, ensure_ascii=False)
-        print("json v-identity")
-        print(serialized_identity)
         schema = {
             "name": {
                 "full_name": "",
@@ -104,22 +92,18 @@ class LLMService:
                 "reason": ""
                 }
             ]
-            }
+        }
         return (
             "You validate identity information extracted from a French or English resume.\n"
             "Return ONLY one valid JSON object matching this schema.\n"
-            "No markdown. No explanations.\n"
-
+            "No markdown. No explanations.\n\n"
             f"{json.dumps(schema, indent=2)}\n\n"
-
             "Extracted identity:\n"
             f"{serialized_identity}\n\n"
-
             "Resume text:\n"
             f"{text}"
-                )
-        
-        
+        )
+
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
         cleaned = raw_response.strip()
@@ -135,18 +119,44 @@ class LLMService:
         try:
             parsed = json.loads(cleaned)
         except json.JSONDecodeError:
-            start = cleaned.find("{")
-            end = cleaned.rfind("}")
-            if start < 0 or end <= start:
-                raise
-            parsed = json.loads(cleaned[start : end + 1])
+            parsed = None
+            obj_start = cleaned.find("{")
+            obj_end = cleaned.rfind("}")
+            if obj_start >= 0 and obj_end > obj_start:
+                try:
+                    parsed = json.loads(cleaned[obj_start : obj_end + 1])
+                except json.JSONDecodeError:
+                    pass
+            if parsed is None:
+                arr_start = cleaned.find("[")
+                arr_end = cleaned.rfind("]")
+                if arr_start >= 0 and arr_end > arr_start:
+                    parsed = json.loads(cleaned[arr_start : arr_end + 1])
+                else:
+                    raise
+
+        if isinstance(parsed, list):
+            parsed = {"rejected": []}
 
         if not isinstance(parsed, dict):
-            raise ValueError("LLM response must be a JSON object")
+            raise ValueError(f"LLM response must be a JSON object or array, got {type(parsed)}")
 
         for field in ("name", "email", "phone"):
             if not isinstance(parsed.get(field), dict):
                 parsed[field] = {}
         if not isinstance(parsed.get("rejected"), list):
             parsed["rejected"] = []
+
+        parsed["rejected"] = [
+            item for item in parsed["rejected"]
+            if isinstance(item, dict) and str(item.get("field", "")).strip()
+        ]
+
+        print(
+            f"\n\nLLM review: "
+            f"fields accepted, "
+            f"{len(parsed['rejected'])} rejected",
+            flush=True,
+        )
+
         return parsed

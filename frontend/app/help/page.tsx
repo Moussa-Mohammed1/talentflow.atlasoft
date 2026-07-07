@@ -68,11 +68,14 @@ interface DocSection {
 
 const sections: DocSection[] = [
   { id: "dashboard", label: "Tableau de bord" },
+  { id: "talents", label: "Talents" },
+  { id: "evaluations", label: "Évaluations" },
   { id: "departements", label: "Départements" },
   { id: "documents", label: "Documents" },
   { id: "invitations", label: "Invitations" },
   { id: "profile", label: "Profil" },
   { id: "settings", label: "Paramètres" },
+  { id: "connexion", label: "Connexion" },
   { id: "features", label: "Fonctionnalités" },
 ];
 
@@ -80,6 +83,10 @@ function HelpContent({ section, searchQuery }: { section: string; searchQuery: s
   switch (section) {
     case "dashboard":
       return <DashboardDoc searchQuery={searchQuery} />;
+    case "talents":
+      return <TalentsDoc searchQuery={searchQuery} />;
+    case "evaluations":
+      return <EvaluationsDoc searchQuery={searchQuery} />;
     case "departements":
       return <DepartementsDoc searchQuery={searchQuery} />;
     case "documents":
@@ -90,6 +97,8 @@ function HelpContent({ section, searchQuery }: { section: string; searchQuery: s
       return <ProfileDoc searchQuery={searchQuery} />;
     case "settings":
       return <SettingsDoc searchQuery={searchQuery} />;
+    case "connexion":
+      return <ConnexionDoc searchQuery={searchQuery} />;
     case "features":
       return <FeaturesDoc searchQuery={searchQuery} />;
     default:
@@ -265,12 +274,33 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
         <Section title="Authentification et comptes" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Connexion sécurisée avec email et mot de passe</li>
+            <li>Page de connexion sécurisée avec email et mot de passe</li>
             <li>Protection des routes par authentification</li>
             <li>Gestion de session avec stockage côté client</li>
             <li>Page de modification du profil utilisateur</li>
             <li>Photo de profil modifiable</li>
             <li>Informations personnelles éditables (nom, email)</li>
+          </ul>
+        </Section>
+
+        <Section title="Talents" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Affichage des talents sous forme de cartes</li>
+            <li>Score du candidat pour son meilleur département</li>
+            <li>Date de désignation et nom du recruteur</li>
+            <li>Photo du candidat ou avatar par défaut</li>
+            <li>Mise à jour automatique depuis les évaluations</li>
+          </ul>
+        </Section>
+
+        <Section title="Évaluations" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Liste des candidats évalués par l&apos;IA sous forme de cartes</li>
+            <li>Aperçu des compétences, expérience et langues</li>
+            <li>Modal de détails avec compatibilité par département</li>
+            <li>Affichage des exigences remplies et manquantes</li>
+            <li>Expériences supplémentaires du candidat</li>
+            <li>Désignation d&apos;un candidat comme talent</li>
           </ul>
         </Section>
 
@@ -328,6 +358,93 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
             <li>Bannière de changement de mot de passe obligatoire</li>
             <li>Design épuré et cohérent</li>
           </ul>
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function TalentsDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Talents" description="Candidats désignés comme talents par les recruteurs" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page Talents affiche les candidats que les recruteurs ont désignés comme talents.
+          Chaque talent est présenté sous forme de carte avec ses informations clés et son score.
+        </Section>
+        <Section title="Cartes talent" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Photo</strong> — Photo du candidat ou avatar par défaut</li>
+            <li><strong>Score</strong> — Score le plus élevé obtenu par le candidat</li>
+            <li><strong>Département</strong> — Meilleur département correspondant au profil</li>
+            <li><strong>Talent depuis</strong> — Date de désignation en tant que talent</li>
+            <li><strong>Défini par</strong> — Nom du recruteur ayant désigné le talent</li>
+          </ul>
+        </Section>
+        <Section title="Statut talent" searchQuery={searchQuery}>
+          Le statut de talent est attribué depuis la page Évaluations. Après avoir consulté
+          les résultats détaillés de l&apos;évaluation d&apos;un candidat, vous pouvez décider de le
+          désigner comme talent. Les talents apparaissent automatiquement dans cette page.
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function EvaluationsDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Évaluations" description="Consultation des candidats évalués par l'intelligence artificielle" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page Évaluations liste les candidats dont le CV a été analysé par l&apos;intelligence
+          artificielle. Chaque candidat est présenté sous forme de carte avec un aperçu de son profil.
+        </Section>
+        <Section title="Cartes candidat" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Photo</strong> — Photo du candidat avec superposition du CV en arrière-plan</li>
+            <li><strong>Compétences</strong> — Nombre de compétences détectées</li>
+            <li><strong>Expérience</strong> — Années d&apos;expérience totale</li>
+            <li><strong>Langues</strong> — Nombre de langues parlées</li>
+            <li><strong>Statut talent</strong> — Indique si le candidat est déjà désigné comme talent</li>
+          </ul>
+        </Section>
+        <Section title="Modal de détails" searchQuery={searchQuery}>
+          Cliquez sur une carte pour ouvrir le modal d&apos;évaluation détaillée. Celui-ci affiche
+          la compatibilité du candidat avec chaque département, les exigences remplies ou non,
+          les expériences manquantes et les expériences supplémentaires.
+        </Section>
+        <Section title="Désigner un talent" searchQuery={searchQuery}>
+          Depuis le modal de détails, vous pouvez désigner un candidat comme talent en cliquant
+          sur le bouton <strong>Définir comme un Talent</strong>. Une fois désigné, le candidat
+          apparaîtra dans la page Talents.
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function ConnexionDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Connexion" description="Page d'authentification de TalentFlow" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page de connexion est la première page que vous voyez en accédant à TalentFlow.
+          Elle vous permet de vous authentifier avec vos identifiants pour accéder à votre
+          espace de travail.
+        </Section>
+        <Section title="Formulaire de connexion" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Email</strong> — Saisissez votre adresse email professionnelle</li>
+            <li><strong>Mot de passe</strong> — Saisissez votre mot de passe</li>
+            <li><strong>Connexion</strong> — Cliquez sur le bouton pour vous connecter</li>
+          </ul>
+        </Section>
+        <Section title="Sécurité" searchQuery={searchQuery}>
+          La connexion est sécurisée et les sessions sont gérées côté client.
+          Les routes de l&apos;application sont protégées par authentification.
         </Section>
       </div>
     </article>

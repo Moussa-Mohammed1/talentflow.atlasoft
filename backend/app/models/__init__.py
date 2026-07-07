@@ -16,3 +16,7 @@ from app.models.invitation import Invitation
 from app.models.notification import Notification, NotificationType
 from app.models.job import Job, JobStatus, JobType
 from app.models.user_preference import UserPreference
+from app.models.job_offers import JobOffers
+from app.models.recruitment import Recruitment, RecruitmentStatus, RecruitmentPriority
+from app.models.interview import Interview, InterviewType, InterviewStatus
+from app.models.recruitment_email import RecruitmentEmail, EmailType, EmailStatus

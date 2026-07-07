@@ -52,6 +52,7 @@ class ResumeAnalysisWorkflow:
         self.lookup_value = lookup_value
         self.require_candidat = require_candidat
         self._resume = None
+        self._resume_path = ""
         self._raw_text = ""
         self._converted_skills: dict = {}
         self._skill_analysis: ResumeSkillAnalysisRead | None = None
@@ -78,9 +79,8 @@ class ResumeAnalysisWorkflow:
         jm.start_analysis_jobs(self._jobs)
 
     def _extract_text(self):
-        self._raw_text = TextExtractionService().extract(
-            str(ResumeLoader.resolve_path(self._resume.path))
-        )
+        self._resume_path = str(ResumeLoader.resolve_path(self._resume.path))
+        self._raw_text = TextExtractionService().extract(self._resume_path)
 
     def _extract_skills(self):
         result = PretrainedBilingualExtractor().extract_skills(self._raw_text)
@@ -109,7 +109,7 @@ class ResumeAnalysisWorkflow:
         })
 
     def _extract_educations(self):
-        result = PretrainedBilingualEducationExtractor().extract_education(self._raw_text)
+        result = PretrainedBilingualEducationExtractor().extract_education(self._resume_path, self._raw_text)
         count = len(result.get("educations", []))
         JobManager(self.db, self.recruiter_id).complete_educations(self._jobs.education_id, count)
         self._education_analysis = ResumeEducationAnalysisRead.model_validate({

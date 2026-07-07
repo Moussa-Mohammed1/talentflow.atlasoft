@@ -60,6 +60,11 @@ export default function Dashboard() {
         </header>
        
         <main className="flex-1 px-6 py-6">
+          <div className="mb-6 rounded-lg">
+            <p className="text-sm leading-7 text-slate-600">
+              Vous trouverez ci-dessous les raccourcis permettant d'accéder rapidement aux principales fonctionnalités de la plateforme.
+            </p>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
             {cardsData.map((card, index) => (
               <div

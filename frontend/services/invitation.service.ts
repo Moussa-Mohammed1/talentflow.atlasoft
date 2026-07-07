@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import type { AcceptInvitationRequest, AcceptInvitationResponse, Invitation, InviteUserResponse, ValidateInvitationResponse } from "@/types/invitation";
+import type { AcceptInvitationRequest, AcceptInvitationResponse, DeleteInvitationResponse, Invitation, InviteUserResponse, ValidateInvitationResponse } from "@/types/invitation";
 
 export const InvitationService = {
   getAll: async (): Promise<Invitation[]> => {
@@ -19,6 +19,11 @@ export const InvitationService = {
 
   acceptInvitation: async (data: AcceptInvitationRequest): Promise<AcceptInvitationResponse> => {
     const response = await api.post<AcceptInvitationResponse>("/auth/accept-invite", data);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<DeleteInvitationResponse> => {
+    const response = await api.delete<DeleteInvitationResponse>(`/auth/invitations/${id}`);
     return response.data;
   },
 };

@@ -22,6 +22,8 @@ const config: Config = {
           "Segoe UI Symbol", 
           "Noto Color Emoji"
         ],
+        playwrite: ['"Playwrite BE VLG"', 'cursive'],
+        herr: ['"Herr Von Muellerhoff"', 'cursive'],
       },
     },
   },

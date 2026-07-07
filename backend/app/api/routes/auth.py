@@ -163,11 +163,11 @@ async def upload_avatar(
     db: Session = Depends(get_db),
 ):
     if not file.filename:
-        raise HTTPException(status_code=400, detail="File is required")
+        raise HTTPException(status_code=400, detail="Fichier requis")
 
     ext = Path(file.filename).suffix.lower()
     if ext not in {".jpg", ".jpeg", ".png", ".gif", ".webp"}:
-        raise HTTPException(status_code=400, detail="Invalid image type. Allowed: jpg, jpeg, png, gif, webp")
+        raise HTTPException(status_code=400, detail="Type d'image invalide. Autorisés : jpg, jpeg, png, gif, webp")
 
     unique_name = f"{uuid.uuid4()}{ext}"
     file_path = AVATAR_DIR / unique_name
@@ -226,14 +226,14 @@ async def linkedin_callback(
     if not signed_state:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing OAuth state",
+            detail="État OAuth manquant",
         )
 
     expected_state = LinkedInService.verify_signed_state(signed_state)
     if not expected_state or expected_state != state:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid OAuth state",
+            detail="État OAuth invalide",
         )
 
     response.delete_cookie(
@@ -246,7 +246,7 @@ async def linkedin_callback(
     if not access_token:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Failed to obtain access token from LinkedIn",
+            detail="Échec de l'obtention du jeton d'accès LinkedIn",
         )
 
     user_info = await LinkedInService.get_user_info(access_token)
@@ -299,7 +299,7 @@ def logout(response: Response):
     )
 
     return {
-        "message": "Successfully logged out"
+        "message": "Déconnexion réussie"
     }
 
 @router.post("/accept-invite")

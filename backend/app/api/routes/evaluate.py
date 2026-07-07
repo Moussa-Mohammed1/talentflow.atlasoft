@@ -66,7 +66,7 @@ def toggle_talent(
     if not candidate:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Candidate not found",
+            detail="Candidat introuvable",
         )
     candidate.is_talent = payload.is_talent
     if payload.is_talent:

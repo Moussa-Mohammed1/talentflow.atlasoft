@@ -52,7 +52,7 @@ def mark_notification_as_read(
         recruiter_id=current_user.id,
     )
     if notification is None:
-        raise HTTPException(status_code=404, detail="Notification not found")
+        raise HTTPException(status_code=404, detail="Notification introuvable")
     return NotificationRead.model_validate(notification)
 
 
@@ -105,17 +105,17 @@ async def notification_websocket(
     try:
         token_user_id = decode_access_token(token)
     except ValueError:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid access token")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Jeton d'accès invalide")
         return
 
     if token_user_id != recruiter_id:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Recruiter mismatch")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Recruteur non concordant")
         return
 
     with SessionLocal() as db:
         user = db.query(User).filter(User.id == token_user_id, User.is_active.is_(True)).first()
     if user is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Inactive user")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Utilisateur inactif")
         return
 
     await notification_manager.connect(recruiter_id, websocket)

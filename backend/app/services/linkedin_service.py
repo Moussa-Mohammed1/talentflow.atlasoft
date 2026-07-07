@@ -72,12 +72,12 @@ class LinkedInService:
             except httpx.TimeoutException:
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="LinkedIn API timeout",
+                    detail="Délai d'attente de l'API LinkedIn dépassé",
                 )
             except httpx.HTTPStatusError as e:
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"LinkedIn token exchange failed: {e.response.text}",
+                    detail=f"Échec de l'échange du jeton LinkedIn : {e.response.text}",
                 )
 
     @staticmethod
@@ -93,16 +93,16 @@ class LinkedInService:
                 if "sub" not in data:
                     raise HTTPException(
                         status_code=status.HTTP_502_BAD_GATEWAY,
-                        detail="Invalid LinkedIn user info response",
+                        detail="Réponse LinkedIn invalide",
                     )
                 return data
             except httpx.TimeoutException:
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail="LinkedIn API timeout",
+                    detail="Délai d'attente de l'API LinkedIn dépassé",
                 )
             except httpx.HTTPStatusError as e:
                 raise HTTPException(
                     status_code=status.HTTP_502_BAD_GATEWAY,
-                    detail=f"LinkedIn user info failed: {e.response.text}",
+                    detail=f"Échec de la récupération des informations LinkedIn : {e.response.text}",
                 )

@@ -78,7 +78,7 @@ class EmailService:
         """
 
         message = MessageSchema(
-            subject="TalentFlow registration invitation",
+            subject="Invitation à rejoindre TalentFlow",
             recipients=[to],
             body=html,
             subtype=MessageType.html,

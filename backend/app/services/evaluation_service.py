@@ -73,7 +73,7 @@ class EvaluationService:
         if candidate is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Candidate not found",
+                detail="Candidat introuvable",
             )
 
         candidate_experiences = self._load_candidate_experiences(candidate_id)

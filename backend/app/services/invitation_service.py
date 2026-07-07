@@ -70,7 +70,7 @@ class InvitationService:
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User already exists"
+                detail="L'utilisateur existe déjà"
             )
 
         existing_invitation = (
@@ -85,7 +85,7 @@ class InvitationService:
         if existing_invitation:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Pending invitation already exists"
+                detail="Une invitation en attente existe déjà"
             )
 
         token = secrets.token_urlsafe(32)
@@ -110,7 +110,7 @@ class InvitationService:
         )
         
         return {
-            "message": "Invitation sent successfully",
+            "message": "Invitation envoyée avec succès",
             "email": email,
         }
 
@@ -129,19 +129,19 @@ class InvitationService:
         if not invitation:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found"
+                detail="Invitation introuvable"
             )
 
         if invitation.accepted:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invitation already used"
+                detail="Invitation déjà utilisée"
             )
 
         if invitation.expires_at < datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invitation expired"
+                detail="Invitation expirée"
             )
 
         return {
@@ -167,13 +167,13 @@ class InvitationService:
         if not invitation:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found",
+                detail="Invitation introuvable",
             )
 
         db.delete(invitation)
         db.commit()
 
-        return {"message": "Invitation deleted successfully"}
+        return {"message": "Invitation supprimée avec succès"}
 
     @staticmethod
     def accept_invitation(
@@ -192,19 +192,19 @@ class InvitationService:
         if not invitation:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Invitation not found"
+                detail="Invitation introuvable"
             )
 
         if invitation.accepted:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invitation already used"
+                detail="Invitation déjà utilisée"
             )
 
         if invitation.expires_at < datetime.utcnow():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invitation expired"
+                detail="Invitation expirée"
             )
 
         existing_user = (
@@ -218,7 +218,7 @@ class InvitationService:
         if existing_user:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User already exists"
+                detail="L'utilisateur existe déjà"
             )
 
         user = User(
@@ -235,5 +235,5 @@ class InvitationService:
         db.commit()
 
         return {
-            "message": "Account created successfully"
+            "message": "Compte créé avec succès"
         }

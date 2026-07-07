@@ -32,7 +32,7 @@ ALLOWED_CONTENT_TYPES = {
 
 def create_resume(file: UploadFile, recruiter_id: int, db: Session) -> Resume:
 	if not file.filename:
-		raise HTTPException(status_code=400, detail="Resume file is required")
+		raise HTTPException(status_code=400, detail="Fichier CV requis")
 
 	# Validate file extension and content type
 	file_ext = Path(file.filename).suffix.lower()
@@ -40,7 +40,7 @@ def create_resume(file: UploadFile, recruiter_id: int, db: Session) -> Resume:
 	if file_ext not in ALLOWED_EXTENSIONS or content_type not in ALLOWED_CONTENT_TYPES:
 		raise HTTPException(
 			status_code=400,
-			detail="Invalid file type. Only PDF and DOCX files are accepted.",
+			detail="Type de fichier invalide. Seuls les fichiers PDF et DOCX sont acceptés.",
 		)
 
 	unique_name = f"{uuid.uuid4()}-{Path(file.filename).name}"
@@ -80,10 +80,10 @@ def resolve_stored_resume_path(path: str) -> Path:
 	resolved_upload_dir = UPLOAD_DIR.resolve()
 
 	if resolved_upload_dir not in resolved_path.parents:
-		raise HTTPException(status_code=400, detail="Resume path is outside resume storage")
+		raise HTTPException(status_code=400, detail="Le chemin du CV est en dehors du stockage")
 
 	if not resolved_path.exists():
-		raise HTTPException(status_code=404, detail="Stored resume file was not found")
+		raise HTTPException(status_code=404, detail="Fichier CV stocké introuvable")
 
 	return resolved_path
 
@@ -130,7 +130,7 @@ def get_resumes_list(db: Session):
 def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
     resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
     if not resume:
-        raise HTTPException(status_code=404, detail="Resume not found")
+        raise HTTPException(status_code=404, detail="Cv introuvable")
         
     return resume
 
@@ -138,7 +138,7 @@ def get_resume_detail(db: Session, resume_id: int, recruiter_id: int):
 def get_full_resume_detail(db: Session, resume_id: int):
     resume = db.query(Resume).filter(Resume.id == resume_id).first()
     if not resume:
-        raise HTTPException(status_code=404, detail="Resume not found")
+        raise HTTPException(status_code=404, detail="CV introuvable")
 
     recruiter = db.query(User).filter(User.id == resume.recruiter_id).first()
     recruiter_name = recruiter.fullname if recruiter else "Inconnu"
@@ -241,7 +241,7 @@ def get_full_resume_detail(db: Session, resume_id: int):
 def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
     resume = ResumeRepository.get_by_id(db, resume_id=resume_id, recruiter_id=recruiter_id)
     if not resume:
-        raise HTTPException(status_code=404, detail="Resume not found")
+        raise HTTPException(status_code=404, detail="CV introuvable")
     
     ResumeRepository.delete(db, resume)
     
@@ -249,4 +249,4 @@ def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
     if file_path.exists():
         file_path.unlink()
         
-    return {"status": "success", "message": "Resume deleted"}
+    return {"status": "success", "message": "CV supprimé"}

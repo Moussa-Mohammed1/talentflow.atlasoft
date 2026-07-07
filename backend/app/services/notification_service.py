@@ -31,8 +31,8 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Resume uploaded",
-                message=f'"{filename}" was uploaded successfully.',
+                title="CV téléchargé",
+                message=f'"{filename}" a été téléchargé avec succès.',
                 type=NotificationType.SUCCESS,
             ),
         )
@@ -41,13 +41,13 @@ class NotificationService:
     def identity_extraction_completed(
         cls, db: Session, *, recruiter_id: int, candidate_name: str
     ) -> Notification:
-        subject = candidate_name.strip() or "The candidate"
+        subject = candidate_name.strip() or "Le candidat"
         return cls.create(
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Identity extraction completed",
-                message=f"Identity extraction completed successfully for {subject}.",
+                title="Extraction d'identité terminée",
+                message=f"Extraction d'identité terminée avec succès pour {subject}.",
                 type=NotificationType.SUCCESS,
             ),
         )
@@ -56,13 +56,13 @@ class NotificationService:
     def identity_extraction_updated(
         cls, db: Session, *, recruiter_id: int, candidate_name: str
     ) -> Notification:
-        subject = candidate_name.strip() or "The candidate"
+        subject = candidate_name.strip() or "Le candidat"
         return cls.create(
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Identity updated",
-                message=f"Identity details updated successfully for {subject}.",
+                title="Identité mise à jour",
+                message=f"Détails d'identité mis à jour avec succès pour {subject}.",
                 type=NotificationType.SUCCESS,
             ),
         )
@@ -73,8 +73,8 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Resume analysis completed",
-                message=f'Analysis completed for "{filename}".',
+                title="Analyse du CV terminée",
+                message=f'L’analyse du CV "{filename}" est terminée. Vous pouvez désormais consulter ce CV et évaluer sa compatibilité avec les différents départements.',
                 type=NotificationType.SUCCESS,
             ),
         )
@@ -83,13 +83,13 @@ class NotificationService:
     def resume_analysis_failed(
         cls, db: Session, *, recruiter_id: int, filename: str, reason: str
     ) -> Notification:
-        safe_reason = reason.strip() or "The resume could not be analyzed."
+        safe_reason = reason.strip() or "Le CV n'a pas pu être analysé."
         return cls.create(
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Resume analysis failed",
-                message=f'Analysis failed for "{filename}": {safe_reason}',
+                title="Analyse du CV échouée",
+                message=f'Analyse échouée pour "{filename}" : {safe_reason}',
                 type=NotificationType.ERROR,
             ),
         )
@@ -102,7 +102,7 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Duplicate candidate detected",
+                title="Candidat en double détecté",
                 message=message,
                 type=NotificationType.WARNING,
             ),
@@ -117,8 +117,8 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Candidate matching completed",
-                message=f"Found {match_count} matching opportunities for {candidate_name}.",
+                title="Correspondance de candidat terminée",
+                message=f"{match_count} opportunité(s) trouvée(s) pour {candidate_name}.",
                 type=NotificationType.INFO,
             ),
         )
@@ -131,8 +131,8 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Language extraction completed",
-                message=f"Found {language_count} language(s) in the resume.",
+                title="Extraction de langues terminée",
+                message=f"{language_count} langue(s) trouvée(s) dans le CV.",
                 type=NotificationType.SUCCESS,
             ),
         )
@@ -145,8 +145,8 @@ class NotificationService:
             db,
             NotificationCreate(
                 recruiter_id=recruiter_id,
-                title="Language extraction failed",
-                message=f"Language extraction failed: {reason}",
+                title="Extraction de langues échouée",
+                message=f"Extraction de langues échouée : {reason}",
                 type=NotificationType.ERROR,
             ),
         )

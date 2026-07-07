@@ -66,7 +66,7 @@ class AuthService:
         if not email.lower().endswith(EMAIL_SUFFIX):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Unauthorized origin"
+                detail="Origine non autorisée"
             )
 
         user = (
@@ -88,7 +88,7 @@ class AuthService:
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
+                detail="Identifiants invalides"
             )
 
         if not verify_password(
@@ -97,7 +97,7 @@ class AuthService:
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials"
+                detail="Identifiants invalides"
             )
 
         token = create_access_token(

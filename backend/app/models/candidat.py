@@ -20,4 +20,8 @@ class Candidat(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     is_talent = Column(Boolean, default=False, nullable=False)
+
+    talent_date = Column(DateTime, nullable=True)
+
+    talent_recruiter_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     

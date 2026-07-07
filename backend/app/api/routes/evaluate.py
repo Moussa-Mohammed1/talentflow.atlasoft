@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -9,9 +11,11 @@ from app.core.security import get_current_user
 from app.models.candidat import Candidat
 from app.models.user import User
 from app.schemas.evaluate import (
+    DepartmentEvaluation,
     EvaluateRequest,
     EvaluateResponse,
     EvaluatedCandidateCard,
+    TalentCard,
 )
 from app.services.evaluation_service import EvaluationService
 
@@ -29,6 +33,16 @@ def get_evaluated_candidates(
 ) -> list[EvaluatedCandidateCard]:
     service = EvaluationService(db)
     return service.get_evaluated_candidates()
+
+
+@router.get("/{candidate_id}/results", response_model=list[DepartmentEvaluation])
+def get_evaluation_results(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[DepartmentEvaluation]:
+    service = EvaluationService(db)
+    return service.get_results(candidate_id)
 
 
 @router.post("", response_model=EvaluateResponse)
@@ -55,6 +69,21 @@ def toggle_talent(
             detail="Candidate not found",
         )
     candidate.is_talent = payload.is_talent
+    if payload.is_talent:
+        candidate.talent_date = datetime.now(timezone.utc)
+        candidate.talent_recruiter_id = current_user.id
+    else:
+        candidate.talent_date = None
+        candidate.talent_recruiter_id = None
     db.commit()
     db.refresh(candidate)
     return {"status": "success", "is_talent": candidate.is_talent}
+
+
+@router.get("/talents", response_model=list[TalentCard])
+def get_talents(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[TalentCard]:
+    service = EvaluationService(db)
+    return service.get_talents()

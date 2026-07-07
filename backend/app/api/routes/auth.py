@@ -18,7 +18,7 @@ from app.schemas.invitation import (
     InvitationResponse,
 )
 
-from app.services.auth_service import AuthService, build_avatar_url, download_external_avatar
+from app.services.auth_service import AuthService, build_avatar_url, download_external_avatar, EMAIL_SUFFIX
 from app.services.invitation_service import InvitationService
 from app.services.linkedin_service import LinkedInService
 from app.core.config import settings
@@ -125,6 +125,7 @@ async def get_me(
             "email_verified": current_user.email_verified,
             "email_verified_at": current_user.email_verified_at,
             "created_at": current_user.created_at,
+            "auth_provider": current_user.auth_provider,
         }
     }
 
@@ -250,6 +251,21 @@ async def linkedin_callback(
 
     user_info = await LinkedInService.get_user_info(access_token)
 
+    linkedin_email = user_info.get("email", "")
+
+    if not linkedin_email.lower().endswith(EMAIL_SUFFIX):
+        return RedirectResponse(
+            url=f"{settings.frontend_url}/login?linkedin_error=unauthorized_email",
+            status_code=status.HTTP_302_FOUND,
+        )
+
+    existing_user = db.query(User).filter(User.email == linkedin_email).first()
+    if not existing_user:
+        return RedirectResponse(
+            url=f"{settings.frontend_url}/login?linkedin_error=unauthorized_email",
+            status_code=status.HTTP_302_FOUND,
+        )
+
     linkedin_picture = user_info.get("picture", "")
     local_avatar = await download_external_avatar(linkedin_picture) if linkedin_picture else None
 
@@ -296,4 +312,17 @@ def accept_invitation(
         token=payload.token,
         fullname=payload.fullname,
         password=payload.password,
+    )
+
+
+@router.delete("/invitations/{invitation_id}")
+def delete_invitation(
+    invitation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return InvitationService.delete_invitation(
+        db=db,
+        invitation_id=invitation_id,
+        user_id=current_user.id,
     )

@@ -144,17 +144,33 @@ export default function InvitationsPage() {
   );
 
   const handleRevoke = useCallback(
-    (id: number) => {
-      setInvitations((prev) => prev.filter((inv) => inv.id !== id));
-      toast.success("Invitation révoquée avec succès");
+    async (id: number) => {
+      try {
+        const { InvitationService } = await import(
+          "@/services/invitation.service"
+        );
+        await InvitationService.delete(id);
+        setInvitations((prev) => prev.filter((inv) => inv.id !== id));
+        toast.success("Invitation révoquée avec succès");
+      } catch {
+        toast.error("Impossible de révoquer l'invitation");
+      }
     },
     [toast]
   );
 
   const handleDelete = useCallback(
-    (id: number) => {
-      setInvitations((prev) => prev.filter((inv) => inv.id !== id));
-      toast.success("Enregistrement d'invitation supprimé");
+    async (id: number) => {
+      try {
+        const { InvitationService } = await import(
+          "@/services/invitation.service"
+        );
+        await InvitationService.delete(id);
+        setInvitations((prev) => prev.filter((inv) => inv.id !== id));
+        toast.success("Enregistrement d'invitation supprimé");
+      } catch {
+        toast.error("Impossible de supprimer l'invitation");
+      }
     },
     [toast]
   );
@@ -208,7 +224,7 @@ export default function InvitationsPage() {
                 
                 <button
                 onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2  border bg-white px-4 py-2.5 text-sm font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
+                className="inline-flex items-center justify-center gap-2  border bg-white px-2.5 py-2.5 text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
                 >
                 <UserPlus className="h-4 w-4" />
                 Inviter un recruteur
@@ -316,7 +332,7 @@ export default function InvitationsPage() {
               </p>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="mt-6 inline-flex items-center justify-center border  gap-2 bg-white px-4 py-2.5 text-sm font-medium text-white shadow-xs hover:bg-black transition-colors"
+                className="mt-6 inline-flex items-center justify-center border gap-2 bg-white px-2 py-1.5 text-xs font-medium text-white shadow-xs hover:bg-black transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 Inviter un recruteur

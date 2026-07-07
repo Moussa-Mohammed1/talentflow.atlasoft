@@ -150,6 +150,32 @@ class InvitationService:
         }
 
     @staticmethod
+    def delete_invitation(
+        db: Session,
+        invitation_id: int,
+        user_id: int,
+    ):
+        invitation = (
+            db.query(Invitation)
+            .filter(
+                Invitation.id == invitation_id,
+                Invitation.invited_by == user_id,
+            )
+            .first()
+        )
+
+        if not invitation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invitation not found",
+            )
+
+        db.delete(invitation)
+        db.commit()
+
+        return {"message": "Invitation deleted successfully"}
+
+    @staticmethod
     def accept_invitation(
         db: Session,
         token: str,

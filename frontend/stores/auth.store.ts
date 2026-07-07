@@ -11,6 +11,7 @@ interface User {
     email_verified: boolean;
     email_verified_at?: string | null;
     created_at?: string | null;
+    auth_provider: string;
 }
 
 interface AuthState {

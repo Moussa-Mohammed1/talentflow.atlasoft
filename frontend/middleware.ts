@@ -6,7 +6,7 @@ export function middleware(
 ) {
   const token = request.cookies.get("access_token");
   
-  const protectedPaths = ["/dashboard", "/profile", "/documents"];
+  const protectedPaths = ["/dashboard", "/profile", "/documents", "/recruitments"];
   const isProtectedPath = protectedPaths.some((path) =>
     request.nextUrl.pathname.startsWith(path)
   );
@@ -22,5 +22,5 @@ export function middleware(
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/documents/:path*"],
+  matcher: ["/dashboard/:path*", "/profile/:path*", "/documents/:path*", "/recruitments/:path*"],
 };

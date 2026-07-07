@@ -32,3 +32,7 @@ export interface ValidateInvitationResponse {
   email: string;
   valid: boolean;
 }
+
+export interface DeleteInvitationResponse {
+  message: string;
+}

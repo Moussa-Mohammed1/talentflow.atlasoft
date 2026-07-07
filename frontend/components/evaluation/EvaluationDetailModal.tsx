@@ -45,6 +45,10 @@ export default function EvaluationDetailModal({
   const toast = useToast();
 
   useEffect(() => {
+    setCurrentIsTalent(candidate?.is_talent ?? false);
+  }, [candidate?.candidate_id]);
+
+  useEffect(() => {
     setModalOpen(isOpen);
     return () => setModalOpen(false);
   }, [isOpen, setModalOpen]);
@@ -54,12 +58,16 @@ export default function EvaluationDetailModal({
     setLoading(true);
     setError(false);
     api
-      .post<{ candidate: unknown; evaluations: DepartmentEvaluation[] }>(
-        "/evaluate",
-        { candidate_id: candidate.candidate_id }
-      )
+      .get<DepartmentEvaluation[]>(`/evaluate/${candidate.candidate_id}/results`)
       .then((res) => {
-        setEvaluations(res.data.evaluations);
+        const sorted = [...res.data].sort((a, b) => b.compatibility - a.compatibility);
+        const seen = new Set<number>();
+        const deduped = sorted.filter((d) => {
+          if (seen.has(d.department_id)) return false;
+          seen.add(d.department_id);
+          return true;
+        });
+        setEvaluations(deduped);
         setExpandedDepartments(new Set());
         setLoading(false);
       })
@@ -122,9 +130,9 @@ export default function EvaluationDetailModal({
               </span>
             </div>
           ) : (
-            evaluations.map((dept) => (
+            evaluations.map((dept, idx) => (
               <div
-                key={dept.department_id}
+                key={`${dept.department_id}-${idx}`}
                 className="border border-slate-100 mrc overflow-hidden"
               >
                 <button

@@ -11,7 +11,7 @@ from app.schemas.skill_extraction import DetectedSectionRead
 class ExperienceItemRead(BaseModel):
     title: str
     description: str | None = None
-    start_date: datetime
+    start_date: datetime | None = None
     end_date: datetime | None = None
     confidence: float = Field(ge=0.0, le=1.0)
     section: str

@@ -12,7 +12,7 @@ class EducationItemRead(BaseModel):
     institution: str
     degree: str | None = None
     field_of_study: str | None = None
-    start_date: datetime
+    start_date: datetime | None = None
     end_date: datetime | None = None
     description: str | None = None
     confidence: float = Field(ge=0.0, le=1.0)

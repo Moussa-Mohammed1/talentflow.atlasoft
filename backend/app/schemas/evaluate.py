@@ -38,3 +38,15 @@ class EvaluatedCandidateCard(BaseModel):
     languages_count: int
     last_evaluation_date: str
     is_talent: bool = False
+
+
+class TalentCard(BaseModel):
+    candidate_id: int
+    resume_id: int
+    fullname: str
+    photo: str | None = None
+    preview_url: str
+    highest_score: float
+    best_department_name: str
+    talent_date: str | None = None
+    talent_recruiter_name: str | None = None

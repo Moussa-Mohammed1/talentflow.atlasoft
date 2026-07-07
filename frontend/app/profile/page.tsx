@@ -33,7 +33,7 @@ function getInitials(name: string): string {
 const infoFields = [
   { key: "role", label: "Rôle", icon: Shield },
   { key: "is_active", label: "Statut", icon: BadgeCheck },
-  { key: "email_verified", label: "Email vérifié", icon: BadgeCheck },
+  { key: "auth_provider", label: "Authentification", icon: Shield },
   { key: "created_at", label: "Membre depuis", icon: Calendar },
 ];
 
@@ -307,7 +307,15 @@ export default function ProfilePage() {
 
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">{user.fullname}</h2>
-                  <p className="text-xs text-slate-500">{user.email}</p>
+                  <p className="text-xs text-slate-500 flex items-center gap-1">
+                    {user.email}
+                    {user.auth_provider === "linkedin" && (
+                      <span className="inline-flex items-center gap-0.5 px-1 py-0.5 bg-blue-50 border border-blue-200 text-blue-700 text-[9px] font-semibold">
+                        <svg className="w-[9px] h-[9px]" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        LinkedIn
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
 
@@ -483,6 +491,8 @@ export default function ProfilePage() {
 
                   if (field.key === "created_at") {
                     displayValue = formatDate(rawValue as string);
+                  } else if (field.key === "auth_provider") {
+                    displayValue = rawValue === "linkedin" ? "LinkedIn" : "Email / Mot de passe";
                   } else if (typeof rawValue === "boolean") {
                     displayValue = rawValue ? "Active" : "Non";
                   } else {
@@ -495,8 +505,12 @@ export default function ProfilePage() {
                         {field.label}
                       </label>
                       <div className="flex items-center gap-2 px-3 py-2  border border-slate-100 bg-slate-50 text-sm text-slate-700">
-                        <Icon size={14} className="shrink-0 text-slate-400" />
-                        <span className="truncate capitalize">{displayValue}</span>
+                        {field.key === "auth_provider" && user.auth_provider === "linkedin" ? (
+                          <svg className="w-[14px] h-[14px] shrink-0 text-[#0A66C2]" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                        ) : (
+                          <Icon size={14} className="shrink-0 text-slate-400" />
+                        )}
+                        <span className="truncate">{displayValue}</span>
                       </div>
                     </div>
                   );

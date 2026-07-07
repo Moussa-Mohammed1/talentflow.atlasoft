@@ -3,7 +3,18 @@
   @font-face {
     font-family: 'Iosevka Charon';
     src: url('/fonts/DM_Sans/static/DMSans-Medium.ttf') format('truetype');
-    /* font-weight: bold; */
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Herr Von Muellerhoff';
+    src: url('/fonts/Herr_Von_Muellerhoff/HerrVonMuellerhoff-Regular.ttf') format('truetype');
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'Playwrite BE VLG';
+    src: url('/fonts/Herr_Von_Muellerhoff/HerrVonMuellerhoff-Regular.ttf') format('truetype');
     font-style: normal;
     font-display: swap;
   }
@@ -11,6 +22,8 @@
 
 @theme {
   --font-sans: 'Iosevka Charon', ui-sans-serif, system-ui, sans-serif;
+  --font-playwrite: 'Playwrite BE VLG', cursive;
+  --font-herr: 'Herr Von Muellerhoff', cursive;
   --animate-toast-enter: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1);
   --animate-toast-exit: toast-exit 0.3s ease-in forwards;
 }

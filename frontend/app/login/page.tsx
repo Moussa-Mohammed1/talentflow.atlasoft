@@ -12,7 +12,7 @@ export default function LoginPage() {
       </Head>
 
        
-      <div className='min-h-screen lg:h-screen w-full bg-white  text-slate-800 relative overflow-y-auto lg:overflow-hidden select-none'>
+      <div className='min-h-screen lg:h-screen w-full bg-white text-slate-800 relative overflow-y-auto lg:overflow-hidden select-none'>
         <Image
           src="/static/bg-login.svg"
           alt=""
@@ -25,24 +25,26 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[radial-gradient(#000_1px,transparent_1px)] [bg-size:16px_16px] z-1" />
 
     
-        <div className="max-w-5xl mx-auto w-full min-h-screen lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 relative z-10 px-4 lg:px-0">
+        <div className="max-w-5xl  mx-auto w-full min-h-screen lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 relative z-10 px-4 lg:px-0">
           
            
-          <div className="lg:col-span-5 flex flex-col items-center justify-center text-center space-y-6 pt-12 lg:pt-0 lg:h-full">
-            <div className="flex flex-col items-center space-y-2">
+          <div className="lg:col-span-5  flex flex-col pb-30 items-center justify-center text-center pt-12 lg:pt-0 lg:h-full">
+            <div className="flex flex-col  items-center space-y-2">
                
               <div className="w-40 h-40 rounded-full border-none flex items-center justify-center overflow-hidden">
                 <img 
                   src="/images/logo.png"
                   alt="Logo 3GCOM" 
-                  className="w-full h-full object-contain p-2" 
+                  className="w-30 h-30 object-contain p-2" 
                 />
               </div>
                
             </div>
 
-            <p className="inline-block bg-blue-900 text-white font-bold text-xs max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
-              Recrutement intelligent, automatisé et entièrement traçable.
+            <p 
+              className="inline-block font-playwrite text-black font-semibold text-3xl max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
+              Recrutement intelligent, automatisé et 
+               entièrement traçable.
             </p>
           </div>
 

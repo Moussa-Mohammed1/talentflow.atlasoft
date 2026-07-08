@@ -29,7 +29,7 @@ export default function Dashboard() {
   },
   {
     title: "Analyse & Statistiques",
-    path: "/evalutaions",
+    path: "/evaluations",
     buttonText: "Voir",
     subtitle: "Suivre les indicateurs clés de recrutement",
     description:

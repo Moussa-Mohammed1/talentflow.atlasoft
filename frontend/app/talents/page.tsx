@@ -12,6 +12,7 @@ import { recruitmentService } from "@/services/recruitment.service";
 import { jobOffersService } from "@/services/job-offers.service";
 import { useToast } from "@/hooks/useToast";
 import type { JobOffer } from "@/types/job-offers";
+import type { Department } from "@/types/department";
 import type { RecruitmentPriority } from "@/types/recruitment";
 import { priorityLabels } from "@/types/recruitment";
 
@@ -389,26 +390,55 @@ function RecruitModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  interface DepartmentScore {
+    department_id: number;
+    department_name: string;
+    compatibility: number;
+  }
+
+  const [departments, setDepartments] = useState<DepartmentScore[]>([]);
+  const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
   const [jobOffers, setJobOffers] = useState<JobOffer[]>([]);
   const [jobOfferId, setJobOfferId] = useState("");
   const [priority, setPriority] = useState<RecruitmentPriority>("medium");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [loadingOffers, setLoadingOffers] = useState(true);
+  const [loading, setLoading] = useState(true);
   const toast = useToast();
 
+  const selectedDept = departments.find((d) => d.department_id === selectedDeptId);
+
   useEffect(() => {
-    jobOffersService.list()
-      .then((offers) => {
-        const published = offers.filter((o) => o.status === "published");
-        setJobOffers(published);
-        if (published.length > 0) setJobOfferId(published[0].id);
-        setLoadingOffers(false);
-      })
-      .catch(() => {
-        setLoadingOffers(false);
-      });
-  }, []);
+    setLoading(true);
+    Promise.all([
+      api.get<DepartmentScore[]>(`/evaluate/${talent.candidate_id}/department-scores`),
+      jobOffersService.list(),
+    ]).then(([deptRes, offers]) => {
+      const sorted = deptRes.data.sort((a, b) => b.compatibility - a.compatibility);
+      setDepartments(sorted);
+      if (sorted.length > 0) setSelectedDeptId(sorted[0].department_id);
+
+      const published = offers.filter((o) => o.status === "published");
+      setJobOffers(published);
+
+      const firstOffer = published.find((o) => o.department_id === sorted[0]?.department_id);
+      if (firstOffer) setJobOfferId(firstOffer.id);
+      setLoading(false);
+    }).catch(() => {
+      setLoading(false);
+    });
+  }, [talent.candidate_id]);
+
+  const filteredOffers = selectedDeptId
+    ? jobOffers.filter((o) => o.department_id === selectedDeptId)
+    : jobOffers;
+
+  useEffect(() => {
+    if (filteredOffers.length > 0 && !filteredOffers.find((o) => o.id === jobOfferId)) {
+      setJobOfferId(filteredOffers[0].id);
+    }
+    if (filteredOffers.length === 0) setJobOfferId("");
+  }, [selectedDeptId, jobOffers]);
 
   const handleRecruit = async () => {
     if (!jobOfferId) {
@@ -442,7 +472,7 @@ function RecruitModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-      <div className="w-full max-w-md overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl">
+      <div className="w-full max-w-3xl flex flex-col mrc border border-gray-200/80 bg-white shadow-xl">
         <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
           <h3 className="text-base font-semibold text-gray-900">Recruter un candidat</h3>
           <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -450,8 +480,8 @@ function RecruitModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
-          <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+        <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-5">
             {talent.photo ? (
               <img src={`${storage_url}${talent.photo}`} alt={talent.fullname} className="w-12 h-12 rounded-full object-cover object-top bg-slate-100" />
             ) : (
@@ -461,61 +491,100 @@ function RecruitModal({
             )}
             <div>
               <p className="text-sm font-bold text-slate-900">{talent.fullname}</p>
-              <p className="text-[11px] text-slate-500">{talent.best_department_name} — {talent.highest_score.toFixed(0)}%</p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Offre d'emploi</label>
-            {loadingOffers ? (
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Loader2 size={12} className="animate-spin" /> Chargement...
+          {loading ? (
+            <div className="flex items-center justify-center py-8 text-slate-400">
+              <Loader2 size={16} className="animate-spin mr-2" /> Chargement...
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-5">
+                {selectedDept && (
+                  <div className="bg-indigo-50/50 border border-indigo-100 rounded-lg p-3 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-600">Score {selectedDept.department_name}</span>
+                    <span className="text-lg font-bold text-indigo-700">{selectedDept.compatibility.toFixed(0)}%</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Offre d'emploi</label>
+                  {filteredOffers.length === 0 ? (
+                    <p className="text-xs text-amber-600">Aucune offre publiée pour ce département.</p>
+                  ) : (
+                    <select
+                      value={jobOfferId}
+                      onChange={(e) => setJobOfferId(e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    >
+                      {filteredOffers.map((offer) => (
+                        <option key={offer.id} value={offer.id}>{offer.title}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Priorité</label>
+                  <div className="flex gap-2">
+                    {(["low", "medium", "high"] as const).map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPriority(p)}
+                        className={`flex-1 py-2 text-xs font-medium border transition-colors cursor-pointer ${
+                          priority === p
+                            ? "bg-slate-900 text-white border-slate-900"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {priorityLabels[p]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes (optionnel)</label>
+                  <textarea
+                    rows={3}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Ajouter une note..."
+                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
+                  />
+                </div>
               </div>
-            ) : jobOffers.length === 0 ? (
-              <p className="text-xs text-amber-600">Aucune offre publiée disponible.</p>
-            ) : (
-              <select
-                value={jobOfferId}
-                onChange={(e) => setJobOfferId(e.target.value)}
-                className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
-              >
-                {jobOffers.map((offer) => (
-                  <option key={offer.id} value={offer.id}>{offer.title}</option>
-                ))}
-              </select>
-            )}
-          </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Priorité</label>
-            <div className="flex gap-2">
-              {(["low", "medium", "high"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPriority(p)}
-                  className={`flex-1 py-2 text-xs font-medium border transition-colors cursor-pointer ${
-                    priority === p
-                      ? "bg-slate-900 text-white border-slate-900"
-                      : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                  }`}
-                >
-                  {priorityLabels[p]}
-                </button>
-              ))}
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1.5">Départements</label>
+                {departments.length === 0 ? (
+                  <p className="text-xs text-amber-600">Aucune évaluation disponible pour ce candidat.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-72 overflow-y-auto [scrollbar-width:thin] pr-1">
+                    {departments.map((dept) => (
+                      <button
+                        key={dept.department_id}
+                        type="button"
+                        onClick={() => setSelectedDeptId(dept.department_id)}
+                        className={`w-full flex items-center justify-between px-3 py-2 text-sm border transition-colors cursor-pointer ${
+                          selectedDeptId === dept.department_id
+                            ? "bg-indigo-50 border-indigo-300 text-indigo-900"
+                            : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="font-medium">{dept.department_name}</span>
+                        <span className={`text-xs font-bold ${selectedDeptId === dept.department_id ? "text-indigo-700" : "text-slate-500"}`}>
+                          {dept.compatibility.toFixed(0)}%
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5">Notes (optionnel)</label>
-            <textarea
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ajouter une note..."
-              className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
-            />
-          </div>
+          )}
         </div>
 
         <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex items-center justify-end gap-2">
@@ -529,7 +598,7 @@ function RecruitModal({
           <button
             type="button"
             onClick={handleRecruit}
-            disabled={submitting || !jobOfferId || jobOffers.length === 0}
+            disabled={submitting || !jobOfferId || filteredOffers.length === 0}
             className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}

@@ -142,7 +142,7 @@ def preview_email(
     current_user: User = Depends(get_current_user),
 ):
     service = RecruitmentService(db)
-    return service.preview_email(recruitment_id, payload)
+    return service.preview_email(recruitment_id, payload, recruiter_id=current_user.id)
 
 
 @router.post("/{recruitment_id}/send-email", response_model=RecruitmentEmailRead)
@@ -164,3 +164,13 @@ def list_emails(
 ):
     service = RecruitmentService(db)
     return service.list_emails(recruitment_id)
+
+
+@router.post("/{recruitment_id}/cancel", response_model=RecruitmentRead)
+def cancel_recruitment(
+    recruitment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    service = RecruitmentService(db)
+    return service.cancel_recruitment(recruitment_id)

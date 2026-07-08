@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.invitation import Invitation
 from app.services.email_service import EmailService
+from app.services.notification_email_service import NotificationEmailService
 from app.core.security import hash_password
 
 EMAIL_SUFFIX = os.getenv("EMAIL_SUFFIX")
@@ -233,6 +234,17 @@ class InvitationService:
         invitation.accepted = True
 
         db.commit()
+
+        inviter = db.query(User).filter(User.id == invitation.invited_by).first()
+        if inviter:
+            subject = "Invitation acceptée"
+            body = (
+                f"<p>Bonjour {inviter.fullname},</p>"
+                f"<p><strong>{fullname}</strong> ({invitation.email}) a accepté votre invitation "
+                f"et rejoint TalentFlow.</p>"
+                f"<p>Cordialement,<br>L'équipe TalentFlow</p>"
+            )
+            NotificationEmailService.send(db, invitation.invited_by, "invitation_accepted", subject, body)
 
         return {
             "message": "Compte créé avec succès"

@@ -10,6 +10,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.candidat import Candidat
+from app.models.department import Department
+from app.models.evaluation_result import EvaluationResult
 from app.models.interview import Interview
 from app.models.job_offers import JobOffers
 from app.models.recruitment import Recruitment, RecruitmentStatus
@@ -63,6 +65,19 @@ class RecruitmentService:
         candidate = self.db.query(Candidat).filter(Candidat.id == rec.candidate_id).first()
         job_offer = self.db.query(JobOffers).filter(JobOffers.id == rec.job_offer_id).first()
 
+        department_name = None
+        department_score = None
+        if job_offer and job_offer.department_id:
+            dept = self.db.query(Department).filter(Department.id == job_offer.department_id).first()
+            if dept:
+                department_name = dept.name
+                eval_result = self.db.query(EvaluationResult).filter(
+                    EvaluationResult.candidate_id == rec.candidate_id,
+                    EvaluationResult.department_id == job_offer.department_id,
+                ).first()
+                if eval_result:
+                    department_score = eval_result.compatibility
+
         interviews = self.interview_repo.list_by_recruitment(recruitment_id)
         emails = self.email_repo.list_by_recruitment(recruitment_id)
 
@@ -80,6 +95,8 @@ class RecruitmentService:
                 "title": job_offer.title,
                 "description": job_offer.description,
                 "department_id": job_offer.department_id,
+                "department_name": department_name,
+                "department_score": department_score,
             } if job_offer else None,
             "interviews": [InterviewRead.model_validate(i) for i in interviews],
             "emails": [RecruitmentEmailRead.model_validate(e) for e in emails],
@@ -158,17 +175,41 @@ class RecruitmentService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recruitment not found")
         self.repo.soft_delete(rec)
 
+    def cancel_recruitment(self, recruitment_id: UUID) -> RecruitmentRead:
+        rec = self.repo.get_by_id(recruitment_id)
+        if rec is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recruitment not found")
+
+        interviews = self.interview_repo.list_by_recruitment(recruitment_id)
+        for interview in interviews:
+            self.interview_repo.delete(interview)
+
+        emails = self.email_repo.list_by_recruitment(recruitment_id)
+        for email in emails:
+            self.db.delete(email)
+        self.db.commit()
+
+        rec.status = RecruitmentStatus.CANCELLED
+        rec.updated_at = datetime.now(timezone.utc)
+        self.db.add(rec)
+        self.db.commit()
+        self.db.refresh(rec)
+
+        return RecruitmentRead.model_validate(rec)
+
     def create_interview(self, recruitment_id: UUID, data: InterviewCreate) -> InterviewRead:
         rec = self.repo.get_by_id(recruitment_id)
         if rec is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recruitment not found")
 
         if data.scheduled_at.tzinfo is None:
-            scheduled_at = data.scheduled_at.replace(tzinfo=timezone.utc)
+            scheduled_at = data.scheduled_at
+            now = datetime.now()
         else:
             scheduled_at = data.scheduled_at
+            now = datetime.now(timezone.utc)
 
-        if scheduled_at <= datetime.now(timezone.utc):
+        if scheduled_at <= now:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Interview date must be in the future",
@@ -191,10 +232,12 @@ class RecruitmentService:
 
         if data.scheduled_at is not None:
             if data.scheduled_at.tzinfo is None:
-                scheduled_at = data.scheduled_at.replace(tzinfo=timezone.utc)
+                scheduled_at = data.scheduled_at
+                now = datetime.now()
             else:
                 scheduled_at = data.scheduled_at
-            if scheduled_at <= datetime.now(timezone.utc):
+                now = datetime.now(timezone.utc)
+            if scheduled_at <= now:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Interview date must be in the future",
@@ -209,7 +252,7 @@ class RecruitmentService:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Interview not found")
         self.interview_repo.delete(interview)
 
-    def preview_email(self, recruitment_id: UUID, data: EmailPreviewRequest) -> EmailPreviewResponse:
+    def preview_email(self, recruitment_id: UUID, data: EmailPreviewRequest, recruiter_id: int | None = None) -> EmailPreviewResponse:
         rec = self.repo.get_by_id(recruitment_id)
         if rec is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recruitment not found")
@@ -230,7 +273,7 @@ class RecruitmentService:
         }
 
         try:
-            result = RecruitmentEmailGenerator.generate(variables)
+            result = RecruitmentEmailGenerator.generate(variables, db=self.db, recruiter_id=recruiter_id)
             return EmailPreviewResponse(subject=result["subject"], body=result["body"])
         except Exception as e:
             logger.error(f"Failed to generate email: {e}", exc_info=True)

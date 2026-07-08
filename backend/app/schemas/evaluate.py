@@ -50,3 +50,9 @@ class TalentCard(BaseModel):
     best_department_name: str
     talent_date: str | None = None
     talent_recruiter_name: str | None = None
+
+
+class DepartmentScore(BaseModel):
+    department_id: int
+    department_name: str
+    compatibility: float

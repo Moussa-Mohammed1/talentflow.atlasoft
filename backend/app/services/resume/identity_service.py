@@ -40,7 +40,7 @@ class ResumeIdentityService:
             
             resume_full_path = ResumeLoader.resolve_path(resume.path)
             text = TextExtractionService().extract(str(resume_full_path))
-            identity = ResumeIdentityPipeline().analyze(text)
+            identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
             jm.complete(job_id, "Extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de l'extraction d'identité : {str(e)}")
@@ -90,7 +90,7 @@ class ResumeIdentityService:
             jm.start(job_id, "Ré-extraction de l'identité du candidat")
             resume_full_path = ResumeLoader.resolve_path(resume.path)
             text = TextExtractionService().extract(str(resume_full_path))
-            identity = ResumeIdentityPipeline().analyze(text)
+            identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
             jm.complete(job_id, "Ré-extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de la ré-extraction d'identité : {str(e)}")

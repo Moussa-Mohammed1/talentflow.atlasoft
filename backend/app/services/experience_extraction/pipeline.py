@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import re
 
+from sqlalchemy.orm import Session
+
 from app.services.experience_extraction.extractor import ExperienceBlockExtractor
 from app.services.experience_extraction.llm_verifier import LLMExperienceVerifier
 from app.services.experience_extraction.models import ExperienceExtractionResult, ExperienceMention
@@ -9,10 +11,12 @@ from app.services.skill_extraction.section_analyzer import ResumeSectionAnalyzer
 
 
 class ResumeExperienceExtractionPipeline:
-    def __init__(self) -> None:
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
         self.section_analyzer = ResumeSectionAnalyzer()
         self.extractor = ExperienceBlockExtractor()
         self.llm_verifier = LLMExperienceVerifier()
+        self._db = db
+        self._recruiter_id = recruiter_id
 
     @staticmethod
     def _key(mention: ExperienceMention) -> tuple[str, object, object]:
@@ -31,7 +35,7 @@ class ResumeExperienceExtractionPipeline:
         sections = self.section_analyzer.analyze(text)
         candidates, rejected = self.extractor.extract(text, sections)
         deterministic_candidate_count = len(candidates)
-        llm_review = self.llm_verifier.review(text, candidates)
+        llm_review = self.llm_verifier.review(text, candidates, db=self._db, recruiter_id=self._recruiter_id)
         candidates = llm_review.experiences
         deduped: dict[tuple[str, object, object], ExperienceMention] = {}
         for candidate in candidates:
@@ -78,8 +82,8 @@ class ResumeExperienceExtractionPipeline:
 
 
 class PretrainedBilingualExperienceExtractor:
-    def __init__(self) -> None:
-        self.pipeline = ResumeExperienceExtractionPipeline()
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
+        self.pipeline = ResumeExperienceExtractionPipeline(db=db, recruiter_id=recruiter_id)
 
     def extract_experiences(self, text: str) -> dict[str, object]:
         return self.pipeline.analyze(text).to_dict()

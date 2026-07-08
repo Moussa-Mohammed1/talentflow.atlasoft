@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from typing import Any
 
 from openai import OpenAI
+from sqlalchemy.orm import Session
+
+from app.services.llm_usage_recorder import record_llm_usage
 
 
 class LLMService:
@@ -23,9 +27,11 @@ class LLMService:
         return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
 
     @classmethod
-    def validate(cls, description: str) -> dict[str, Any]:
+    def validate(cls, description: str,
+                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
         prompt = cls._build_job_offer_prompt(description)
         print("calling deepseek for job offer generation...", flush=True)
+        start = datetime.utcnow()
         response = cls._client().chat.completions.create(
             model=cls.model(),
             messages=[{"role": "user", "content": prompt}],
@@ -33,9 +39,23 @@ class LLMService:
             top_p=float(os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8")),
             max_tokens=int(os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "4096")),
         )
+        duration = int((datetime.utcnow() - start).total_seconds() * 1000)
         content = response.choices[0].message.content or ""
         print("printing result...", flush=True)
         print(content, flush=True)
+        if db is not None and recruiter_id is not None:
+            try:
+                record_llm_usage(
+                    db=db,
+                    recruiter_id=recruiter_id,
+                    action="job_offer_generation",
+                    model=cls.model(),
+                    tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
+                    tokens_completion=response.usage.completion_tokens if response.usage else 0,
+                    duration_ms=duration,
+                )
+            except Exception:
+                pass
         return cls._parse_json_response(content)
 
     @staticmethod

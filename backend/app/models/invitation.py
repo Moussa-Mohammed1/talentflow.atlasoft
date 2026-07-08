@@ -15,6 +15,6 @@ class Invitation(Base):
 
     accepted = Column(Boolean, default=False)
 
-    invited_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    invited_by = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow)

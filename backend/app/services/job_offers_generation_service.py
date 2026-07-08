@@ -11,12 +11,13 @@ from app.services.job_offers_service import JobOffersService
 
 
 class JobOffersGenerationService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, recruiter_id: int | None = None):
         self.db = db
+        self.recruiter_id = recruiter_id
         self.job_offers_service = JobOffersService(db)
 
     def generate_from_description(self, description: str) -> JobOfferRead:
-        payload = LLMService.validate(description)
+        payload = LLMService.validate(description, db=self.db, recruiter_id=self.recruiter_id)
         job_in = self._build_create(payload)
         return self.job_offers_service.create(job_in)
 

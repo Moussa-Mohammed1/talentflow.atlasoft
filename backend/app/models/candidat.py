@@ -23,5 +23,5 @@ class Candidat(Base):
 
     talent_date = Column(DateTime, nullable=True)
 
-    talent_recruiter_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    talent_recruiter_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     

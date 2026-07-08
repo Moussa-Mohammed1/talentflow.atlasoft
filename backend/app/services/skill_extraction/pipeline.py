@@ -7,6 +7,8 @@ try:
 except Exception:
     SentenceTransformer = None
 
+from sqlalchemy.orm import Session
+
 from app.services.skill_extraction.candidate_extractor import CandidateExtractor
 from app.services.skill_extraction.constants import COMPETENCY_FAMILY, TECHNOLOGY_FAMILY
 from app.services.skill_extraction.models import SectionSpan, SkillExtractionResult, SkillMention
@@ -16,11 +18,11 @@ from app.services.skill_extraction.section_analyzer import ResumeSectionAnalyzer
 
 
 class ResumeSkillExtractionPipeline:
-    def __init__(self) -> None:
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
         self.ontology = SkillOntology()
         self.section_analyzer = ResumeSectionAnalyzer()
         self.extractor = CandidateExtractor(self.ontology)
-        self.scorer = SkillScorer(self.ontology)
+        self.scorer = SkillScorer(self.ontology, db=db, recruiter_id=recruiter_id)
 
     @staticmethod
     def _group_skills(skills: list[SkillMention]) -> dict[str, list[SkillMention]]:
@@ -132,7 +134,8 @@ class ResumeSkillExtractionPipeline:
             }
             for mention in skill_mentions
         ]
-        review = self.scorer.llm_verifier.review_resume_skills(text, review_payload)
+        review = self.scorer.llm_verifier.review_resume_skills(text, review_payload,
+            db=self.scorer._db, recruiter_id=self.scorer._recruiter_id)
         stats: dict[str, object] = {
             "available": review.available,
             "provider": review.provider,
@@ -233,9 +236,10 @@ class ResumeSkillExtractionPipeline:
 
 
 class PretrainedBilingualExtractor:
-    def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"):
+    def __init__(self, model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+                 db: Session | None = None, recruiter_id: int | None = None):
         self.model_name = model_name
-        self.pipeline = ResumeSkillExtractionPipeline()
+        self.pipeline = ResumeSkillExtractionPipeline(db=db, recruiter_id=recruiter_id)
 
     def extract_skills(self, text: str) -> dict[str, object]:
         return self.pipeline.analyze(text).to_dict()

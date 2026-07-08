@@ -32,7 +32,7 @@ class ResumeExperienceService:
         try:
             jm.start(job_id, "Extraction des expériences du CV")
             raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
-            extracted = PretrainedBilingualExperienceExtractor().extract_experiences(raw_text)
+            extracted = PretrainedBilingualExperienceExtractor(db=db, recruiter_id=recruiter_id).extract_experiences(raw_text)
             count = len(extracted.get("experiences", []))
             jm.complete(job_id, f"{count} expérience(s) trouvée(s)")
         except UnsupportedFileTypeError as e:

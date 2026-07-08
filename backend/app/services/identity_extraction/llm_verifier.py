@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.LLM.validate_identity import LLMService
 from app.services.identity_extraction.validation import IdentityValidation
 
@@ -38,13 +40,14 @@ class LLMIdentityVerifier:
     def available(self) -> bool:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def review_resume_identity(self, text: str, identity: dict[str, Any]) -> LLMIdentityReview:
+    def review_resume_identity(self, text: str, identity: dict[str, Any],
+                                db: Session | None = None, recruiter_id: int | None = None) -> LLMIdentityReview:
         print("verfiying")
         if not self.available:
             return LLMIdentityReview(False, self.provider or "none", {}, [], "llm_fallback_not_configured")
 
         try:
-            payload = LLMService.validate(text, identity)
+            payload = LLMService.validate(text, identity, db=db, recruiter_id=recruiter_id)
             print("validating sorted")
         except Exception as exc:
             print("validating excepted")

@@ -3,6 +3,8 @@ from __future__ import annotations
 from math import exp
 from typing import Iterable
 
+from sqlalchemy.orm import Session
+
 from app.services.skill_extraction.constants import COMPETENCY_FAMILY, TECHNOLOGY_FAMILY, SECTION_CONFIDENCE
 from app.services.skill_extraction.category_classifier import SkillCategoryClassifier
 from app.services.skill_extraction.embedding_matcher import EmbeddingSkillMatcher
@@ -48,13 +50,15 @@ _AMBIGUOUS_SINGLE_WORDS = {
 
 
 class SkillScorer:
-    def __init__(self, ontology: SkillOntology) -> None:
+    def __init__(self, ontology: SkillOntology, db: Session | None = None, recruiter_id: int | None = None) -> None:
         self.ontology = ontology
         self.normalizer = SkillNormalizer(ontology)
         self.ontology_matcher = OntologyMatcher(ontology)
         self.embedding_matcher = EmbeddingSkillMatcher(ontology)
         self.llm_verifier = LLMSkillVerifier()
         self.category_classifier = SkillCategoryClassifier(ontology)
+        self._db = db
+        self._recruiter_id = recruiter_id
 
     @staticmethod
     def _section_for_char(char_index: int, sections: list[SectionSpan]) -> SectionSpan:

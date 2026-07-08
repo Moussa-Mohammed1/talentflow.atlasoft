@@ -1,15 +1,20 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, status, UploadFile, File, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from pathlib import Path
 import shutil
 import uuid
 import os
+from datetime import datetime
 from app.core.database import get_db
 from app.models.user import User
+from app.models.resume import Resume
+from app.models.llm_usage import LLMUsage
+from app.models.invitation import Invitation
 from app.repositories.candidat_repository import CandidatRepository
 from app.core.security import get_current_user, create_access_token
-from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest
+from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest, UserStatsResponse, LLMUsageByAction
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
@@ -128,6 +133,62 @@ async def get_me(
             "auth_provider": current_user.auth_provider,
         }
     }
+
+
+@router.get("/me/stats", response_model=UserStatsResponse)
+def get_user_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    resume_count = (
+        db.query(func.count(Resume.id))
+        .filter(Resume.recruiter_id == current_user.id)
+        .scalar() or 0
+    )
+    llm_count = (
+        db.query(func.count(LLMUsage.id))
+        .filter(LLMUsage.recruiter_id == current_user.id)
+        .scalar() or 0
+    )
+    llm_by_action_rows = (
+        db.query(LLMUsage.action, func.count(LLMUsage.id).label("count"))
+        .filter(LLMUsage.recruiter_id == current_user.id)
+        .group_by(LLMUsage.action)
+        .all()
+    )
+    llm_usage_by_action = [
+        LLMUsageByAction(action=row.action, count=row.count)
+        for row in llm_by_action_rows
+    ]
+    invitations_sent = (
+        db.query(func.count(Invitation.id))
+        .filter(Invitation.invited_by == current_user.id)
+        .scalar() or 0
+    )
+    invitations_accepted = (
+        db.query(func.count(Invitation.id))
+        .filter(Invitation.invited_by == current_user.id, Invitation.accepted == True)
+        .scalar() or 0
+    )
+    invitations_refused = (
+        db.query(func.count(Invitation.id))
+        .filter(
+            Invitation.invited_by == current_user.id,
+            Invitation.accepted == False,
+            Invitation.expires_at < datetime.utcnow(),
+        )
+        .scalar() or 0
+    )
+
+    return UserStatsResponse(
+        resume_count=resume_count,
+        successful_llm_requests=llm_count,
+        llm_usage_by_action=llm_usage_by_action,
+        invitations_sent=invitations_sent,
+        invitations_accepted=invitations_accepted,
+        invitations_refused=invitations_refused,
+    )
+
 
 @router.patch("/me")
 async def update_profile(
@@ -289,6 +350,25 @@ async def linkedin_callback(
 
     redirect_url = f"{settings.frontend_url}/login?token={jwt_token}"
     return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+
+
+@router.delete("/me")
+def delete_account(
+    response: Response,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if current_user.avatar:
+        avatar_path = Path(current_user.avatar.lstrip("/"))
+        if avatar_path.exists():
+            avatar_path.unlink()
+
+    response.delete_cookie(key="access_token", path="/")
+
+    db.delete(current_user)
+    db.commit()
+
+    return {"message": "Compte supprimé avec succès"}
 
 
 @router.post("/logout")

@@ -42,7 +42,7 @@ def generate_job_offer(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> JobOfferRead:
-    service = JobOffersGenerationService(db)
+    service = JobOffersGenerationService(db, recruiter_id=current_user.id)
     return service.generate_from_description(job_in.description)
 
 

@@ -33,7 +33,7 @@ class ResumeEducationService:
             jm.start(job_id, "Extraction des formations du CV")
             resume_path = str(ResumeLoader.resolve_path(resume.path))
             raw_text = TextExtractionService().extract(resume_path)
-            extracted = PretrainedBilingualEducationExtractor().extract_education(resume_path, raw_text)
+            extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
             count = len(extracted.get("educations", []))
             jm.complete(job_id, f"{count} formation(s) trouvée(s)")
         except UnsupportedFileTypeError as e:

@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.education_extraction.models import EducationMention
 from app.services.experience_extraction.date_parser import BilingualDateRangeParser
 from app.services.experience_extraction.models import ParsedDateRange
@@ -50,7 +52,8 @@ class LLMEducationVerifier:
     def available(self) -> bool:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def review(self, file_path: str, text: str, candidates: list[EducationMention]) -> LLMEducationReview:
+    def review(self, file_path: str, text: str, candidates: list[EducationMention],
+               db: Session | None = None, recruiter_id: int | None = None) -> LLMEducationReview:
         if not self.available:
             logger.info("Education LLM verification skipped: provider is not configured")
             return LLMEducationReview(
@@ -60,7 +63,7 @@ class LLMEducationVerifier:
         serialized = [self._serialize(index, candidate) for index, candidate in enumerate(candidates)]
         try:
             from app.services.LLM.validate_education import LLMService
-            payload = LLMService.validate(file_path, serialized)
+            payload = LLMService.validate(file_path, serialized, db=db, recruiter_id=recruiter_id)
         except Exception as exc:
             logger.warning("Education LLM verification failed: %s", type(exc).__name__)
             return LLMEducationReview(

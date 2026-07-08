@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.certification_extraction.models import CertificationMention
 from app.services.experience_extraction.date_parser import BilingualDateRangeParser
 from app.services.experience_extraction.models import ParsedDateRange
@@ -50,7 +52,8 @@ class LLMCertificationVerifier:
     def available(self) -> bool:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def review(self, text: str, candidates: list[CertificationMention]) -> LLMCertificationReview:
+    def review(self, text: str, candidates: list[CertificationMention],
+               db: Session | None = None, recruiter_id: int | None = None) -> LLMCertificationReview:
         if not self.available:
             logger.info("Certification LLM verification skipped: provider is not configured")
             return LLMCertificationReview(
@@ -60,7 +63,7 @@ class LLMCertificationVerifier:
         serialized = [self._serialize(index, candidate) for index, candidate in enumerate(candidates)]
         try:
             from app.services.LLM.validate_certification import LLMService
-            payload = LLMService.validate(text, serialized)
+            payload = LLMService.validate(text, serialized, db=db, recruiter_id=recruiter_id)
         except Exception as exc:
             logger.warning("Certification LLM verification failed: %s", type(exc).__name__)
             return LLMCertificationReview(

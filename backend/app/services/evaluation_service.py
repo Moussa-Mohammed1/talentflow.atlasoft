@@ -301,7 +301,7 @@ class EvaluationService:
             from app.services.LLM.validate_evaluation import LLMService
 
             serialized = [e.model_dump() for e in evaluations]
-            payload = LLMService.validate(file_path, serialized)
+            payload = LLMService.validate(file_path, serialized, db=self.db, recruiter_id=resume.recruiter_id)
         except Exception as exc:
             print(f"Evaluation LLM validation failed: {exc}", flush=True)
             return evaluations

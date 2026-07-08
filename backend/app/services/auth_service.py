@@ -145,6 +145,8 @@ class AuthService:
         if user:
             if avatar_path:
                 user.avatar = avatar_path
+            if fullname:
+                user.fullname = fullname
             db.commit()
             db.refresh(user)
             return user
@@ -158,6 +160,8 @@ class AuthService:
                 user.auth_provider = "linkedin"
                 if avatar_path:
                     user.avatar = avatar_path
+                if fullname:
+                    user.fullname = fullname
                 user.email_verified = True
                 db.commit()
                 db.refresh(user)

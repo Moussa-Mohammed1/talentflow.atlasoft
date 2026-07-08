@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.identity_extraction.extractor import IdentityExtractor
 from app.services.identity_extraction.llm_verifier import LLMIdentityVerifier
 
@@ -11,13 +13,14 @@ class ResumeIdentityPipeline:
         self.extractor = IdentityExtractor()
         self.llm_verifier = LLMIdentityVerifier()
 
-    def analyze(self, text: str) -> dict[str, Any]:
+    def analyze(self, text: str, db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
         identity = self.extractor.extract(text).to_dict()
-        identity = self._apply_llm_review(text, identity)
+        identity = self._apply_llm_review(text, identity, db=db, recruiter_id=recruiter_id)
         return identity
 
-    def _apply_llm_review(self, text: str, identity: dict[str, Any]) -> dict[str, Any]:
-        review = self.llm_verifier.review_resume_identity(text, identity)
+    def _apply_llm_review(self, text: str, identity: dict[str, Any],
+                           db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
+        review = self.llm_verifier.review_resume_identity(text, identity, db=db, recruiter_id=recruiter_id)
         stats = dict(identity.get("stats", {}))
         stats["llm_review"] = {
             "available": review.available,

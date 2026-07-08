@@ -83,13 +83,13 @@ class ResumeAnalysisWorkflow:
         self._raw_text = TextExtractionService().extract(self._resume_path)
 
     def _extract_skills(self):
-        result = PretrainedBilingualExtractor().extract_skills(self._raw_text)
+        result = PretrainedBilingualExtractor(db=self.db, recruiter_id=self.recruiter_id).extract_skills(self._raw_text)
         count = len(result.get("technologies", [])) + len(result.get("competencies", []))
         JobManager(self.db, self.recruiter_id).complete_skills(self._jobs.skill_id, count)
         self._converted_skills = SkillMapper.convert_skills(result)
 
     def _extract_experiences(self):
-        result = PretrainedBilingualExperienceExtractor().extract_experiences(self._raw_text)
+        result = PretrainedBilingualExperienceExtractor(db=self.db, recruiter_id=self.recruiter_id).extract_experiences(self._raw_text)
         count = len(result.get("experiences", []))
         JobManager(self.db, self.recruiter_id).complete_experiences(self._jobs.experience_id, count)
         self._experience_analysis = ResumeExperienceAnalysisRead.model_validate({
@@ -109,7 +109,7 @@ class ResumeAnalysisWorkflow:
         })
 
     def _extract_educations(self):
-        result = PretrainedBilingualEducationExtractor().extract_education(self._resume_path, self._raw_text)
+        result = PretrainedBilingualEducationExtractor(db=self.db, recruiter_id=self.recruiter_id).extract_education(self._resume_path, self._raw_text)
         count = len(result.get("educations", []))
         JobManager(self.db, self.recruiter_id).complete_educations(self._jobs.education_id, count)
         self._education_analysis = ResumeEducationAnalysisRead.model_validate({
@@ -119,7 +119,7 @@ class ResumeAnalysisWorkflow:
         })
 
     def _extract_certifications(self):
-        result = PretrainedBilingualCertificationExtractor().extract_certifications(self._raw_text)
+        result = PretrainedBilingualCertificationExtractor(db=self.db, recruiter_id=self.recruiter_id).extract_certifications(self._raw_text)
         count = len(result.get("certifications", []))
         JobManager(self.db, self.recruiter_id).complete_certifications(self._jobs.certification_id, count)
         self._certification_analysis = ResumeCertificationAnalysisRead.model_validate({

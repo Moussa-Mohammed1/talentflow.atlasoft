@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from typing import Any
 
 from openai import OpenAI
+from sqlalchemy.orm import Session
+
+from app.services.llm_usage_recorder import record_llm_usage
 
 
 class RecruitmentEmailGenerator:
@@ -23,9 +27,11 @@ class RecruitmentEmailGenerator:
         return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
 
     @classmethod
-    def generate(cls, variables: dict[str, str]) -> dict[str, str]:
+    def generate(cls, variables: dict[str, str],
+                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, str]:
         prompt = cls._build_prompt(variables)
         print("Calling DeepSeek for email generation...", flush=True)
+        start = datetime.utcnow()
         response = cls._client().chat.completions.create(
             model=cls.model(),
             messages=[{"role": "user", "content": prompt}],
@@ -33,8 +39,22 @@ class RecruitmentEmailGenerator:
             top_p=0.9,
             max_tokens=2048,
         )
+        duration = int((datetime.utcnow() - start).total_seconds() * 1000)
         content = response.choices[0].message.content or ""
         print("Email generation result received", flush=True)
+        if db is not None and recruiter_id is not None:
+            try:
+                record_llm_usage(
+                    db=db,
+                    recruiter_id=recruiter_id,
+                    action="recruitment_email_generation",
+                    model=cls.model(),
+                    tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
+                    tokens_completion=response.usage.completion_tokens if response.usage else 0,
+                    duration_ms=duration,
+                )
+            except Exception:
+                pass
         return cls._parse_json_response(content)
 
     @classmethod

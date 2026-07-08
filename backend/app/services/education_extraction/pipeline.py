@@ -3,6 +3,8 @@ from __future__ import annotations
 import re
 from datetime import datetime
 
+from sqlalchemy.orm import Session
+
 from app.services.education_extraction.extractor import EducationBlockExtractor
 from app.services.education_extraction.llm_verifier import LLMEducationVerifier
 from app.services.education_extraction.models import EducationExtractionResult, EducationMention
@@ -10,10 +12,12 @@ from app.services.skill_extraction.section_analyzer import ResumeSectionAnalyzer
 
 
 class ResumeEducationExtractionPipeline:
-    def __init__(self) -> None:
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
         self.section_analyzer = ResumeSectionAnalyzer()
         self.extractor = EducationBlockExtractor()
         self.llm_verifier = LLMEducationVerifier()
+        self._db = db
+        self._recruiter_id = recruiter_id
 
     @staticmethod
     def _key(mention: EducationMention) -> tuple[str, object, object]:
@@ -32,7 +36,7 @@ class ResumeEducationExtractionPipeline:
         sections = self.section_analyzer.analyze(text)
         candidates, rejected = self.extractor.extract(text, sections)
         deterministic_candidate_count = len(candidates)
-        llm_review = self.llm_verifier.review(file_path, text, candidates)
+        llm_review = self.llm_verifier.review(file_path, text, candidates, db=self._db, recruiter_id=self._recruiter_id)
         candidates = llm_review.educations
 
         deduped: dict[tuple[str, object, object], EducationMention] = {}
@@ -85,8 +89,8 @@ class ResumeEducationExtractionPipeline:
 
 
 class PretrainedBilingualEducationExtractor:
-    def __init__(self) -> None:
-        self.pipeline = ResumeEducationExtractionPipeline()
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
+        self.pipeline = ResumeEducationExtractionPipeline(db=db, recruiter_id=recruiter_id)
 
     def extract_education(self, file_path: str, text: str) -> dict[str, object]:
         return self.pipeline.analyze(file_path, text).to_dict()

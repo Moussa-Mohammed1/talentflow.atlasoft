@@ -20,3 +20,4 @@ from app.models.job_offers import JobOffers
 from app.models.recruitment import Recruitment, RecruitmentStatus, RecruitmentPriority
 from app.models.interview import Interview, InterviewType, InterviewStatus
 from app.models.recruitment_email import RecruitmentEmail, EmailType, EmailStatus
+from app.models.llm_usage import LLMUsage

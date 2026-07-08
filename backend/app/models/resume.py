@@ -7,7 +7,7 @@ class Resume(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    recruiter_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    recruiter_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     path = Column(String, nullable=False)
 

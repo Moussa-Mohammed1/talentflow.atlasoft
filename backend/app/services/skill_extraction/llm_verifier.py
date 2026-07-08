@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.LLM.validate_skills import LLMService
 
 try:
@@ -40,7 +42,8 @@ class LLMSkillVerifier:
     def available(self) -> bool:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def verify(self, candidate: str, evidence: list[str], section: str) -> LLMVerification:
+    def verify(self, candidate: str, evidence: list[str], section: str,
+               db: Session | None = None, recruiter_id: int | None = None) -> LLMVerification:
         if not self.available:
             return LLMVerification(False, 0.0, "llm_fallback_not_configured", "none")
 
@@ -49,7 +52,8 @@ class LLMSkillVerifier:
 
         prompt_text = "\n".join(evidence)
         try:
-            payload = LLMService.validate(prompt_text, [{"name": candidate, "section": section, "evidence": evidence}])
+            payload = LLMService.validate(prompt_text, [{"name": candidate, "section": section, "evidence": evidence}],
+                                           db=db, recruiter_id=recruiter_id)
         except Exception as exc:
             return LLMVerification(False, 0.0, f"llm_error:{exc}", self.provider)
 
@@ -58,12 +62,13 @@ class LLMSkillVerifier:
         confidence = 0.7 if accepted else 0.0
         return LLMVerification(accepted, confidence, "candidate_reviewed_by_llm", self.provider)
 
-    def review_resume_skills(self, text: str, skills: list[dict[str, Any]]) -> LLMReview:
+    def review_resume_skills(self, text: str, skills: list[dict[str, Any]],
+                              db: Session | None = None, recruiter_id: int | None = None) -> LLMReview:
         if not self.available:
             return LLMReview(False, self.provider or "none", [], [], "llm_fallback_not_configured")
 
         try:
-            payload = LLMService.validate(text, skills)
+            payload = LLMService.validate(text, skills, db=db, recruiter_id=recruiter_id)
         except Exception as exc:
             return LLMReview(True, self.provider, [], [], f"llm_error:{exc}")
 

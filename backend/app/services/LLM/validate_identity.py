@@ -2,9 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import datetime
 from typing import Any
 
 from openai import OpenAI
+from sqlalchemy.orm import Session
+
+from app.services.llm_usage_recorder import record_llm_usage
 
 
 class LLMService:
@@ -32,9 +36,11 @@ class LLMService:
         ).strip() or cls.DEFAULT_MODEL
 
     @classmethod
-    def validate(cls, text: str, identity: dict[str, Any]) -> dict[str, Any]:
+    def validate(cls, text: str, identity: dict[str, Any],
+                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
         prompt = cls._build_identity_review_prompt(text, identity)
         print("calling deepseek...", flush=True)
+        start = datetime.utcnow()
         response = cls._client().chat.completions.create(
             model=cls.model(),
             messages=[{"role": "user", "content": prompt}],
@@ -57,9 +63,23 @@ class LLMService:
                 )
             ),
         )
+        duration = int((datetime.utcnow() - start).total_seconds() * 1000)
         content = response.choices[0].message.content or ""
         print("printing result...", flush=True)
         print(content, flush=True)
+        if db is not None and recruiter_id is not None:
+            try:
+                record_llm_usage(
+                    db=db,
+                    recruiter_id=recruiter_id,
+                    action="identity_validation",
+                    model=cls.model(),
+                    tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
+                    tokens_completion=response.usage.completion_tokens if response.usage else 0,
+                    duration_ms=duration,
+                )
+            except Exception:
+                pass
         return cls._parse_json_response(content)
 
     @staticmethod

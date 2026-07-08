@@ -9,6 +9,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.LLM.validate_experience import LLMService
 from app.services.experience_extraction.date_parser import BilingualDateRangeParser
 from app.services.experience_extraction.models import ExperienceMention, ParsedDateRange
@@ -49,7 +51,8 @@ class LLMExperienceVerifier:
     def available(self) -> bool:
         return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
 
-    def review(self, text: str, candidates: list[ExperienceMention]) -> LLMExperienceReview:
+    def review(self, text: str, candidates: list[ExperienceMention],
+               db: Session | None = None, recruiter_id: int | None = None) -> LLMExperienceReview:
         if not self.available:
             logger.info("Experience LLM verification skipped: provider is not configured")
             return LLMExperienceReview(
@@ -58,7 +61,7 @@ class LLMExperienceVerifier:
 
         serialized = [self._serialize(index, candidate) for index, candidate in enumerate(candidates)]
         try:
-            payload = LLMService.validate(text, serialized)
+            payload = LLMService.validate(text, serialized, db=db, recruiter_id=recruiter_id)
         except Exception as exc:
             logger.warning("Experience LLM verification failed: %s", type(exc).__name__)
             return LLMExperienceReview(

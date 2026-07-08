@@ -72,10 +72,13 @@ const sections: DocSection[] = [
   { id: "evaluations", label: "Évaluations" },
   { id: "departements", label: "Départements" },
   { id: "documents", label: "Documents" },
+  { id: "jobs", label: "Offres d'emploi" },
+  { id: "recruitments", label: "Recrutements" },
   { id: "invitations", label: "Invitations" },
   { id: "profile", label: "Profil" },
   { id: "settings", label: "Paramètres" },
   { id: "connexion", label: "Connexion" },
+  { id: "admin", label: "Administration" },
   { id: "features", label: "Fonctionnalités" },
 ];
 
@@ -91,6 +94,10 @@ function HelpContent({ section, searchQuery }: { section: string; searchQuery: s
       return <DepartementsDoc searchQuery={searchQuery} />;
     case "documents":
       return <DocumentsDoc searchQuery={searchQuery} />;
+    case "jobs":
+      return <JobsDoc searchQuery={searchQuery} />;
+    case "recruitments":
+      return <RecruitmentsDoc searchQuery={searchQuery} />;
     case "invitations":
       return <InvitationsDoc searchQuery={searchQuery} />;
     case "profile":
@@ -99,6 +106,8 @@ function HelpContent({ section, searchQuery }: { section: string; searchQuery: s
       return <SettingsDoc searchQuery={searchQuery} />;
     case "connexion":
       return <ConnexionDoc searchQuery={searchQuery} />;
+    case "admin":
+      return <AdminDoc searchQuery={searchQuery} />;
     case "features":
       return <FeaturesDoc searchQuery={searchQuery} />;
     default:
@@ -232,13 +241,16 @@ function ProfileDoc({ searchQuery }: { searchQuery: string }) {
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
         <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Profil vous permet de consulter et modifier les informations de votre compte,
-          ainsi que de gérer votre photo de profil.
+          de gérer votre photo de profil, de changer votre mot de passe et de consulter
+          vos statistiques d&apos;activité.
         </Section>
         <Section title="Fonctionnalités" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li><strong>Photo de profil</strong> — Modifiez votre avatar depuis l&apos;interface</li>
             <li><strong>Informations personnelles</strong> — Modifiez votre nom complet et votre adresse email</li>
-            <li><strong>Informations du compte</strong> — Consultez votre rôle, date d&apos;inscription et statut de vérification</li>
+            <li><strong>Mot de passe</strong> — Changez votre mot de passe (obligatoire à la première connexion)</li>
+            <li><strong>Activités et statistiques</strong> — Consultez le nombre de CV analysés, les requêtes LLM par action et les statistiques d&apos;invitations (administrateurs uniquement)</li>
+            <li><strong>Informations du compte</strong> — Consultez votre rôle, date d&apos;inscription, statut de vérification et méthode d&apos;authentification</li>
           </ul>
         </Section>
       </div>
@@ -253,13 +265,115 @@ function SettingsDoc({ searchQuery }: { searchQuery: string }) {
       <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
         <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
           La page Paramètres regroupe la configuration de vos préférences de notification,
-          les options de sécurité et la gestion des invitations.
+          les options de sécurité et la gestion de votre compte.
         </Section>
         <Section title="Onglets disponibles" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Notifications</strong> — Activez ou désactivez les notifications par email pour chaque type d&apos;événement</li>
-            <li><strong>Sécurité</strong> — Modifiez votre mot de passe et consultez les informations de connexion</li>
-            <li><strong>Invitations</strong> — Gérez les invitations que vous avez reçues</li>
+            <li><strong>Notifications</strong> — Activez ou désactivez les notifications par email pour chaque type d&apos;événement (nouveau candidat, invitation acceptée, mises à jour système)</li>
+            <li><strong>Sécurité</strong> — Modifiez votre mot de passe, consultez les détails de votre compte (rôle, statut, email vérifié) et accédez à la zone dangereuse</li>
+          </ul>
+        </Section>
+        <Section title="Zone dangereuse" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Déconnexion</strong> — Déconnectez-vous de votre session</li>
+            <li><strong>Suppression du compte</strong> — Supprimez définitivement votre compte et toutes vos données (CV, évaluations, talents, recrutements). Une confirmation par texte est requise avant suppression.</li>
+          </ul>
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function JobsDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Offres d'emploi" description="Gestion des offres d'emploi générées par l'IA" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page Offres d&apos;emploi vous permet de créer, consulter et gérer les offres d&apos;emploi
+          de votre entreprise. Les offres peuvent être générées automatiquement par l&apos;IA à partir
+          d&apos;une simple description.
+        </Section>
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Génération IA</strong> — Créez une offre d&apos;emploi automatiquement à partir d&apos;une description textuelle</li>
+            <li><strong>Recherche</strong> — Filtrez les offres par titre, type de contrat ou mode de travail</li>
+            <li><strong>Pagination</strong> — Navigation paginée (8 éléments par page)</li>
+            <li><strong>Consultation</strong> — Visualisez les détails complets d&apos;une offre (titre, département, salaire, etc.)</li>
+            <li><strong>Modification</strong> — Éditez une offre existante</li>
+            <li><strong>Suppression</strong> — Supprimez une offre avec confirmation</li>
+          </ul>
+        </Section>
+        <Section title="Informations disponibles" searchQuery={searchQuery}>
+          Chaque offre d&apos;emploi affiche le titre, le département concerné, le type de contrat,
+          le mode de travail, le niveau de séniorité, la fourchette de salaire et le statut de l&apos;offre.
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function RecruitmentsDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Recrutements" description="Suivi du pipeline de recrutement des talents" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page Recrutements vous permet de suivre l&apos;ensemble du pipeline de recrutement
+          des candidats désignés comme talents, depuis la mise en relation jusqu&apos;à la décision finale.
+        </Section>
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Liste des recrutements</strong> — Visualisez tous les recrutements en cours sous forme de cartes</li>
+            <li><strong>Recherche</strong> — Filtrez par nom du candidat ou intitulé du poste</li>
+            <li><strong>Filtres</strong> — Filtrez par statut et priorité via un panneau dédié</li>
+            <li><strong>Pagination</strong> — Navigation paginée (12 éléments par page)</li>
+            <li><strong>Détails</strong> — Consultez les informations complètes du recrutement dans un modal à trois onglets (Informations, Entretien, Email)</li>
+            <li><strong>Score du département</strong> — Le score du département associé au poste apparaît dans l&apos;en-tête du modal</li>
+            <li><strong>Notes modifiables</strong> — Ajoutez ou modifiez les notes directement depuis le modal de détails</li>
+            <li><strong>Annulation</strong> — Annulez un recrutement depuis le modal (uniquement pour les recrutements en attente). Les entretiens et emails associés sont supprimés automatiquement</li>
+          </ul>
+        </Section>
+        <Section title="Onglet Entretien" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Planifiez un entretien avec date, heure, durée, lieu et nom de l&apos;intervieweur</li>
+            <li>Consultez la liste des entretiens déjà planifiés avec leur statut</li>
+          </ul>
+        </Section>
+        <Section title="Onglet Email" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Choisissez un entretien planifié existant pour pré-remplir automatiquement la date, l&apos;heure, la durée et le lieu</li>
+            <li>Saisissez le nom de l&apos;entreprise et la langue souhaitée</li>
+            <li>Générez un email d&apos;invitation professionnel via l&apos;IA (DeepSeek)</li>
+            <li>Modifiez le sujet et le corps HTML avant envoi</li>
+            <li>Consultez l&apos;historique des emails envoyés</li>
+          </ul>
+        </Section>
+        <Section title="Statuts de recrutement" searchQuery={searchQuery}>
+          Les recrutements peuvent avoir différents statuts : en attente, invitation envoyée, entretien confirmé,
+          entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché ou annulé.
+          Chaque statut est représenté par une couleur distinctive.
+        </Section>
+      </div>
+    </article>
+  );
+}
+
+function AdminDoc({ searchQuery }: { searchQuery: string }) {
+  return (
+    <article className="space-y-6">
+      <DocHeader title="Administration" description="Gestion des utilisateurs de la plateforme" searchQuery={searchQuery} />
+      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
+          La page Administration est accessible uniquement aux administrateurs. Elle permet de
+          consulter la liste de tous les utilisateurs de la plateforme et leurs statistiques d&apos;utilisation.
+        </Section>
+        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li><strong>Liste des utilisateurs</strong> — Visualisez tous les comptes recruteurs de la plateforme</li>
+            <li><strong>Recherche</strong> — Filtrez les utilisateurs par nom ou email</li>
+            <li><strong>Statistiques</strong> — Consultez le nombre de CV analysés et de requêtes LLM par utilisateur</li>
+            <li><strong>Actualisation</strong> — Rafraîchissez la liste pour voir les données à jour</li>
           </ul>
         </Section>
       </div>
@@ -276,20 +390,40 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
           <ul className="list-disc pl-5 space-y-1">
             <li>Page de connexion sécurisée avec email et mot de passe</li>
             <li>Protection des routes par authentification</li>
-            <li>Gestion de session avec stockage côté client</li>
+            <li>Gestion de session avec stockage côté client (SessionProvider)</li>
             <li>Page de modification du profil utilisateur</li>
-            <li>Photo de profil modifiable</li>
+            <li>Photo de profil modifiable avec aperçu</li>
             <li>Informations personnelles éditables (nom, email)</li>
+            <li>Changement de mot de passe avec confirmation</li>
+            <li>Bannière de changement de mot de passe obligatoire à la première connexion</li>
+            <li>Page d&apos;acceptation d&apos;invitation avec création de compte</li>
+            <li>Déconnexion sécurisée</li>
+            <li>Authentification via LinkedIn</li>
+          </ul>
+        </Section>
+
+        <Section title="Profil et statistiques" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Photo de profil avec téléchargement, aperçu et annulation</li>
+            <li>Édition en ligne du nom et de l&apos;email</li>
+            <li>Changement de mot de passe avec validation</li>
+            <li>Statistiques d&apos;activité : nombre de CV analysés</li>
+            <li>Tableau des requêtes LLM par action avec total</li>
+            <li>Statistiques d&apos;invitations (administrateurs uniquement)</li>
+            <li>Informations du compte : rôle, statut, authentification, date d&apos;inscription</li>
           </ul>
         </Section>
 
         <Section title="Talents" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Affichage des talents sous forme de cartes</li>
+            <li>Affichage des talents sous forme de cartes en grille</li>
             <li>Score du candidat pour son meilleur département</li>
             <li>Date de désignation et nom du recruteur</li>
             <li>Photo du candidat ou avatar par défaut</li>
             <li>Mise à jour automatique depuis les évaluations</li>
+            <li>Modal de détails avec compétences et expériences</li>
+            <li>Action de recrutement depuis le profil talent</li>
+            <li>Retrait d&apos;un talent avec confirmation</li>
           </ul>
         </Section>
 
@@ -301,6 +435,7 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
             <li>Affichage des exigences remplies et manquantes</li>
             <li>Expériences supplémentaires du candidat</li>
             <li>Désignation d&apos;un candidat comme talent</li>
+            <li>Validation LLM des évaluations générées</li>
           </ul>
         </Section>
 
@@ -320,12 +455,40 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
         <Section title="Documents et CV" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
             <li>Import de CV au format PDF</li>
-            <li>Analyse automatique des documents</li>
-            <li>Extraction des informations (identité, compétences)</li>
+            <li>Analyse automatique des documents (extraction d&apos;identité, compétences, expériences, formations, certifications, langues)</li>
+            <li>Extraction des informations depuis le CV</li>
             <li>Prévisualisation des documents</li>
             <li>Recherche dans les documents</li>
-            <li>Progression de l&apos;import avec étapes visuelles</li>
+            <li>Progression de l&apos;import avec étapes visuelles (multi-étape)</li>
             <li>Gestion des erreurs d&apos;import</li>
+            <li>Pagination (8 éléments par page)</li>
+            <li>Suppression de document avec confirmation</li>
+          </ul>
+        </Section>
+
+        <Section title="Offres d'emploi" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Génération d&apos;offres d&apos;emploi par IA à partir d&apos;une description</li>
+            <li>Liste des offres en grille avec recherche et pagination</li>
+            <li>Consultation détaillée d&apos;une offre (titre, département, contrat, salaire, séniorité)</li>
+            <li>Modification et suppression d&apos;offres</li>
+            <li>Filtres par type de contrat et mode de travail</li>
+          </ul>
+        </Section>
+
+        <Section title="Recrutements" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Pipeline de recrutement des talents sous forme de cartes</li>
+            <li>Recherche par nom du candidat ou intitulé du poste</li>
+            <li>Filtres par statut et priorité</li>
+            <li>Pagination (12 éléments par page)</li>
+            <li>Modal de détails à trois onglets (Informations, Entretien, Email)</li>
+            <li>Affichage du score du département dans l&apos;en-tête du modal</li>
+            <li>Notes modifiables directement dans le modal</li>
+            <li>Sélection d&apos;un entretien planifié pour générer un email</li>
+            <li>Génération d&apos;email d&apos;invitation par IA (DeepSeek) avec choix de langue</li>
+            <li>Annulation d&apos;un recrutement avec suppression des entretiens et emails associés</li>
+            <li>Statuts : en attente, invitation envoyée, entretien confirmé, entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché, annulé</li>
           </ul>
         </Section>
 
@@ -336,16 +499,27 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
             <li>Filtrage par statut et recherche par email</li>
             <li>Tri par date ou email</li>
             <li>Modal de détails avec actions (renvoyer, copier le lien, révoquer, supprimer)</li>
-            <li>Page d&apos;acceptation d&apos;invitation</li>
+            <li>Barre de métriques (en attente, acceptées, expirées, total)</li>
+            <li>Page d&apos;acceptation d&apos;invitation publique</li>
           </ul>
         </Section>
 
-        <Section title="Paramètres et configuration" searchQuery={searchQuery}>
+        <Section title="Administration" searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Gestion des préférences de notification par email</li>
-            <li>Modification du mot de passe</li>
-            <li>Informations de sécurité du compte</li>
-            <li>Gestion des invitations reçues</li>
+            <li>Liste des utilisateurs de la plateforme (administrateurs uniquement)</li>
+            <li>Recherche par nom ou email</li>
+            <li>Statistiques par utilisateur : nombre de CV analysés et requêtes LLM</li>
+            <li>Actualisation des données en temps réel</li>
+          </ul>
+        </Section>
+
+        <Section title="Paramètres et sécurité" searchQuery={searchQuery}>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>Gestion des préférences de notification par email (nouveau candidat, invitation acceptée, mises à jour)</li>
+            <li>Modification du mot de passe avec confirmation</li>
+            <li>Informations de sécurité du compte (rôle, statut, email vérifié, date d&apos;inscription)</li>
+            <li>Déconnexion de la session</li>
+            <li>Suppression du compte avec confirmation par texte obligatoire</li>
           </ul>
         </Section>
 
@@ -354,8 +528,9 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
             <li>Barre latérale de navigation responsive</li>
             <li>Indicateur de page active</li>
             <li>Mode mobile avec menu hamburger</li>
-            <li>Notifications en temps réel (toasts)</li>
-            <li>Bannière de changement de mot de passe obligatoire</li>
+            <li>Notifications en temps réel (toasts) avec indicateur de notification</li>
+            <li>Feed d&apos;activités récentes sur le tableau de bord</li>
+            <li>Indicateur de progression des tâches système (SystemJobs)</li>
             <li>Design épuré et cohérent</li>
           </ul>
         </Section>

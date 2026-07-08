@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowRight, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import Sidebar from '@/components/layouts/Sidebar';
 import NotificationButton from '@/components/ui/NotificationButton';
 import PasswordChangeBanner from '@/components/ui/PasswordChangeBanner';
@@ -8,6 +9,7 @@ import RecentActivities from '@/components/ui/RecentActivities';
 import { useRouter } from 'next/navigation';
 export default function Dashboard() {
   const router = useRouter();
+  const [guideOpen, setGuideOpen] = useState(true);
   const cardsData = [
     {
     title: "Guide de démarrage",
@@ -104,10 +106,87 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <div className="max-w-6xl mx-auto mt-8">
+          <div className="max-w-6xl mx-auto mt-10">
+            <div className="bg-white border border-slate-100 mrc shadow-xs">
+              <button
+                onClick={() => setGuideOpen(!guideOpen)}
+                className="w-full flex items-center justify-between px-5 py-3 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Lightbulb className="h-4 w-4 text-amber-500" />
+                  <span className="text-sm font-semibold text-slate-900">Parcours recommandé</span>
+                </div>
+                {guideOpen ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
+              </button>
+
+              {guideOpen && (
+                <div className="px-5 pb-5 pt-1 text-sm text-slate-600 leading-relaxed space-y-3">
+                  <p className="text-xs text-slate-500">
+                    Suivez ces étapes dans l&apos;ordre pour exploiter pleinement TalentFlow&nbsp;:
+                  </p>
+
+                  <div className="space-y-2">
+                    <Step number={1} title="Préparer les départements">
+                      Rendez-vous dans <strong>Resources → Départements</strong> et assurez-vous que chaque département existe avec ses <strong>compétences requises</strong> bien renseignées. Ces données servent de référence pour toutes les évaluations.
+                    </Step>
+
+                    <Step number={2} title="Importer un CV">
+                      Allez dans <strong>Documents</strong>, cliquez sur <strong>Importer un candidat</strong>, sélectionnez le CV, puis cliquez sur <strong>Importer et extraire tous</strong>. Le CV sera enregistré et ses données extraites automatiquement.
+                    </Step>
+
+                    <Step number={3} title="Vérifier les données extraites">
+                      Le CV apparaît dans la liste des documents. Cliquez dessus pour voir les <strong>informations extraites</strong> du candidat. Si des données sont erronées, <strong>modifiez-les</strong>. Si l&apos;extraction est encore en cours, consultez les <strong>tâches en arrière-plan</strong>. Si l&apos;extraction est terminée mais qu&apos;aucune donnée n&apos;apparaît, cliquez sur <strong>Re-analyser l&apos;identité</strong> ou <strong>Re-analyser tout</strong>.
+                    </Step>
+
+                    <Step number={4} title="Évaluer le candidat">
+                      Une fois les données validées, cliquez sur <strong>Évaluer</strong>. La compatibilité entre le candidat et chaque département sera calculée et affichée en pourcentages.
+                    </Step>
+
+                    <Step number={5} title="Consulter les évaluations">
+                      Rendez-vous dans la page <strong>Évaluations</strong> pour voir les résultats par candidat. Si un profil vous intéresse, <strong>marquez-le comme Talent</strong>.
+                    </Step>
+
+                    <Step number={6} title="Recruter un talent">
+                      Dans la page <strong>Talents</strong>, retrouvez vos talents marqués. Cliquez sur <strong>Recruter</strong> pour lancer le processus de recrutement. Le candidat apparaîtra dans la page <strong>Recrutements</strong>.
+                    </Step>
+
+                    <Step number={7} title="Planifier l&apos;entretien">
+                      Dans le modal de recrutement, allez dans l&apos;onglet <strong>Entretien</strong>. Renseignez la date, l&apos;heure, la durée et le lieu, puis cliquez sur <strong>Planifier l&apos;entretien</strong>.
+                    </Step>
+
+                    <Step number={8} title="Générer et envoyer l&apos;email">
+                      Passez à l&apos;onglet <strong>Email</strong>. Sélectionnez l&apos;entretien planifié pour pré-remplir les informations (ou saisissez-les manuellement). Choisissez la <strong>langue</strong> et cliquez sur <strong>Générer l&apos;email</strong>. Vérifiez le sujet et le contenu, puis cliquez sur <strong>Envoyer l&apos;email</strong>.
+                    </Step>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <p className="text-xs text-slate-400">
+                      <strong>Note&nbsp;:</strong> Chaque étape est indépendante. Vous pouvez revenir en arrière à tout moment pour corriger ou ajuster les informations.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="max-w-6xl mx-auto mt-6">
             <RecentActivities />
           </div>
         </main>
+      </div>
+    </div>
+  );
+}
+
+function Step({ number, title, children }: { number: number; title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <span className="shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-slate-200 text-black text-xs font-bold mt-0.5">
+        {number}
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-slate-800">{title}</p>
+        <p className="text-xs text-slate-500 mt-0.5">{children}</p>
       </div>
     </div>
   );

@@ -45,15 +45,7 @@ function formatDateTime(dateStr: string): string {
   });
 }
 
-const statusFlow: { status: string; label: string }[] = [
-  { status: "pending", label: "En attente" },
-  { status: "interview_invitation_sent", label: "Invitation envoyée" },
-  { status: "interview_confirmed", label: "Entretien confirmé" },
-  { status: "interview_completed", label: "Entretien terminé" },
-  { status: "offer_sent", label: "Offre envoyée" },
-  { status: "offer_accepted", label: "Offre acceptée" },
-  { status: "hired", label: "Embauché" },
-];
+
 
 export function RecruitmentDetailModal({
   recruitmentId,
@@ -67,7 +59,7 @@ export function RecruitmentDetailModal({
   const [detail, setDetail] = useState<RecruitmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [activeTab, setActiveTab] = useState<"info" | "interview" | "email" | "timeline">("info");
+  const [activeTab, setActiveTab] = useState<"info" | "interview" | "email">("info");
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
 
@@ -80,6 +72,15 @@ export function RecruitmentDetailModal({
   const [interviewInterviewer, setInterviewInterviewer] = useState(user?.fullname || "");
   const [savingInterview, setSavingInterview] = useState(false);
 
+  // Notes state
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [editNotesText, setEditNotesText] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   // Email state
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
@@ -88,6 +89,21 @@ export function RecruitmentDetailModal({
   const [sendingEmail, setSendingEmail] = useState(false);
   const [companyName, setCompanyName] = useState("Notre Société");
   const [emailLanguage, setEmailLanguage] = useState("french");
+  const [selectedInterviewId, setSelectedInterviewId] = useState("");
+
+  const handleSelectInterview = (interviewId: string) => {
+    setSelectedInterviewId(interviewId);
+    if (interviewId && detail) {
+      const interview = detail.interviews.find((i) => i.id === interviewId);
+      if (interview) {
+        const d = new Date(interview.scheduled_at);
+        setInterviewDate(d.toISOString().split("T")[0]);
+        setInterviewTime(d.toTimeString().slice(0, 5));
+        setInterviewDuration(interview.duration_minutes);
+        setInterviewLocation(interview.location || "");
+      }
+    }
+  };
 
   const fetchDetail = useCallback(async () => {
     try {
@@ -112,7 +128,7 @@ export function RecruitmentDetailModal({
     }
     setSavingInterview(true);
     try {
-      const scheduledAt = new Date(`${interviewDate}T${interviewTime}`).toISOString();
+      const scheduledAt = `${interviewDate}T${interviewTime}:00`;
       await recruitmentService.createInterview(recruitmentId, {
         title: interviewTitle,
         interview_type: interviewLocation ? "onsite" : "online",
@@ -183,6 +199,51 @@ export function RecruitmentDetailModal({
     }
   };
 
+  const handleSaveNotes = async () => {
+    setSavingNotes(true);
+    try {
+      await recruitmentService.update(recruitmentId, { notes: editNotesText });
+      toast.success("Notes mises à jour");
+      setEditingNotes(false);
+      await fetchDetail();
+      onUpdated();
+    } catch {
+      toast.error("Erreur lors de la mise à jour des notes");
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const handleCancelRecruitment = async () => {
+    setCancelling(true);
+    try {
+      await recruitmentService.cancel(recruitmentId);
+      toast.success("Recrutement annulé");
+      setShowCancelModal(false);
+      await fetchDetail();
+      onUpdated();
+    } catch {
+      toast.error("Erreur lors de l'annulation");
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const handleDeleteRecruitment = async () => {
+    setDeleting(true);
+    try {
+      await recruitmentService.delete(recruitmentId);
+      toast.success("Recrutement supprimé");
+      setShowDeleteModal(false);
+      onClose();
+      onUpdated();
+    } catch {
+      toast.error("Erreur lors de la suppression");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
@@ -213,7 +274,6 @@ export function RecruitmentDetailModal({
     { key: "info" as const, label: "Informations" },
     { key: "interview" as const, label: "Entretien" },
     { key: "email" as const, label: "Email" },
-    { key: "timeline" as const, label: "Chronologie" },
   ];
 
   return (
@@ -222,7 +282,7 @@ export function RecruitmentDetailModal({
         <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <h3 className="text-base font-semibold text-gray-900">Détails du recrutement</h3>
-            <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[10px] font-medium ${statusColors[recruitment.status]}`}>
+            <span className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[10px] font-medium ${statusColors[recruitment.status]}`}>
               {statusLabels[recruitment.status]}
             </span>
           </div>
@@ -276,10 +336,16 @@ export function RecruitmentDetailModal({
                   </div>
                 </div>
                 <div className="ml-auto text-right shrink-0">
-                  <p className="text-xs text-slate-500">Score</p>
-                  <p className="text-xl font-bold text-indigo-700">
-                    {recruitment.compatibility_score?.toFixed(0) || "-"}%
-                  </p>
+                  {job_offer?.department_name && (
+                    <>
+                      <p className="text-xs text-slate-500 mt-2">Score {job_offer.department_name}</p>
+                      <p className="text-lg font-bold text-indigo-700">
+                        {job_offer.department_score != null
+                          ? (job_offer.department_score).toFixed(0) + "%"
+                          : "-"}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -299,15 +365,55 @@ export function RecruitmentDetailModal({
                       {recruitingPriorityLabel(recruitment.priority)}
                     </span>
                   </div>
+
                 </div>
               )}
 
-              {recruitment.notes && (
-                <div className="border border-slate-100 rounded-lg p-4">
+              <div className="border border-slate-100 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Notes</span>
-                  <p className="text-sm text-slate-700 mt-1">{recruitment.notes}</p>
+                  {!editingNotes && (
+                    <button
+                      type="button"
+                      onClick={() => { setEditNotesText(recruitment.notes || ""); setEditingNotes(true); }}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                    >
+                      {recruitment.notes ? "Modifier" : "Ajouter"}
+                    </button>
+                  )}
                 </div>
-              )}
+                {editingNotes ? (
+                  <div className="space-y-2">
+                    <textarea
+                      rows={3}
+                      value={editNotesText}
+                      onChange={(e) => setEditNotesText(e.target.value)}
+                      className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
+                      placeholder="Ajouter une note..."
+                    />
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleSaveNotes}
+                        disabled={savingNotes}
+                        className="inline-flex items-center gap-1 bg-black text-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
+                      >
+                        {savingNotes ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                        Enregistrer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingNotes(false)}
+                        className="text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-700 mt-1">{recruitment.notes || "Aucune note"}</p>
+                )}
+              </div>
 
               <div className="text-[11px] text-slate-400">
                 Créé le {formatDate(recruitment.created_at)}
@@ -441,6 +547,26 @@ export function RecruitmentDetailModal({
                 </div>
               </div>
 
+              {interviews.length > 0 && (
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">
+                    Entretien planifié
+                  </label>
+                  <select
+                    value={selectedInterviewId}
+                    onChange={(e) => handleSelectInterview(e.target.value)}
+                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                  >
+                    <option value="">Sélectionner un entretien...</option>
+                    {interviews.map((interview) => (
+                      <option key={interview.id} value={interview.id}>
+                        {interview.title} - {formatDateTime(interview.scheduled_at)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -450,6 +576,14 @@ export function RecruitmentDetailModal({
                 >
                   {generatingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
                   Générer l'email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setEmailSubject(""); setEmailBody(""); setEmailGenerated(true); }}
+                  className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <Mail className="h-4 w-4" />
+                  Rédiger manuellement
                 </button>
               </div>
 
@@ -522,73 +656,31 @@ export function RecruitmentDetailModal({
             </div>
           )}
 
-          {activeTab === "timeline" && (
-            <div className="space-y-4">
-              <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Chronologie du recrutement</h4>
-              <div className="relative">
-                {statusFlow.map((step, index) => {
-                  const isActive = statusFlow.findIndex(s => s.status === recruitment.status) >= index;
-                  const isCurrent = step.status === recruitment.status;
-                  return (
-                    <div key={step.status} className="flex items-start gap-3 pb-4 last:pb-0">
-                      <div className="flex flex-col items-center">
-                        <div className={`w-3 h-3 rounded-full ${
-                          isCurrent ? "bg-indigo-600 ring-2 ring-indigo-200" :
-                          isActive ? "bg-indigo-400" : "bg-slate-200"
-                        }`} />
-                        {index < statusFlow.length - 1 && (
-                          <div className={`w-0.5 h-6 ${
-                            isActive ? "bg-indigo-300" : "bg-slate-200"
-                          }`} />
-                        )}
-                      </div>
-                      <div className="pt-0.5">
-                        <p className={`text-sm font-medium ${
-                          isActive ? "text-slate-900" : "text-slate-400"
-                        }`}>{step.label}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
 
-              {interviews.length > 0 && (
-                <div className="mt-6 pt-4 border-t border-slate-100">
-                  <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Entretiens</h5>
-                  {interviews.map((interview) => (
-                    <div key={interview.id} className="flex items-start gap-3 pb-3">
-                      <div className="w-3 h-3 rounded-full bg-blue-400 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{interview.title}</p>
-                        <p className="text-xs text-slate-500">{formatDateTime(interview.scheduled_at)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {emails.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <h5 className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Emails</h5>
-                  {emails.map((email) => (
-                    <div key={email.id} className="flex items-start gap-3 pb-3">
-                      <div className="w-3 h-3 rounded-full bg-emerald-400 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-slate-900">{email.subject}</p>
-                        <p className="text-xs text-slate-500">
-                          {email.status === "sent" ? "Envoyé" : email.status}
-                          {email.sent_at && ` - ${formatDateTime(email.sent_at)}`}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex justify-end shrink-0">
+        <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            {recruitment.status === "pending" && (
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(true)}
+                disabled={cancelling}
+                className="inline-flex items-center gap-1 border border-red-200 text-red-600 bg-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {cancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Annuler le recrutement
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              disabled={deleting}
+              className="inline-flex items-center gap-1 border border-red-300 text-red-500 bg-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+            >
+              {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+Supprimer ce recrutement            </button>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -598,6 +690,66 @@ export function RecruitmentDetailModal({
           </button>
         </div>
       </div>
+
+      {showCancelModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs" onClick={() => setShowCancelModal(false)}>
+          <div className="w-full max-w-sm mrc border border-gray-200/80 bg-white shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Annuler le recrutement</h4>
+            <p className="text-sm text-slate-600 mb-6">
+              Voulez-vous vraiment annuler ce recrutement ? Les entretiens et emails associés seront supprimés.
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                className="border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Non
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelRecruitment}
+                disabled={cancelling}
+                className="inline-flex items-center gap-1 bg-red-600 text-white px-4 py-2 text-xs font-medium shadow-xs hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {cancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Oui, annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs" onClick={() => setShowDeleteModal(false)}>
+          <div className="w-full max-w-sm mrc border border-gray-200/80 bg-white shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Supprimer le recrutement</h4>
+            <p className="text-sm text-slate-600 mb-6">
+              Voulez-vous vraiment supprimer définitivement ce recrutement ? Cette action est irréversible.
+            </p>
+            <div className="flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+                className="border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Non
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteRecruitment}
+                disabled={deleting}
+                className="inline-flex items-center gap-1 bg-red-600 text-white px-4 py-2 text-xs font-medium shadow-xs hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                Oui, supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

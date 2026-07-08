@@ -80,4 +80,8 @@ export const recruitmentService = {
     const response = await api.get<RecruitmentEmail[]>(`/recruitments/${recruitmentId}/emails`);
     return response.data;
   },
+
+  async cancel(recruitmentId: string): Promise<void> {
+    await api.post(`/recruitments/${recruitmentId}/cancel`);
+  },
 };

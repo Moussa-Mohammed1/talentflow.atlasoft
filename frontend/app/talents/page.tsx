@@ -414,7 +414,10 @@ function RecruitModal({
       api.get<DepartmentScore[]>(`/evaluate/${talent.candidate_id}/department-scores`),
       jobOffersService.list(),
     ]).then(([deptRes, offers]) => {
-      const sorted = deptRes.data.sort((a, b) => b.compatibility - a.compatibility);
+      const unique = Array.from(
+        new Map(deptRes.data.map((d) => [d.department_id, d])).values()
+      );
+      const sorted = unique.sort((a, b) => b.compatibility - a.compatibility);
       setDepartments(sorted);
       if (sorted.length > 0) setSelectedDeptId(sorted[0].department_id);
 

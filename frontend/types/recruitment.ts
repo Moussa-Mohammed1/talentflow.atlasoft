@@ -66,6 +66,8 @@ export interface JobOfferInfo {
   title: string;
   description: string | null;
   department_id: number | null;
+  department_name: string | null;
+  department_score: number | null;
 }
 
 export interface Interview {

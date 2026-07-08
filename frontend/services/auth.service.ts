@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import { useAuthStore } from "@/stores/auth.store";
 
 export const AuthService = {
     login: async (email: string, password: string) => {
@@ -25,7 +26,11 @@ export const AuthService = {
         return response.data;
     },
     logout: async () => {
-        const response = await api.post("/auth/logout");
-        return response.data
+        try {
+            await api.post("/auth/logout");
+        } finally {
+            localStorage.removeItem("access_token");
+            useAuthStore.getState().logout();
+        }
     }
 }

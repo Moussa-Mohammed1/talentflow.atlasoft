@@ -1,5 +1,6 @@
 import api from "@/lib/axios";
 import { useAuthStore } from "@/stores/auth.store";
+import type { UserStats } from "@/types/auth";
 
 export const AuthService = {
     login: async (email: string, password: string) => {
@@ -11,6 +12,10 @@ export const AuthService = {
     },
     me: async () => {
         const response = await api.get("/auth/me", { withCredentials: true });
+        return response.data;
+    },
+    getUserStats: async (): Promise<UserStats> => {
+        const response = await api.get("/auth/me/stats");
         return response.data;
     },
     updateProfile: async (data: { fullname?: string; email?: string; avatar?: string; current_password?: string; new_password?: string }) => {
@@ -32,5 +37,9 @@ export const AuthService = {
             localStorage.removeItem("access_token");
             useAuthStore.getState().logout();
         }
-    }
+    },
+    deleteAccount: async () => {
+        const response = await api.delete("/auth/me");
+        return response.data;
+    },
 }

@@ -12,7 +12,6 @@ export function middleware(
   );
 
   if (!token && isProtectedPath) {
-    console.log("[Middleware] Redirecting to login - no token");
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("expired", "true");
     return NextResponse.redirect(loginUrl);

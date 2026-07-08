@@ -103,7 +103,7 @@ export function DetailModal({
             <h3 className="text-base font-semibold text-gray-900">
               {isEditMode ? "Modifier l'offre" : "Détails de l'offre"}
             </h3>
-            <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium ${statusColors[offer.status]}`}>
+            <span className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[11px] font-medium ${statusColors[offer.status]}`}>
               {statusLabels[offer.status]}
             </span>
           </div>

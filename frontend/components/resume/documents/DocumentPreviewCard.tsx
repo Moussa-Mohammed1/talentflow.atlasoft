@@ -76,7 +76,7 @@ export default function DocumentPreviewCard({ document, onClick }: DocumentPrevi
   return (
     <article
       onClick={onClick}
-      className="group bg-white border border-slate-100 rounded-sm p-2 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+      className="group bg-white border border-slate-100 mm p-2 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300 flex flex-col justify-between cursor-pointer"
     >
       <div className="mb-4 overflow-hidden rounded">
         {document.previewUrl ? (

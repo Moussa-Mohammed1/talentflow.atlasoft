@@ -13,12 +13,10 @@ export function RecruitmentCard({
   item,
   onView,
   onSendEmail,
-  onScheduleInterview,
 }: {
   item: RecruitmentListItem;
   onView: () => void;
   onSendEmail: () => void;
-  onScheduleInterview: () => void;
 }) {
   return (
     <div className="bg-white border border-slate-100 transition-all duration-300 flex flex-col overflow-hidden mrc">
@@ -46,10 +44,10 @@ export function RecruitmentCard({
         </div>
 
         <div className="flex items-center justify-between">
-          <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[10px] font-medium ${statusColors[item.status]}`}>
+          <span className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[10px] font-medium ${statusColors[item.status]}`}>
             {statusLabels[item.status]}
           </span>
-          <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[10px] font-medium ${priorityColors[item.priority]}`}>
+          <span className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[10px] font-medium ${priorityColors[item.priority]}`}>
             {priorityLabels[item.priority]}
           </span>
         </div>
@@ -97,14 +95,7 @@ export function RecruitmentCard({
             <Mail size={12} className="inline mr-1" />
             Email
           </button>
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onScheduleInterview(); }}
-            className="flex-1 text-[11px] font-medium text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 py-1.5 rounded transition-colors cursor-pointer"
-          >
-            <Video size={12} className="inline mr-1" />
-            Interview
-          </button>
+         
         </div>
       </div>
     </div>

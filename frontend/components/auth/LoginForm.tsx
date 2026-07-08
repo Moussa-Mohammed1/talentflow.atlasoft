@@ -126,7 +126,7 @@ export default function LoginForm() {
                 setEmail(e.target.value)
                 }
                 required
-                className="w-full px-4 py-2.5 rounded-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                className="w-full px-4 py-2.5 mm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
             />
 
             <p className="text-xs text-slate-400 mt-1.5">
@@ -149,7 +149,7 @@ export default function LoginForm() {
                 setPassword(e.target.value)
                 }
                 required
-                className="w-full rounded-sm px-4 py-2.5  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
+                className="w-full mm px-4 py-2.5  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
             />
 
 

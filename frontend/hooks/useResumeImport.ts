@@ -121,6 +121,7 @@ export function useResumeImport() {
           path: uploadResponse.data.path,
         }
       );
+      toast.success("L'analyse complet du resume importé est terminé")
       setAnalysisResult(analyzeResponse.data);
       setStatus("success");
       return {

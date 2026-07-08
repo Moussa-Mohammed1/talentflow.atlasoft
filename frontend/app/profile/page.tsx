@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle2, CircleAlert, PenLine, Mail, User, Shield, Calendar, BadgeCheck, Camera } from "lucide-react";
+import { Loader2, CheckCircle2, CircleAlert, PenLine, Mail, User, Shield, Calendar, BadgeCheck, Camera, FileText, Cpu, Send, XCircle } from "lucide-react";
 import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
 import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useToast } from "@/hooks/useToast";
+import type { UserStats } from "@/types/auth";
 
 interface EditableField {
   key: "fullname" | "email";
@@ -27,6 +28,17 @@ function getInitials(name: string): string {
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
+
+const LLM_ACTION_LABELS: Record<string, string> = {
+  skill_validation: "Validation des compétences",
+  job_offer_generation: "Génération d'offre d'emploi",
+  identity_validation: "Validation d'identité",
+  experience_validation: "Validation d'expérience",
+  evaluation_validation: "Validation d'évaluation",
+  education_validation: "Validation de formation",
+  certification_validation: "Validation de certification",
+  recruitment_email_generation: "Génération d'email de recrutement",
+};
 
 
 
@@ -68,6 +80,8 @@ export default function ProfilePage() {
   const [newPassword, setNewPassword] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -75,7 +89,6 @@ export default function ProfilePage() {
       AuthService.me()
         .then((data) => {
           setUser(data.user);
-          console.log(data.user);
         })
         .catch(() => {
           router.push("/login");
@@ -85,7 +98,15 @@ export default function ProfilePage() {
         });
     }
   }, [user, setUser, router]);
-  console.log(user);
+
+  useEffect(() => {
+    if (user) {
+      setIsLoadingStats(true);
+      AuthService.getUserStats()
+        .then(setStats)
+        .finally(() => setIsLoadingStats(false));
+    }
+  }, [user]);
   
   const startEditing = useCallback((key: string) => {
     setEditingField(key);
@@ -420,62 +441,71 @@ export default function ProfilePage() {
               </div>
             </div>
 
+             
             <div className="bg-white border border-slate-100 mrc p-6">
               <h3 className="text-xs font-bold text-slate-900 mb-4 uppercase tracking-wider">
-                Mot de passe
+                Activités & Statistiques
               </h3>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                    Mot de passe actuel
-                  </label>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="Entrez votre mot de passe actuel"
-                    className="w-full px-3 py-2  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
-                    disabled={isSavingPassword}
-                  />
+              {isLoadingStats ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 size={20} className="animate-spin text-slate-400" />
                 </div>
+              ) : stats ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 px-3 py-3 border border-slate-100 bg-slate-50">
+                      <FileText size={18} className="shrink-0 text-blue-600" />
+                      <div>
+                        <p className="text-lg font-bold text-slate-900 leading-tight">{stats.resume_count}</p>
+                        <p className="text-[10px] text-slate-500 leading-tight">CV analysés</p>
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                    Nouveau mot de passe
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Entrez votre nouveau mot de passe"
-                    className="w-full px-3 py-2  border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm"
-                    disabled={isSavingPassword}
-                  />
-                </div>
-
-                {passwordError && (
-                  <p className="flex items-center gap-1 text-xs text-rose-500">
-                    <CircleAlert size={12} />
-                    {passwordError}
-                  </p>
-                )}
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={handlePasswordSave}
-                    disabled={isSavingPassword || !currentPassword || !newPassword}
-                    className="px-4 py-2  bg-blue-800 hover:bg-blue-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1.5"
-                  >
-                    {isSavingPassword ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <CheckCircle2 size={12} />
+                    {user.role === "admin" && (
+                      <div className="flex items-center gap-3 px-3 py-3 border border-slate-100 bg-slate-50">
+                        <Send size={18} className="shrink-0 text-amber-600" />
+                        <div>
+                          <p className="text-lg font-bold text-slate-900 leading-tight">{stats.invitations_sent}</p>
+                          <p className="text-[10px] text-slate-500 leading-tight">Invitations envoyées</p>
+                        </div>
+                      </div>
                     )}
-                    Enregistrer
-                  </button>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                      <Cpu size={14} className="text-purple-600" />
+                      Requêtes LLM par action
+                    </h4>
+                    <div className="border border-slate-100 overflow-hidden">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-100">
+                            <th className="text-left px-3 py-2 font-semibold text-slate-600">Action</th>
+                            <th className="text-right px-3 py-2 font-semibold text-slate-600">Nombre de requêtes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stats.llm_usage_by_action.map((row) => (
+                            <tr key={row.action} className="border-b border-slate-50 last:border-b-0">
+                              <td className="px-3 py-2 text-slate-700">{LLM_ACTION_LABELS[row.action] || row.action}</td>
+                              <td className="px-3 py-2 text-right text-slate-900 font-medium">{row.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-50 border-t border-slate-100">
+                            <td className="px-3 py-2 font-semibold text-slate-700">Total</td>
+                            <td className="px-3 py-2 text-right font-bold text-slate-900">{stats.successful_llm_requests}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+
                 </div>
-              </div>
+              ) : null}
             </div>
 
             <div className="bg-white border border-slate-100 mrc p-6">

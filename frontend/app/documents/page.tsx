@@ -164,7 +164,7 @@ export default function DocumentsPage() {
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-slate-100 rounded-sm p-2 shadow-sm animate-pulse"
+                    className="bg-white border border-slate-100 mm p-2 shadow-sm animate-pulse"
                   >
                     <div className="w-full aspect-[3/4] bg-slate-100 rounded mb-4" />
                     <div className="h-3 bg-slate-100 rounded w-3/4 mb-2" />

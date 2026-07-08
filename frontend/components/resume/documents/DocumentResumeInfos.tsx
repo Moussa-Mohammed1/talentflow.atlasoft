@@ -339,14 +339,14 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
   };
 
   return (
-    <div className="fixed inset-0 bg-white/50 backdrop-blur-xl flex items-center justify-center p-4 z-50 selection:bg-slate-200">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 selection:bg-slate-200">
       <DeleteConfirmModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirm}
         fileName={data.candidat?.fullname || "CV"}
       />
-      <div className="bg-white  shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100">
+      <div className="bg-white shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 mm">
         
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2">

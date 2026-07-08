@@ -18,6 +18,8 @@ import {
   Globe,
   List,
   LogOut,
+  Trash2,
+  TriangleAlert,
 } from "lucide-react";
 import Sidebar from "@/components/layouts/Sidebar";
 import NotificationButton from "@/components/ui/NotificationButton";
@@ -31,7 +33,6 @@ type Tab = "notifications" | "security" | "invitations";
 const tabs: { key: Tab; label: string; icon: typeof Bell | typeof Lock }[] = [
   { key: "notifications", label: "Notifications", icon: Bell },
   { key: "security", label: "Sécurité", icon: Lock },
-  { key: "invitations", label: "Invitations", icon: LucideSend }
 ];
 
 function formatDate(dateStr: string | null | undefined): string {
@@ -107,6 +108,10 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -242,7 +247,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <div className="bg-white border border-slate-100 mrc p-6">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 bg-blue-50 rounded-sm">
+                    <div className="p-2 bg-blue-50 mm">
                       <Bell size={16} className="text-blue-800" />
                     </div>
                     <div>
@@ -287,83 +292,13 @@ export default function SettingsPage() {
                   )}
                 </div>
 
-                {/* UI Preferences */}
-                <div className="bg-white border border-slate-100 mrc p-6">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 bg-indigo-50 rounded-sm">
-                      <Moon size={16} className="text-indigo-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-slate-900">
-                        Préférences d&apos;interface
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Personnalisez votre expérience
-                      </p>
-                    </div>
-                  </div>
-
-                  {isLoadingSettings ? (
-                    <div className="flex justify-center py-8">
-                      <Loader2 size={20} className="animate-spin text-slate-400" />
-                    </div>
-                  ) : uiPrefs ? (
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <Globe size={13} />
-                            Langue
-                          </div>
-                        </label>
-                        <select
-                          value={uiPrefs.language}
-                          onChange={(e) =>
-                            setUIPrefs((prev) =>
-                              prev ? { ...prev, language: e.target.value as "fr" | "en" } : prev
-                            )
-                          }
-                          className="w-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded-sm"
-                        >
-                          <option value="fr">Français</option>
-                          <option value="en">English</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-slate-700 mb-1.5">
-                          <div className="flex items-center gap-1.5">
-                            <List size={13} />
-                            Éléments par page
-                          </div>
-                        </label>
-                        <select
-                          value={uiPrefs.items_per_page}
-                          onChange={(e) =>
-                            setUIPrefs((prev) =>
-                              prev ? { ...prev, items_per_page: Number(e.target.value) } : prev
-                            )
-                          }
-                          className="w-full border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 rounded-sm"
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-500 text-center py-4">
-                      Erreur de chargement des préférences
-                    </p>
-                  )}
-                </div>
+               
 
                 <div className="flex justify-end">
                   <button
                     onClick={handleSaveNotifications}
                     disabled={isSavingNotif || !notifPrefs || !uiPrefs}
-                    className="px-5 py-2.5 bg-blue-800 hover:bg-blue-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 rounded-sm"
+                    className="px-5 py-2.5 bg-blue-800 hover:bg-blue-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 mm"
                   >
                     {isSavingNotif ? (
                       <Loader2 size={14} className="animate-spin" />
@@ -381,7 +316,7 @@ export default function SettingsPage() {
               <div className="space-y-6">
                 <div className="bg-white border border-slate-100 mrc p-6">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 bg-amber-50 rounded-sm">
+                    <div className="p-2 bg-amber-50 mm">
                       <Lock size={16} className="text-amber-600" />
                     </div>
                     <div>
@@ -404,7 +339,7 @@ export default function SettingsPage() {
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
                         placeholder="Entrez votre mot de passe actuel"
-                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm rounded-sm"
+                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm mm"
                         disabled={isSavingPassword}
                       />
                     </div>
@@ -417,7 +352,7 @@ export default function SettingsPage() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Au moins 8 caractères"
-                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm rounded-sm"
+                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm mm"
                         disabled={isSavingPassword}
                       />
                     </div>
@@ -430,18 +365,18 @@ export default function SettingsPage() {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirmez votre nouveau mot de passe"
-                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm rounded-sm"
+                        className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors text-sm mm"
                         disabled={isSavingPassword}
                       />
                     </div>
                     {passwordError && (
-                      <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 rounded-sm">
+                      <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 mm">
                         <CircleAlert size={14} className="shrink-0 mt-0.5 text-rose-500" />
                         <p className="text-xs text-rose-700">{passwordError}</p>
                       </div>
                     )}
                     {user.must_change_password && (
-                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-sm">
+                      <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 mm">
                         <CircleAlert size={14} className="shrink-0 mt-0.5 text-amber-500" />
                         <p className="text-xs text-amber-700">
                           Vous devez changer votre mot de passe après votre première connexion.
@@ -452,7 +387,7 @@ export default function SettingsPage() {
                       <button
                         onClick={handlePasswordSave}
                         disabled={isSavingPassword || !currentPassword || !newPassword}
-                        className="px-5 py-2.5 bg-blue-800 hover:bg-blue-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 rounded-sm"
+                        className="px-5 py-2.5 bg-blue-800 hover:bg-blue-600 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center gap-2 mm"
                       >
                         {isSavingPassword ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -468,7 +403,7 @@ export default function SettingsPage() {
                 {/* Account info */}
                 <div className="bg-white border border-slate-100 mrc p-6">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="p-2 bg-slate-50 rounded-sm">
+                    <div className="p-2 bg-slate-50 mm">
                       <Shield size={16} className="text-slate-500" />
                     </div>
                     <div>
@@ -486,7 +421,7 @@ export default function SettingsPage() {
                       <label className="block text-xs font-medium text-slate-500 mb-1">
                         Rôle
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 rounded-sm">
+                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 mm">
                         <Shield size={14} className="shrink-0 text-slate-400" />
                         <span className="truncate capitalize">{user.role}</span>
                       </div>
@@ -495,7 +430,7 @@ export default function SettingsPage() {
                       <label className="block text-xs font-medium text-slate-500 mb-1">
                         Statut
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 rounded-sm">
+                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 mm">
                         <BadgeCheck size={14} className="shrink-0 text-slate-400" />
                         <span className="truncate">{user.is_active ? "Actif" : "Inactif"}</span>
                       </div>
@@ -504,7 +439,7 @@ export default function SettingsPage() {
                       <label className="block text-xs font-medium text-slate-500 mb-1">
                         Email vérifié
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 rounded-sm">
+                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 mm">
                         <Mail size={14} className="shrink-0 text-slate-400" />
                         <span className="truncate">{user.email_verified ? "Oui" : "Non"}</span>
                       </div>
@@ -513,7 +448,7 @@ export default function SettingsPage() {
                       <label className="block text-xs font-medium text-slate-500 mb-1">
                         Membre depuis
                       </label>
-                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 rounded-sm">
+                      <div className="flex items-center gap-2 px-3 py-2 border border-slate-100 bg-slate-50 text-sm text-slate-700 mm">
                         <Calendar size={14} className="shrink-0 text-slate-400" />
                         <span className="truncate">{formatDate(user.created_at)}</span>
                       </div>
@@ -524,7 +459,7 @@ export default function SettingsPage() {
                 {/* Danger zone */}
                 <div className="bg-white border border-rose-200 mrc p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-rose-50 rounded-sm">
+                    <div className="p-2 bg-rose-50 mm">
                       <LogOut size={16} className="text-rose-500" />
                     </div>
                     <div>
@@ -549,10 +484,34 @@ export default function SettingsPage() {
                         useAuthStore.getState().logout();
                         router.push("/login");
                       }}
-                      className="px-4 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-colors cursor-pointer rounded-sm flex items-center gap-2"
+                      className="px-4 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 text-sm font-medium transition-colors cursor-pointer mm flex items-center gap-2"
                     >
                       <LogOut size={14} />
                       Se déconnecter
+                    </button>
+                  </div>
+
+                  <div className="border-t border-rose-100 my-2" />
+
+                  <div className="flex items-center justify-between py-2">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        Supprimer le compte
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Supprime définitivement votre compte et toutes vos données
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setDeleteConfirmText("");
+                        setDeleteError(null);
+                        setShowDeleteModal(true);
+                      }}
+                      className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition-colors cursor-pointer mm flex items-center gap-2"
+                    >
+                      <Trash2 size={14} />
+                      Supprimer
                     </button>
                   </div>
                 </div>
@@ -561,6 +520,105 @@ export default function SettingsPage() {
           </div>
         </main>
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white mrc shadow-xl w-full max-w-md mx-4 p-6 select-none">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="p-2 bg-rose-50 rounded-full shrink-0">
+                <TriangleAlert size={20} className="text-rose-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  Supprimer le compte
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 bg-rose-50 border border-rose-200 mm mb-4">
+              <p className="text-xs text-rose-700 leading-relaxed">
+                La suppression de votre compte entraînera la perte définitive de toutes vos données, y compris vos CV analysés, évaluations, talents, recrutements, et toutes autres informations associées à votre compte.
+              </p>
+            </div>
+
+            {deleteError && (
+              <div className="flex items-start gap-2 p-3 bg-rose-50 border border-rose-200 mm mb-4">
+                <CircleAlert size={14} className="shrink-0 mt-0.5 text-rose-500" />
+                <p className="text-xs text-rose-700">{deleteError}</p>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-600 mb-2">
+              Tapez <span className="font-semibold text-slate-900">supprimer mon compte</span> pour confirmer.
+            </p>
+
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => {
+                setDeleteConfirmText(e.target.value);
+                setDeleteError(null);
+              }}
+              placeholder="supprimer mon compte"
+              disabled={isDeleting}
+              className="w-full px-3 py-2 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-colors text-sm mm mb-4"
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText("");
+                }
+              }}
+            />
+
+            <div className="flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText("");
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+                className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-colors cursor-pointer mm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (deleteConfirmText !== "supprimer mon compte") {
+                    setDeleteError("Veuillez taper exactement « supprimer mon compte » pour confirmer.");
+                    return;
+                  }
+                  setIsDeleting(true);
+                  setDeleteError(null);
+                  try {
+                    await AuthService.deleteAccount();
+                    useAuthStore.getState().logout();
+                    router.push("/login");
+                  } catch (err: any) {
+                    setDeleteError(
+                      err?.response?.data?.detail || "Échec de la suppression du compte"
+                    );
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                disabled={isDeleting || deleteConfirmText !== "supprimer mon compte"}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer mm flex items-center gap-2"
+              >
+                {isDeleting ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                Supprimer mon compte
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -19,33 +19,50 @@ import {
     HelpingHand,
     HelpingHandIcon,
     Info,
+    Shield,
     BadgeQuestionMarkIcon,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [adminOpen, setAdminOpen] = useState(false);
     const pathname = usePathname();
     const { isModalOpen } = useModal();
-    
+    const currentUserRole = useAuthStore((s) => s.user?.role);
+
     useEffect(() => {
       setMobileOpen(false);
     }, [pathname]);
 
     if(isModalOpen) return null;
 
+    const isAdmin = currentUserRole?.toLowerCase() === "admin";
+
     const sidebarItems = [
-      { icon: <Home size={16} />, label: "Accueil", href: "/dashboard", active: true },
+      { icon: <Home size={16} />, label: "Accueil", href: "/dashboard" },
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
       { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
       { icon: <Users size={16} />, label: "Talents", href: "/talents" },
       { icon: <Briefcase size={16} />, label: "Offre d'emploi", href: "/jobs" },
       { icon: <LampDesk size={16} />, label: "Recruter", href: "/recruitments" },
-      { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
       { icon: <BadgeQuestionMarkIcon size={16} />, label: "Aide", href: "/help" },
     ];
+
+    const adminItems = [
+      { icon: <Shield size={16} />, label: "Utilisateurs", href: "/admin" },
+      { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
+    ];
+
+    const sidebarLinkClass = (active: boolean) =>
+      `w-full flex items-center focus:scale-95 px-2.5 py-2 text-xs font-medium transition-colors ${
+        active
+          ? "bg-slate-200 text-slate-900 border-l-3 border-l-blue-500"
+          : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
+      }`;
 
     return (
       <>
@@ -69,7 +86,7 @@ export default function Sidebar() {
         {/* Mobile sidebar overlay */}
         <aside className={`
           fixed md:hidden top-0 left-0 z-50 h-screen bg-white border-r border-slate-100 flex flex-col justify-between p-3
-          transition-transform duration-300 ease-in-out w-56 shadow-xl
+          transition-transform duration-300 ease-in-out w-[180px] shadow-xl
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
         `}>
           <div>
@@ -95,11 +112,7 @@ export default function Sidebar() {
                 <Link
                   key={index}
                   href={item.href}
-                  className={`w-full flex items-center focus:scale-95 px-2.5 py-2  text-xs font-medium transition-colors ${
-                    pathname === item.href
-                      ? "bg-slate-200 text-slate-900 border-l-3 border-l-blue-500"
-                      : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
-                  }`}
+                  className={sidebarLinkClass(pathname === item.href)}
                 >
                   <div className="flex items-center gap-2.5">
                     {item.icon}
@@ -107,6 +120,29 @@ export default function Sidebar() {
                   </div>
                 </Link>
               ))}
+
+              {isAdmin && (
+                <>
+                  <div className="pt-3 pb-1">
+                    <span className="block px-3 py-1 text-[10px] cursor-pointer font-bold uppercase tracking-wider text-slate-400 select-none">
+                      Administration
+                    </span>
+                    {adminItems.map((item, index) => (
+                      <Link
+                        key={index}
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={sidebarLinkClass(pathname === item.href)}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </>
+              )}
             </nav>
           </div>
 
@@ -119,16 +155,16 @@ export default function Sidebar() {
         <div 
           className={`shrink-0 h-screen sticky top-0 z-40 group/sidebar hidden md:block ${
             collapsed 
-              ? "w-16 hover:w-56 transition-all duration-300 ease-in-out" 
-              : "w-56 transition-none"
+              ? "w-16 hover:w-[200px] transition-all duration-300 ease-in-out" 
+              : "w-[200px] transition-none"
           }`}
         >
           <aside
             className={`
               bg-white border-r border-gray-500  flex flex-col justify-between  h-screen top-0 left-0
               ${collapsed 
-                ? "absolute w-16 group-hover/sidebar:w-56 z-50   group-hover/sidebar:shadow-xl shadow-none transition-all duration-300 ease-in-out" 
-                : "sticky w-56   transition-none"
+                ? "absolute w-16 group-hover/sidebar:w-[200px] z-50   group-hover/sidebar:shadow-xl shadow-none transition-all duration-300 ease-in-out" 
+                : "sticky w-[200px]   transition-none"
               }
             `}
           >    
@@ -189,6 +225,80 @@ export default function Sidebar() {
                     </div>
                   </Link>
                 ))}
+
+                {isAdmin && (
+                  <div
+                    className="relative"
+                    onMouseEnter={() => setAdminOpen(true)}
+                    onMouseLeave={() => setAdminOpen(false)}
+                  >
+                    <div
+                      className={`w-full flex items-center px-5.5 py-2 focus:scale-99 focus:border cursor-pointer text-xs font-medium transition-all select-none ${
+                        adminOpen ||
+                        pathname === "/admin" ||
+                        pathname === "/invitations"
+                          ? "bg-slate-200 text-slate-900 border-l-3 border-l-blue-500"
+                          : "text-slate-600 hover:bg-slate-200 hover:text-black duration-500"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Shield size={16} />
+                        <span
+                          className={`
+                            whitespace-nowrap cursor-pointer
+                            ${
+                              collapsed
+                                ? "opacity-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 cursor-pointer group-hover/sidebar:w-auto transition-all duration-300 ease-in-out"
+                                : "opacity-100 transition-none"
+                            }
+                          `}
+                        >
+                          Administration
+                        </span>
+                      </div> 
+                      <ChevronRight
+                        size={12}
+                        className={`
+                          ml-auto transition-transform duration-300 shrink-0
+                          ${adminOpen ? "rotate-90" : ""}
+                          ${collapsed ? "opacity-0 w-0 overflow-hidden group-hover/sidebar:opacity-100 group-hover/sidebar:w-auto" : "opacity-100"}
+                        `}
+                      />
+                    </div>
+
+                    <>
+                      <div
+                        className={`fixed inset-0 z-30 transition-opacity duration-300 ${adminOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+                        onClick={() => setAdminOpen(false)}
+                      />
+                      <div
+                        className={`absolute left-full top-0 z-40 ml-0.5 bg-white border border-slate-200  shadow-lg py-1.5 w-48 transition-all duration-300 ${
+                          adminOpen
+                            ? "opacity-100 translate-x-0 pointer-events-auto"
+                            : "opacity-0 -translate-x-2 pointer-events-none"
+                        }`}
+                        onMouseEnter={() => setAdminOpen(true)}
+                        onMouseLeave={() => setAdminOpen(false)}
+                      >
+                        {adminItems.map((item, index) => (
+                          <Link
+                            key={index}
+                            href={item.href}
+                            onClick={() => setAdminOpen(false)}
+                            className={`flex items-center gap-2.5 px-3.5  py-2 text-xs font-medium transition-colors ${
+                              pathname === item.href
+                                ? "bg-slate-100 text-slate-900"
+                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            {item.icon}
+                            <span>{item.label}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  </div>
+                )}
               </nav>
             </div>
  

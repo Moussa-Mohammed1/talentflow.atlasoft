@@ -25,16 +25,16 @@ export function JobOfferCard({ offer, onClick }: { offer: JobOffer; onClick: () 
       </div>
 
       <div className="flex flex-wrap gap-1.5 mb-3">
-        <span className="inline-flex items-center gap-1 rounded-sm bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+        <span className="inline-flex items-center gap-1 mm bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
           <Briefcase size={12} />
           {employmentTypeLabels[offer.employment_type]}
         </span>
-        <span className="inline-flex items-center gap-1 rounded-sm bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+        <span className="inline-flex items-center gap-1 mm bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
           <MapPin size={12} />
           {workModeLabels[offer.work_mode]}
         </span>
         <span
-          className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-[11px] font-medium ${seniorityBadgeColors[offer.seniority_level]}`}
+          className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[11px] font-medium ${seniorityBadgeColors[offer.seniority_level]}`}
         >
           <Users size={12} />
           {seniorityLevelLabels[offer.seniority_level]}

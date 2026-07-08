@@ -66,11 +66,11 @@ export default function PasswordChangeBanner() {
             </p>
 
             <Link
-              href="/profile"
+              href="/settings"
               onClick={handleDismiss}
               className="inline-flex items-center gap-1.5 px-3 py-1.5  bg-blue-800 hover:bg-blue-600 text-white text-[11px] font-semibold transition-colors"
             >
-              Aller au profil
+              Aller au parametres
               <ArrowRight size={12} />
             </Link>
           </div>

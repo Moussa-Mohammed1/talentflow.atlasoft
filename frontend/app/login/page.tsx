@@ -28,7 +28,7 @@ export default function LoginPage() {
         <div className="max-w-5xl  mx-auto w-full min-h-screen lg:h-full grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 relative z-10 px-4 lg:px-0">
           
            
-          <div className="lg:col-span-5  flex flex-col pb-30 items-center justify-center text-center pt-12 lg:pt-0 lg:h-full">
+          <div className="lg:col-span-5  flex flex-col lg:pb-30 items-center justify-center text-center pt-12 lg:pt-0 lg:h-full">
             <div className="flex flex-col  items-center space-y-2">
                
               <div className="w-40 h-40 rounded-full border-none flex items-center justify-center overflow-hidden">
@@ -42,7 +42,7 @@ export default function LoginPage() {
             </div>
 
             <p 
-              className="inline-block font-playwrite text-black font-semibold text-3xl max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
+              className="inline-block text-black font-semibold text-xl max-w-sm leading-relaxed px-5 py-2 rounded-full text-center">
               Recrutement intelligent, automatisé et 
                entièrement traçable.
             </p>

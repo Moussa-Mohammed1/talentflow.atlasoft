@@ -20,6 +20,7 @@ from app.models.user import User
 from app.repositories.evaluation_repository import EvaluationRepository
 from app.schemas.evaluate import (
     DepartmentEvaluation,
+    DepartmentScore,
     EvaluateResponse,
     EvaluatedCandidateCard,
     RequirementScore,
@@ -244,6 +245,27 @@ class EvaluationService:
             )
 
         return result
+
+    def get_department_scores(self, candidate_id: int) -> list[DepartmentScore]:
+        results = (
+            self.db.query(
+                EvaluationResult.department_id,
+                EvaluationResult.compatibility,
+            )
+            .filter(EvaluationResult.candidate_id == candidate_id)
+            .all()
+        )
+        scores: list[DepartmentScore] = []
+        for dept_id, compat in results:
+            dept = self.db.query(Department).filter(Department.id == dept_id).first()
+            scores.append(
+                DepartmentScore(
+                    department_id=dept_id,
+                    department_name=dept.name if dept else "Unknown",
+                    compatibility=round(compat, 2),
+                )
+            )
+        return scores
 
     # ------------------------------------------------------------------
     # LLM validation

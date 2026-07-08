@@ -12,6 +12,7 @@ from app.models.candidat import Candidat
 from app.models.user import User
 from app.schemas.evaluate import (
     DepartmentEvaluation,
+    DepartmentScore,
     EvaluateRequest,
     EvaluateResponse,
     EvaluatedCandidateCard,
@@ -78,6 +79,16 @@ def toggle_talent(
     db.commit()
     db.refresh(candidate)
     return {"status": "success", "is_talent": candidate.is_talent}
+
+
+@router.get("/{candidate_id}/department-scores", response_model=list[DepartmentScore])
+def get_candidate_department_scores(
+    candidate_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[DepartmentScore]:
+    service = EvaluationService(db)
+    return service.get_department_scores(candidate_id)
 
 
 @router.get("/talents", response_model=list[TalentCard])

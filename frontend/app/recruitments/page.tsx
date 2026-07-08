@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertCircle,
   ChevronLeft,
@@ -30,6 +30,7 @@ export default function RecruitmentsPage() {
   const [priorityFilter, setPriorityFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  const filtersRef = useRef<HTMLDivElement>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
@@ -66,6 +67,16 @@ export default function RecruitmentsPage() {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, priorityFilter]);
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (showFilters && filtersRef.current && !filtersRef.current.contains(e.target as Node)) {
+        setShowFilters(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showFilters]);
+
   const totalPages = Math.ceil(total / itemsPerPage);
 
   const handleView = (id: string) => setSelectedId(id);
@@ -95,7 +106,7 @@ export default function RecruitmentsPage() {
               className="w-full pl-10 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 px-4 py-2.5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
             />
           </div>
-          <div className="flex items-center gap-3 shrink-0">
+          <div ref={filtersRef} className="flex items-center gap-3 shrink-0 relative">
             <button
               onClick={() => setShowFilters(!showFilters)}
               className={`flex items-center gap-2 px-2.5 py-2.5 border text-xs font-medium transition-colors cursor-pointer ${
@@ -105,48 +116,49 @@ export default function RecruitmentsPage() {
               <SlidersHorizontal size={14} />
               Filtres
             </button>
+            {showFilters && (
+              <div className="absolute top-full right-0 mt-2 z-40 bg-white border border-slate-200 shadow-xl p-4 min-w-[220px]">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Statut</label>
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="w-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Tous</option>
+                      {Object.entries(statusLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-slate-500 block mb-1">Priorité</label>
+                    <select
+                      value={priorityFilter}
+                      onChange={(e) => setPriorityFilter(e.target.value)}
+                      className="w-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
+                    >
+                      <option value="">Toutes</option>
+                      {Object.entries(priorityLabels).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {(statusFilter || priorityFilter) && (
+                    <button
+                      onClick={() => { setStatusFilter(""); setPriorityFilter(""); }}
+                      className="w-full text-xs text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 py-1 cursor-pointer"
+                    >
+                      <X size={12} /> Réinitialiser
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
             <NotificationButton />
           </div>
         </header>
-
-        {showFilters && (
-          <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-slate-500">Statut</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
-              >
-                <option value="">Tous</option>
-                {Object.entries(statusLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-medium text-slate-500">Priorité</label>
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-                className="border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
-              >
-                <option value="">Toutes</option>
-                {Object.entries(priorityLabels).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
-                ))}
-              </select>
-            </div>
-            {(statusFilter || priorityFilter) && (
-              <button
-                onClick={() => { setStatusFilter(""); setPriorityFilter(""); }}
-                className="text-xs text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-              >
-                <X size={12} /> Réinitialiser
-              </button>
-            )}
-          </div>
-        )}
 
         <main className="flex-1 flex flex-col min-h-0 max-w-7xl mx-auto w-full">
           <div className="flex-1 overflow-y-auto px-6 pt-6">

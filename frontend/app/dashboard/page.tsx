@@ -146,15 +146,19 @@ export default function Dashboard() {
                       Rendez-vous dans la page <strong>Évaluations</strong> pour voir les résultats par candidat. Si un profil vous intéresse, <strong>marquez-le comme Talent</strong>.
                     </Step>
 
-                    <Step number={6} title="Recruter un talent">
+                    <Step number={6} title="Publier une offre d&apos;emploi (obligatoire)">
+                      Avant de recruter, vous devez d&apos;abord disposer d&apos;une <strong>offre d&apos;emploi</strong> publiée. Rendez-vous dans l&apos;onglet <strong>Offre d&apos;emploi</strong>, cliquez sur <strong>Ajouter une offre</strong>. Une modale s&apos;ouvre&nbsp;: collez la <strong>description du poste</strong>, le système extrait automatiquement les données. Assurez-vous que le statut est <strong>Publié</strong> (les offres non publiées ne sont pas recrutables) et qu&apos;un <strong>département</strong> lui est assigné. De bonnes données d&apos;offre, notamment le département et ses compétences requises, faciliteront la sélection des talents préférés (le score d&apos;évaluation repose sur les compétences du département).
+                    </Step>
+
+                    <Step number={7} title="Recruter un talent">
                       Dans la page <strong>Talents</strong>, retrouvez vos talents marqués. Cliquez sur <strong>Recruter</strong> pour lancer le processus de recrutement. Le candidat apparaîtra dans la page <strong>Recrutements</strong>.
                     </Step>
 
-                    <Step number={7} title="Planifier l&apos;entretien">
+                    <Step number={8} title="Planifier l&apos;entretien">
                       Dans le modal de recrutement, allez dans l&apos;onglet <strong>Entretien</strong>. Renseignez la date, l&apos;heure, la durée et le lieu, puis cliquez sur <strong>Planifier l&apos;entretien</strong>.
                     </Step>
 
-                    <Step number={8} title="Générer et envoyer l&apos;email">
+                    <Step number={9} title="Générer et envoyer l&apos;email">
                       Passez à l&apos;onglet <strong>Email</strong>. Sélectionnez l&apos;entretien planifié pour pré-remplir les informations (ou saisissez-les manuellement). Choisissez la <strong>langue</strong> et cliquez sur <strong>Générer l&apos;email</strong>. Vérifiez le sujet et le contenu, puis cliquez sur <strong>Envoyer l&apos;email</strong>.
                     </Step>
                   </div>

@@ -153,7 +153,7 @@ export default function AdminUsersPage() {
           <div className="flex items-center gap-3">
             <div>
               <h1 className="text-lg font-bold text-slate-900">Administration</h1>
-              <p className="text-xs text-slate-500">Gestion des utilisateurs</p>
+              <p className="text-xs text-slate-500">Gestion des utilisateurs. Consultez la liste des recruteurs, leurs rôles et leur statut. Utilisez les actions pour <strong>activer</strong>, <strong>désactiver</strong> ou <strong>changer le rôle</strong> d&apos;un utilisateur.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

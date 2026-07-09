@@ -42,7 +42,7 @@ export default function EvaluationsPage() {
             <div className="mb-6">
               <h2 className="text-sm font-bold text-slate-800">Candidats évalués</h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Consultez les profils déjà évalués par l&apos;intelligence artificielle.
+                Consultez les profils déjà évalués par l&apos;intelligence artificielle. Chaque candidat affiche son <strong>score de compatibilité</strong> par département, ses <strong>compétences</strong>, <strong>expériences</strong> et <strong>langues</strong>. Cliquez sur le bouton <strong>Talent</strong> pour marquer un profil prometteur.
               </p>
               <p className="text-[11px]  mt-0.5">
                 <span className="font-bold text-black">* </span> Après avoir consulté les résultats détaillés de l'évaluation du candidat, vous pouvez décider de le désigner comme un talent ou non. Pour en savoir plus sur les privilèges associés au statut de talent, veuillez consulter la page d'aide.</p>

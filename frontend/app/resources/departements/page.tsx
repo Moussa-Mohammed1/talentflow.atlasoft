@@ -149,8 +149,11 @@ export default function DepartementsPage() {
     <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900">Départements</h1>
+        <header className="flex items-start justify-between border-b border-slate-100 bg-white px-6 py-4">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">Départements</h1>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl">Gérez les départements de l&apos;entreprise. Pour chaque département, renseignez les <strong>compétences requises</strong> et le nombre d&apos;<strong>années d&apos;expérience</strong> nécessaire. Utilisez la <strong>barre de recherche</strong> et le <strong>tri</strong> pour naviguer. Cliquez sur un département pour voir ses détails, le <strong>modifier</strong> ou le <strong>supprimer</strong>.</p>
+          </div>
           <div className="flex items-center gap-3">
             <button
               onClick={handleOpenCreate}

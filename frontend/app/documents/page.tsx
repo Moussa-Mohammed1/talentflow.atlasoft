@@ -119,8 +119,11 @@ export default function DocumentsPage() {
     <div className="flex min-h-screen bg-slate-100  text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen [scrollbar-width:none]">
-        <header className="bg-white border-b border-slate-100 px-6 pt-4 pb-3 flex justify-between items-center z-30">
-          <h1 className="text-lg font-bold text-slate-900 shrink-0">Documents</h1>
+        <header className="bg-white border-b border-slate-100 px-6 pt-4 pb-3 flex items-start justify-between z-30">
+          <div className="shrink-0">
+            <h1 className="text-lg font-bold text-slate-900">Documents</h1>
+            <p className="text-[11px] text-slate-500 mt-0.5 hidden lg:block">Importez et gérez les CV des candidats. Utilisez la <strong>barre de recherche</strong> pour filtrer, cliquez sur une carte pour voir les <strong>détails extraits</strong> (identité, compétences, expériences, formations). Lancez une <strong>ré-analyse</strong> ou <strong>extraction</strong> depuis le panneau de détails.</p>
+          </div>
           <div className="relative max-w-md w-full hidden md:block mx-4">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"

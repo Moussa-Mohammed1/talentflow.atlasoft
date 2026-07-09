@@ -213,8 +213,11 @@ export default function SettingsPage() {
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Paramètres</h1>
+        <header className="bg-slate-50 px-6 py-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">Paramètres</h1>
+            <p className="text-xs text-slate-500 mt-1">Personnalisez vos préférences. Configurez les <strong>notifications par e-mail</strong> que vous souhaitez recevoir, modifiez votre <strong>mot de passe</strong> et réglez vos <strong>préférences d&apos;interface</strong> (thème sombre, langue).</p>
+          </div>
           <NotificationButton />
         </header>
 

@@ -64,7 +64,7 @@ export default function Dashboard() {
         <main className="flex-1 px-6 py-6">
           <div className="mb-6 rounded-lg">
             <p className="text-sm leading-7 text-slate-600">
-              Vous trouverez ci-dessous les raccourcis permettant d'accéder rapidement aux principales fonctionnalités de la plateforme.
+              Page d&apos;accueil de TalentFlow. Retrouvez les raccourcis vers les principales fonctionnalités&nbsp;: <strong>Guide de démarrage</strong>, <strong>Gestion des talents</strong>, <strong>Analyse &amp; Statistiques</strong>, <strong>Documents &amp; Ressources</strong>. Consultez le <strong>parcours recommandé</strong> pour suivre les bonnes pratiques et visionnez les <strong>activités récentes</strong>.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
@@ -147,7 +147,7 @@ export default function Dashboard() {
                     </Step>
 
                     <Step number={6} title="Publier une offre d&apos;emploi (obligatoire)">
-                      Avant de recruter, vous devez d&apos;abord disposer d&apos;une <strong>offre d&apos;emploi</strong> publiée. Rendez-vous dans l&apos;onglet <strong>Offre d&apos;emploi</strong>, cliquez sur <strong>Ajouter une offre</strong>. Une modale s&apos;ouvre&nbsp;: collez la <strong>description du poste</strong>, le système extrait automatiquement les données. Assurez-vous que le statut est <strong>Publié</strong> (les offres non publiées ne sont pas recrutables) et qu&apos;un <strong>département</strong> lui est assigné. De bonnes données d&apos;offre, notamment le département et ses compétences requises, faciliteront la sélection des talents préférés (le score d&apos;évaluation repose sur les compétences du département).
+                      Avant de recruter, vous devez d&apos;abord disposer d&apos;une <strong>offre d&apos;emploi</strong> publiée. Rendez-vous dans l&apos;onglet <strong>Offre d&apos;emploi</strong>, cliquez sur <strong>Ajouter une offre</strong>. Une modale s&apos;ouvre&nbsp;: collez la <strong>description du poste</strong>, le système extrait automatiquement les données. Assurez-vous que le statut est <strong>Publié</strong> (les offres non publiées ne sont pas recrutables) et qu&apos;un <strong>département </strong> lui est assigné. De bonnes données d&apos;offre, notamment le département et ses compétences requises, faciliteront la sélection des talents préférés (le score d&apos;évaluation repose sur les compétences du département).
                     </Step>
 
                     <Step number={7} title="Recruter un talent">

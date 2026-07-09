@@ -164,8 +164,7 @@ export default function RecruitmentsPage() {
           <div className="flex-1 overflow-y-auto px-6 pt-6">
             <div className="mb-6">
               <p className="text-sm leading-7 text-slate-600">
-                Gérez les recrutements en cours. Consultez les détails des candidats,
-                planifiez des entretiens et envoyez des invitations.
+                Gérez les recrutements en cours. Consultez les <strong>fiches candidates</strong> avec leurs informations, notes et score département. Dans le détail, accédez aux onglets <strong>Entretien</strong> pour planifier, <strong>Email</strong> pour générer et envoyer un message, et <strong>Actions</strong> pour annuler ou supprimer le recrutement.
               </p>
             </div>
 

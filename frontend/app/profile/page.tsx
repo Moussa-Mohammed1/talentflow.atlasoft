@@ -242,9 +242,11 @@ export default function ProfilePage() {
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Mon Profil</h1>
-          <NotificationButton />
+        <header className="bg-slate-50 px-6 py-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-lg font-bold text-slate-900">Mon Profil</h1>
+            <p className="text-xs text-slate-500 mt-1">Consultez et modifiez vos informations personnelles. Téléchargez un <strong>avatar</strong>, modifiez votre <strong>nom</strong> et votre <strong>email</strong>, changez votre <strong>mot de passe</strong> et consultez vos <strong>statistiques d&apos;utilisation</strong> de l&apos;IA.</p>
+          </div>
         </header>
 
         <main className="flex-1 px-6 pb-8 overflow-y-auto">

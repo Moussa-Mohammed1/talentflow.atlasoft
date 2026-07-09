@@ -652,7 +652,7 @@ export default function TalentsPage() {
             <div className="mb-6">
               <h2 className="text-sm font-bold text-slate-800">Profils talents</h2>
               <p className="text-[11px] text-slate-500 mt-0.5">
-                Candidats désignés comme talents par les recruteurs.
+                Candidats désignés comme talents par les recruteurs. Utilisez la <strong>barre de recherche</strong> et le <strong>filtre par département</strong> pour trouver un profil. Cliquez sur <strong>Recruter</strong> pour lancer le processus de recrutement.
               </p>
             </div>
 

@@ -155,10 +155,7 @@ export default function JobsPage() {
             </div>
             <div className="mb-6">
               <p className="text-sm leading-7 text-slate-600">
-                Les offres d&apos;emploi affichées ci-dessous ont été générées automatiquement
-                par l&apos;intelligence artificielle à partir des descriptions que vous avez
-                fournies. Vous pouvez les consulter, les modifier ou les compléter avant
-                leur publication.
+                Gérez les offres d&apos;emploi. Les annonces sont générées automatiquement par l&apos;IA à partir des descriptions fournies. Cliquez sur <strong>Ajouter une offre</strong> pour en créer une nouvelle. Utilisez les actions pour <strong>modifier</strong>, <strong>publier</strong> ou <strong>archiver</strong> une offre. Seules les offres au statut <strong>Publié</strong> sont disponibles pour le recrutement.
               </p>
             </div>
 

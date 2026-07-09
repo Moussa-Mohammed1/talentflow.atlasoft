@@ -204,8 +204,7 @@ export default function RecruitmentsPage() {
                     key={item.id}
                     item={item}
                     onView={() => handleView(item.id)}
-                    onSendEmail={() => handleSendEmail(item.id)}
-                    onScheduleInterview={() => handleScheduleInterview(item.id)}
+                    onSendEmail={() => handleSendEmail(item.id)} 
                   />
                 ))}
               </div>

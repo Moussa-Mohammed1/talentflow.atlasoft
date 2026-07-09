@@ -242,15 +242,15 @@ export default function ProfilePage() {
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex items-start justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">Mon Profil</h1>
-            <p className="text-xs text-slate-500 mt-1">Consultez et modifiez vos informations personnelles. Téléchargez un <strong>avatar</strong>, modifiez votre <strong>nom</strong> et votre <strong>email</strong>, changez votre <strong>mot de passe</strong> et consultez vos <strong>statistiques d&apos;utilisation</strong> de l&apos;IA.</p>
-          </div>
+        <header className="bg-slate-50 px-6 py-4 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-slate-900">Mon Profil</h1>
+          <NotificationButton />
         </header>
 
         <main className="flex-1 px-6 pb-8 overflow-y-auto">
-          <div className="max-w-2xl mx-auto space-y-6">
+          <div className="max-w-2xl mx-auto">
+            <p className="text-sm text-slate-600 mb-6">Consultez et modifiez vos informations personnelles. Téléchargez un <strong>avatar</strong>, modifiez votre <strong>nom</strong> et votre <strong>email</strong>, changez votre <strong>mot de passe</strong> et consultez vos <strong>statistiques d&apos;utilisation</strong> de l&apos;IA.</p>
+            <div className="space-y-6">
             <div className="bg-white border border-slate-100 mrc p-6">
               <div className="flex items-start gap-4 mb-6">
                 <div className="flex flex-col items-center gap-2">
@@ -550,6 +550,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </div>
         </main>
       </div>
     </div>

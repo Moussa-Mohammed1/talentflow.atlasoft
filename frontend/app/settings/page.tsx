@@ -213,16 +213,15 @@ export default function SettingsPage() {
     <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
       <Sidebar />
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex items-start justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-slate-900">Paramètres</h1>
-            <p className="text-xs text-slate-500 mt-1">Personnalisez vos préférences. Configurez les <strong>notifications par e-mail</strong> que vous souhaitez recevoir, modifiez votre <strong>mot de passe</strong> et réglez vos <strong>préférences d&apos;interface</strong> (thème sombre, langue).</p>
-          </div>
+         <header className="bg-slate-50 px-6 py-4 flex items-center justify-between">
+          <h1 className="text-lg font-bold text-slate-900">Paramètres</h1>
           <NotificationButton />
         </header>
 
         <main className="flex-1 px-6 pb-8 overflow-y-auto">
-          <div className="max-w-3xl mx-auto space-y-6">
+          <div className="max-w-3xl mx-auto">
+            <p className="text-sm text-slate-600 mb-6">Personnalisez vos préférences. Configurez les <strong>notifications par e-mail</strong> que vous souhaitez recevoir, modifiez votre <strong>mot de passe</strong> et réglez vos <strong>préférences d&apos;interface</strong> (thème sombre, langue).</p>
+            <div className="space-y-6">
             {/* Tabs */}
             <div className="flex border-b border-slate-200">
               {tabs.map((tab) => {
@@ -521,6 +520,7 @@ export default function SettingsPage() {
               </div>
             )}
           </div>
+        </div>
         </main>
       </div>
 

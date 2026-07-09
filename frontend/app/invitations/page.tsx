@@ -215,13 +215,10 @@ export default function InvitationsPage() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-start justify-between border-b border-slate-100 bg-white px-6 py-4">
-            <div>
+        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
             <h1 className="text-lg font-bold text-slate-900">
                 Invitations
             </h1>
-            <p className="text-xs text-slate-500 mt-1 max-w-xl">Invitez des recruteurs à collaborer. Consultez la liste des invitations, filtrez par <strong>statut</strong> (En attente, Acceptée, Expirée) et effectuez des actions&nbsp;: <strong>renvoyer</strong>, <strong>révoquer</strong> ou <strong>copier le lien</strong> d&apos;invitation.</p>
-            </div>
 
             <div className="flex items-center gap-3">
                 
@@ -238,6 +235,7 @@ export default function InvitationsPage() {
         </header>
 
         <main className="flex-1 px-6  max-w-7xl mx-auto w-full space-y-6">
+          <p className="text-sm text-slate-600">Invitez des recruteurs à collaborer. Consultez la liste des invitations, filtrez par <strong>statut</strong> (En attente, Acceptée, Expirée) et effectuez des actions&nbsp;: <strong>renvoyer</strong>, <strong>révoquer</strong> ou <strong>copier le lien</strong> d&apos;invitation.</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             
           </div>

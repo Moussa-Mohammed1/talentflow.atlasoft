@@ -5,11 +5,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from app.services.skill_extraction.concepts import CONCEPTS
 from app.services.skill_extraction.constants import DOMAIN_HINTS
 from app.services.skill_extraction.models import SkillConcept
-try:
-    from sentence_transformers import SentenceTransformer
-except Exception: 
-    SentenceTransformer = None
-
 
 class SkillOntology:
     def __init__(self) -> None:
@@ -163,7 +158,9 @@ class SkillOntology:
     def ensure_embeddings(self) -> None:
         if self._embedding_model is not None:
             return
-        if SentenceTransformer is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except Exception:
             return
         try:
             self._embedding_model = SentenceTransformer(

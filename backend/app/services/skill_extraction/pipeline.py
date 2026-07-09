@@ -2,10 +2,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-try:
-    from sentence_transformers import SentenceTransformer
-except Exception:
-    SentenceTransformer = None
 
 from sqlalchemy.orm import Session
 
@@ -172,6 +168,11 @@ class ResumeSkillExtractionPipeline:
         return reviewed, stats
 
     def analyze(self, text: str) -> SkillExtractionResult:
+        try:
+            from sentence_transformers import SentenceTransformer
+        except Exception:
+            SentenceTransformer = None
+
         if not text or not text.strip():
             empty_stats = {"candidate_count": 0, "skill_count": 0, "model_available": False}
             return SkillExtractionResult(

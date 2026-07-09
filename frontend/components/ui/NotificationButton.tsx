@@ -24,7 +24,7 @@ const iconByType: Record<NotificationType, React.ReactNode> = {
 function relativeTime(value: string): string {
   const timestamp = new Date(value).getTime();
   const seconds = Math.round((timestamp - Date.now()) / 1000);
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const formatter = new Intl.RelativeTimeFormat("fr", { numeric: "auto" });
   const ranges: Array<[Intl.RelativeTimeFormatUnit, number]> = [
     ["year", 31_536_000],
     ["month", 2_592_000],
@@ -58,7 +58,7 @@ export default function NotificationButton() {
     <div className="relative inline-block" ref={dropdownRef}>
       <button
         type="button"
-        aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+        aria-label={`Notifications${unreadCount ? `, ${unreadCount} non lues` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="dialog"
         onClick={() => setIsOpen((open) => !open)}
@@ -81,7 +81,7 @@ export default function NotificationButton() {
           <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 px-4 py-3">
             <div>
               <h3 className="text-sm font-semibold text-slate-800">Notifications</h3>
-              <p className="text-[10px] text-slate-500">{unreadCount} unread</p>
+              <p className="text-[10px] text-slate-500">{unreadCount} non lue{unreadCount !== 1 ? "s" : ""}</p>
             </div>
             <button
               type="button"
@@ -89,21 +89,21 @@ export default function NotificationButton() {
               onClick={() => void markAllAsRead()}
               className="flex items-center gap-1 text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <Check size={12} /> Mark all as read
+              <Check size={12} /> Tout marquer comme lu
             </button>
           </header>
 
           <div className="max-h-100 overflow-y-auto divide-y divide-slate-100">
             {isLoading && notifications.length === 0 && (
               <div className="flex items-center justify-center gap-2 p-8 text-xs text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading notifications…
+                <Loader2 className="h-4 w-4 animate-spin" /> Chargement des notifications…
               </div>
             )}
             {!isLoading && error && notifications.length === 0 && (
               <p className="p-6 text-center text-xs text-rose-600">{error}</p>
             )}
             {!isLoading && !error && notifications.length === 0 && (
-              <p className="p-8 text-center text-xs text-slate-500">You’re all caught up.</p>
+              <p className="p-8 text-center text-xs text-slate-500">Tout est à jour.</p>
             )}
             {notifications.map((notification) => (
               <button

@@ -35,10 +35,10 @@ export function RecruitmentCard({
           )}
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-bold text-slate-900 truncate">
-              {item.candidate?.fullname || "Unknown"}
+              {item.candidate?.fullname || "Inconnu"}
             </h3>
             <p className="text-[11px] text-slate-500 truncate">
-              {item.job_offer?.title || "No position"}
+              {item.job_offer?.title || "Aucun poste"}
             </p>
           </div>
         </div>

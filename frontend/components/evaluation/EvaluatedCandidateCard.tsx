@@ -83,7 +83,7 @@ export default function EvaluatedCandidateCard({ candidate, onClick }: { candida
         </div>
         <div className="flex flex-col items-center gap-0.5 py-2.5 px-1">
           {/* <Briefcase size={14} className="text-emerald-500 mb-0.5" /> */}
-          <span className="text-xs font-bold text-slate-800">{candidate.total_experience_years} yr</span>
+          <span className="text-xs font-bold text-slate-800">{candidate.total_experience_years} ans</span>
           <span className="text-[9px] text-slate-400 uppercase tracking-wide">Expérience</span>
         </div>
         <div className="flex flex-col items-center gap-0.5 py-2.5 px-1">

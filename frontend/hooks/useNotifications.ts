@@ -51,7 +51,7 @@ export function useNotifications() {
         if (!cancelled) hydrate(response.items, response.unread_count);
       })
       .catch(() => {
-        if (!cancelled) setError("Unable to load notifications.");
+        if (!cancelled) setError("Impossible de charger les notifications.");
       });
 
     return () => {
@@ -128,7 +128,7 @@ export function useNotifications() {
       await notificationService.deleteAll();
       hydrate([], 0);
     } catch {
-      setError("Unable to delete all notifications.");
+      setError("Impossible de supprimer toutes les notifications.");
     }
   }, [hydrate, recruiterId, setError, token]);
 

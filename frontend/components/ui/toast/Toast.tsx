@@ -89,7 +89,7 @@ export default function Toast({ toast, onRemove }: ToastProps) {
         type="button"
         onClick={handleClose}
         className="shrink-0  p-1 text-zinc-500 opacity-0 transition-opacity hover:bg-white/10 hover:text-zinc-300 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-zinc-400 group-hover:opacity-100"
-        aria-label="Dismiss notification"
+        aria-label="Fermer la notification"
       >
         <X className="h-4 w-4" />
       </button>

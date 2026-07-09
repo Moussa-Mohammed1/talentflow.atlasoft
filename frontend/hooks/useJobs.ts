@@ -48,7 +48,7 @@ export function useJobs() {
         if (!cancelled) hydrate(response.items, response.running_count);
       })
       .catch(() => {
-        if (!cancelled) setError("Unable to load background jobs.");
+        if (!cancelled) setError("Impossible de charger les tâches de fond.");
       });
 
     return () => {
@@ -62,7 +62,7 @@ export function useJobs() {
       await jobService.deleteAll();
       hydrate([], 0);
     } catch {
-      setError("Unable to delete all jobs.");
+      setError("Impossible de supprimer toutes les tâches.");
     }
   }, [hydrate, recruiterId, setError, token]);
 
@@ -73,7 +73,7 @@ export function useJobs() {
       const response = await jobService.list();
       hydrate(response.items, response.running_count);
     } catch {
-      setError("Unable to refresh jobs.");
+      setError("Impossible d'actualiser les tâches.");
     }
   }, [hydrate, recruiterId, setError, setLoading, token]);
 

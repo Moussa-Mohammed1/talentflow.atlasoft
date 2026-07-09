@@ -26,7 +26,7 @@ export default function SystemJobs() {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
             <Loader2 className="animate-spin h-3 w-3 text-blue-600" />
-            Running
+            En cours
           </span>
         );
       case "completed":
@@ -35,7 +35,7 @@ export default function SystemJobs() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
-            Done
+            Terminé
           </span>
         );
       case "failed":
@@ -44,13 +44,13 @@ export default function SystemJobs() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
-            Failed
+            Échoué
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-700 border border-slate-100">
-            Pending
+            En attente
           </span>
         );
     }
@@ -59,13 +59,13 @@ export default function SystemJobs() {
   const statusText = (status: string) => {
     switch (status) {
       case "running":
-        return "is running for";
+        return "en cours depuis";
       case "completed":
-        return "completed for";
+        return "terminé depuis";
       case "failed":
-        return "failed for";
+        return "échoué depuis";
       default:
-        return "pending for";
+        return "en attente depuis";
     }
   };
 
@@ -82,7 +82,7 @@ export default function SystemJobs() {
             ? "bg-slate-100 text-slate-800 border-slate-300 shadow-inner"
             : "bg-white text-slate-600 border-black hover:bg-slate-50 hover:text-slate-800 shadow-sm"
         }`}
-        title="System Background Jobs"
+        title="Tâches de fond"
         >
         {/* Smoothly expanding text container on the left */}
         <span className="max-w-0 opacity-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-w-32 group-hover:opacity-100 group-focus:max-w-32 group-focus:opacity-100 whitespace-nowrap text-xs font-medium">
@@ -128,7 +128,7 @@ export default function SystemJobs() {
             {isLoading ? (
               <div className="p-4 text-center text-slate-400 text-sm">
                 <Loader2 className="animate-spin h-4 w-4 mx-auto text-blue-600 mb-2" />
-                Loading jobs...
+                Chargement des tâches...
               </div>
             ) : error ? (
               <div className="p-4 text-center text-rose-500 text-sm">
@@ -137,16 +137,16 @@ export default function SystemJobs() {
                   onClick={refresh}
                   className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
                 >
-                  Ressayer
+                  Réessayer
                 </button>
               </div>
             ) : jobs.length === 0 ? (
-              <div className="p-4 text-center text-slate-400 text-sm">No background jobs found
+              <div className="p-4 text-center text-slate-400 text-sm">Aucune tâche de fond trouvée
               <button
                   onClick={refresh}
                   className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
                 >
-                  Ressayer
+                  Réessayer
                 </button></div>
             ) : (
               jobs.map((job) => (
@@ -171,7 +171,7 @@ export default function SystemJobs() {
                   </p>
 
                   <p className={`mt-1 text-[11px] ${statusMessageClass(job.status)}`}>
-                    {job.message || "No additional details"}
+                    {job.message || "Aucun détail supplémentaire"}
                   </p>
                 </div>
               ))

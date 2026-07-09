@@ -43,21 +43,21 @@ export interface JobStatusUpdate {
 export function formatJobType(type: JobType): string {
   switch (type) {
     case "identity_extraction":
-      return "Identity Extraction";
+      return "Extraction d'identité";
     case "resume_screening":
-      return "AI Resume Screening";
+      return "Analyse de CV IA";
     case "bulk_export":
-      return "Bulk Data Export";
+      return "Export de données";
     case "skill_extraction":
-      return "Skill Extraction";
+      return "Extraction de compétences";
     case "experience_extraction":
-      return "Experience Extraction";
+      return "Extraction d'expériences";
     case "candidate_matching":
-      return "Candidate Matching";
+      return "Correspondance de candidats";
     case "language_extraction":
       return "Extraction des langues";
     case "education_extraction":
-      return "Education Extraction";
+      return "Extraction de formations";
     default:
       return type;
   }
@@ -71,9 +71,9 @@ export function formatTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? "s" : ""} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+  if (diffMins < 1) return "À l'instant";
+  if (diffMins < 60) return `il y a ${diffMins} min`;
+  if (diffHours < 24) return `il y a ${diffHours} h`;
+  if (diffDays < 7) return `il y a ${diffDays} j`;
   return date.toLocaleDateString();
 }

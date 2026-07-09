@@ -17,10 +17,10 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           </div>
           <div>
             <h2 className="text-lg text-left font-bold text-gray-900">
-              Analyzing Resume
+              Analyse du CV
             </h2>
             <p className="text-sm font-medium text-gray-600">
-              Extracting structured data from your document...
+              Extraction des données structurées de votre document...
             </p>
           </div>
         </div>
@@ -31,7 +31,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Experiences</h3>
+              <h3 className="text-sm font-semibold text-gray-800">Expériences</h3>
             </div>
             <div className="animate-pulse space-y-4 pl-4 border-l-2 border-gray-100">
               <div className="space-y-2">
@@ -48,7 +48,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Education</h3>
+              <h3 className="text-sm font-semibold text-gray-800">Formation</h3>
             </div>
             <div className="animate-pulse pl-4 space-y-2 border-l-2 border-gray-100">
               <div className="h-4 bg-gray-200 rounded w-2/5"></div>
@@ -59,7 +59,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
            <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Skills</h3>
+              <h3 className="text-sm font-semibold text-gray-800">Compétences</h3>
             </div>
             <div className="flex flex-wrap gap-2 pl-4">
               {skillSkeletonWidths.map((width) => (
@@ -91,7 +91,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
            <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Languages</h3>
+              <h3 className="text-sm font-semibold text-gray-800">Langues</h3>
             </div>
             <div className="animate-pulse pl-4 flex space-x-6">
               <div className="space-y-2 w-24">

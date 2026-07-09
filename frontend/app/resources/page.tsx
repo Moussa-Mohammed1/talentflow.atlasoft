@@ -27,7 +27,7 @@ export default function ResourcesPage() {
           <NotificationButton />
         </header>
         <main className="flex-1 px-6 py-8">
-          <p className="text-sm text-slate-600 mb-6 max-w-2xl">Accédez aux ressources de configuration de la plateforme. Gérez les <strong>départements</strong>, leurs <strong>compétences requises</strong> et les seuils d&apos;expérience pour affiner les évaluations des candidats.</p>
+          <p className="text-sm text-slate-600 mb-6">Accédez aux ressources de configuration de la plateforme. Gérez les <strong>départements</strong>, leurs <strong>compétences requises</strong> et les seuils d&apos;expérience pour affiner les évaluations des candidats.</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
             {resources.map((resource, index) => (
               <div

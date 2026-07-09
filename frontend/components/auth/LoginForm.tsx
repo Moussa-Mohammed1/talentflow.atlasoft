@@ -212,7 +212,7 @@ export default function LoginForm() {
         <strong className="text-black">* Remarque :</strong> <br /> - L’authentification via LinkedIn est réservée aux utilisateurs autorisés.
         <br />
             - Si c'est votre première visite sur la plateforme, vous ne pouvez pas vous authentifier à l'aide de LinkedIn        </p>
-        <hr className="my-6 border-slate-100" />
+        <hr className="my-2 border-slate-100" />
 
         <div className="space-y-3">
             <h3 className="text-sm font-bold text-slate-900">

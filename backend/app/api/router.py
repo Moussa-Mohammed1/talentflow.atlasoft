@@ -13,7 +13,12 @@ from app.api.routes.recruitment import router as recruitment_router
 from app.api.routes.admin import router as admin_router
 
 api_router = APIRouter()
-
+@api_router.get("/", tags=["API"])
+async def root():
+    return {
+        "message":  "Welcome to the TalentFlow API",
+        "status" : "online",
+    }
 api_router.include_router(resume_router)
 api_router.include_router(auth_router)
 api_router.include_router(notification_router)

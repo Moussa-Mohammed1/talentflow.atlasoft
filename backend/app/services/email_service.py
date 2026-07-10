@@ -86,3 +86,66 @@ class EmailService:
 
         fm = FastMail(conf)
         await fm.send_message(message)
+
+    @staticmethod
+    async def send_otp_email(to: str, otp_code: str):
+        html = f"""
+            <h2 style="color: #2563eb; margin-bottom: 20px;">
+                Réinitialisation de votre mot de passe
+            </h2>
+
+            <p>
+                Bonjour,
+            </p>
+
+            <p>
+                Vous avez demandé la réinitialisation de votre mot de passe sur <strong>TalentFlow</strong>.
+            </p>
+
+            <p>
+                Voici votre code de vérification à usage unique (OTP) :
+            </p>
+
+            <p style="margin: 30px 0; text-align: center;">
+                <span
+                    style="
+                        background-color: #f3f4f6;
+                        color: #1e3a8a;
+                        padding: 16px 32px;
+                        font-size: 32px;
+                        font-weight: bold;
+                        letter-spacing: 8px;
+                        border-radius: 8px;
+                        display: inline-block;
+                        font-family: monospace;
+                    "
+                >
+                    {otp_code}
+                </span>
+            </p>
+
+            <p>
+                Ce code est valable pendant <strong>15 minutes</strong>. Ne le partagez avec personne.
+            </p>
+
+            <p>
+                Si vous n'êtes pas à l'origine de cette demande, veuillez ignorer cet e-mail.
+            </p>
+
+            <hr style="margin: 25px 0; border: 0; border-top: 1px solid #e5e7eb;">
+
+            <p>
+                Cordialement,<br>
+                <strong>L'équipe TalentFlow</strong>
+            </p>
+        """
+
+        message = MessageSchema(
+            subject="Code de réinitialisation - TalentFlow",
+            recipients=[to],
+            body=html,
+            subtype=MessageType.html,
+        )
+
+        fm = FastMail(conf)
+        await fm.send_message(message)

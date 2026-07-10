@@ -1,6 +1,8 @@
 import secrets
 import os
 import uuid
+import random
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -13,6 +15,7 @@ from app.core.security import (
     create_access_token,
     hash_password,
 )
+from app.services.email_service import EmailService
 
 AVATAR_DIR = Path("storage/avatars")
 
@@ -123,6 +126,41 @@ class AuthService:
             "must_change_password":
                 user.must_change_password
         }
+
+    @staticmethod
+    async def forgot_password(db: Session, email: str):
+        user = db.query(User).filter(User.email == email).first()
+        if user:
+            otp_code = str(random.randint(100000, 999999))
+            user.reset_code = otp_code
+            user.reset_code_expires_at = datetime.utcnow() + timedelta(minutes=15)
+            db.commit()
+            await EmailService.send_otp_email(to=email, otp_code=otp_code)
+
+        return {"message": "Si l'adresse email existe, un code de réinitialisation vous a été envoyé."}
+
+    @staticmethod
+    def reset_password(db: Session, email: str, otp_code: str, new_password: str):
+        user = db.query(User).filter(User.email == email).first()
+        if not user or not user.reset_code or user.reset_code != otp_code:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Code de vérification invalide ou expiré."
+            )
+
+        if not user.reset_code_expires_at or user.reset_code_expires_at < datetime.utcnow():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Code de vérification expiré. Veuillez refaire une demande."
+            )
+
+        user.hashed_password = hash_password(new_password)
+        user.reset_code = None
+        user.reset_code_expires_at = None
+        user.must_change_password = False
+        db.commit()
+
+        return {"message": "Mot de passe réinitialisé avec succès."}
 
     @staticmethod
     def handle_linkedin_user(

@@ -14,7 +14,7 @@ from app.models.llm_usage import LLMUsage
 from app.models.invitation import Invitation
 from app.repositories.candidat_repository import CandidatRepository
 from app.core.security import get_current_user, create_access_token
-from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest, UserStatsResponse, LLMUsageByAction
+from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest, UserStatsResponse, LLMUsageByAction, ForgotPasswordRequest, ResetPasswordRequest
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
@@ -73,6 +73,30 @@ def login(
 #         email=form_data.username,  
 #         password=form_data.password,
 #     )
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    payload: ForgotPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    return await AuthService.forgot_password(
+        db=db,
+        email=payload.email,
+    )
+
+
+@router.post("/reset-password")
+def reset_password(
+    payload: ResetPasswordRequest,
+    db: Session = Depends(get_db),
+):
+    return AuthService.reset_password(
+        db=db,
+        email=payload.email,
+        otp_code=payload.otp_code,
+        new_password=payload.new_password,
+    )
 
 
 @router.post("/invite")

@@ -38,6 +38,14 @@ export const AuthService = {
             useAuthStore.getState().logout();
         }
     },
+    forgotPassword: async (email: string) => {
+        const response = await api.post("/auth/forgot-password", { email });
+        return response.data;
+    },
+    resetPassword: async (email: string, otp_code: string, new_password: string) => {
+        const response = await api.post("/auth/reset-password", { email, otp_code, new_password });
+        return response.data;
+    },
     deleteAccount: async () => {
         const response = await api.delete("/auth/me");
         return response.data;

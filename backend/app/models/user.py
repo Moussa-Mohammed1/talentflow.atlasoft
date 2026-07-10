@@ -88,6 +88,16 @@ class User(Base):
         default=True
     )
 
+    reset_code = Column(
+        String,
+        nullable=True
+    )
+
+    reset_code_expires_at = Column(
+        DateTime,
+        nullable=True
+    )
+
     created_at = Column(
         DateTime,
         default=datetime.utcnow

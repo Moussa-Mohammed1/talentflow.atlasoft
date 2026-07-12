@@ -34,6 +34,7 @@ from app.services.resume.experience_service import ResumeExperienceService
 from app.services.resume.language_service import ResumeLanguageService
 from app.services.resume.education_service import ResumeEducationService
 from app.services.resume.certification_service import ResumeCertificationService
+from app.services.resume.skill_service import ResumeSkillService
 from app.services.resume.upload_service import ResumeUploadService
 from app.services.resume.preview_service import ResumePreviewService
 from app.services.resume.update_service import ResumeUpdateService
@@ -90,6 +91,43 @@ def reanalyze_identity(
     current_user: User = Depends(get_current_user),
 ):
     return ResumeIdentityService.reanalyze(db=db, recruiter_id=current_user.id, background_tasks=background_tasks, resume_id=resume_id)
+
+
+@router.post("/{resume_id}/reanalyze-competences", status_code=status.HTTP_200_OK)
+def reanalyze_competences(
+    resume_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeSkillService.reanalyze(db=db, recruiter_id=current_user.id, resume_id=resume_id)
+
+
+@router.post("/{resume_id}/reanalyze-experiences", response_model=ResumeExperienceRead, status_code=status.HTTP_200_OK)
+def reanalyze_experiences(
+    resume_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeExperienceService.reanalyze(db=db, recruiter_id=current_user.id, resume_id=resume_id)
+
+
+@router.post("/{resume_id}/reanalyze-educations", response_model=ResumeEducationRead, status_code=status.HTTP_200_OK)
+def reanalyze_educations(
+    resume_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeEducationService.reanalyze(db=db, recruiter_id=current_user.id, resume_id=resume_id)
+
+
+@router.post("/{resume_id}/reanalyze-languages", response_model=ResumeLanguageRead, status_code=status.HTTP_200_OK)
+def reanalyze_languages(
+    resume_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeLanguageService.reanalyze(db=db, recruiter_id=current_user.id, background_tasks=background_tasks, resume_id=resume_id)
 
 
 @router.post("/experience", response_model=ResumeExperienceRead, status_code=status.HTTP_200_OK)

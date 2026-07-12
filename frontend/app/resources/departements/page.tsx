@@ -516,7 +516,7 @@ function DepartmentDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/30 backdrop-blur-xs p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl"
+        className="w-full max-w-lg overflow-x-hidden  border border-gray-200/80 bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
@@ -547,7 +547,7 @@ function DepartmentDetailModal({
           {department.required_skills && department.required_skills.length > 0 && (
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Compétences requises</label>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 h-80 overflow-y-scroll">
                 {department.required_skills.map((skill) => (
                   <span
                     key={skill}

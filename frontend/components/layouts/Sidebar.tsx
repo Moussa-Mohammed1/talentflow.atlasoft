@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 import {
     Menu,
     X,
-    ChevronRight,
-    ChevronLeft,
+    ChevronRight, 
     Home,
     Briefcase, 
     Users,
@@ -15,12 +14,11 @@ import {
     Building2,
     FolderOpen,
     MailPlus,
-    LampDesk,
-    HelpingHand,
-    HelpingHandIcon,
-    Info,
+    LampDesk, 
+    PanelLeftClose, 
     Shield,
-    BadgeQuestionMarkIcon,
+    BadgeQuestionMarkIcon, 
+    PanelLeft,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -188,9 +186,9 @@ export default function Sidebar() {
                   `}
                 >
                   {collapsed ? (
-                    <ChevronRight size={18} />
+                    <PanelLeft size={18} />
                   ) : (
-                    <ChevronLeft size={18} />
+                    <PanelLeftClose size={18} />
                   )}
                 </button>
               </div>

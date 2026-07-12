@@ -148,6 +148,26 @@ export async function updateCertification(certificationId: number, data: UpdateC
   return response.data;
 }
 
+export async function reanalyzeCompetences(resumeId: number) {
+  const response = await api.post(`/resumes/${resumeId}/reanalyze-competences`);
+  return response.data;
+}
+
+export async function reanalyzeExperiences(resumeId: number) {
+  const response = await api.post(`/resumes/${resumeId}/reanalyze-experiences`);
+  return response.data;
+}
+
+export async function reanalyzeEducations(resumeId: number) {
+  const response = await api.post(`/resumes/${resumeId}/reanalyze-educations`);
+  return response.data;
+}
+
+export async function reanalyzeLanguages(resumeId: number) {
+  const response = await api.post(`/resumes/${resumeId}/reanalyze-languages`);
+  return response.data;
+}
+
 export async function deleteResume(resumeId: number) {
   const response = await api.delete(`/resumes/${resumeId}`);
   return response.data;

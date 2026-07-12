@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import api from "@/lib/axios";
 import { useToast } from "@/hooks/useToast";
-import { reanalyzeIdentity, reanalyzeAll, updateCandidat, updateExperience, updateEducation, updateCertification, deleteResume } from "@/services/resume.service";
+import { reanalyzeIdentity, reanalyzeAll, reanalyzeCompetences, reanalyzeExperiences, reanalyzeEducations, reanalyzeLanguages, updateCandidat, updateExperience, updateEducation, updateCertification, deleteResume } from "@/services/resume.service";
 import { useAuthStore } from "@/stores/auth.store";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
@@ -90,6 +90,7 @@ interface DocumentResumeInfosProps {
   onClose: () => void;
   data?: ResumeDetails | null;
   onDeleted?: () => void;
+  onRefresh?: () => void;
 }
 
 function EditableField({ value, onSave, placeholder = "", inputClassName = "", readOnly = false }: { value: string; onSave: (val: string) => Promise<void>; placeholder?: string; inputClassName?: string; readOnly?: boolean }) {
@@ -205,7 +206,7 @@ function EditableTextArea({ value, onSave, placeholder = "", readOnly = false }:
   );
 }
 
-export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }: DocumentResumeInfosProps) {
+export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted, onRefresh }: DocumentResumeInfosProps) {
   if (!isOpen) return null;
   if (!data) return null;
   
@@ -246,6 +247,10 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
   const menuRef = useRef<HTMLDivElement>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [reanalyzingAll, setReanalyzingAll] = useState(false);
+  const [reanalyzingCompetences, setReanalyzingCompetences] = useState(false);
+  const [reanalyzingExperiences, setReanalyzingExperiences] = useState(false);
+  const [reanalyzingEducations, setReanalyzingEducations] = useState(false);
+  const [reanalyzingLanguages, setReanalyzingLanguages] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
   const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL
   useEffect(() => {
@@ -284,6 +289,62 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
       toast.error("Erreur lors du lancement de la réanalyse complète.");
     } finally {
       setReanalyzingAll(false);
+    }
+  };
+
+  const handleReanalyzeCompetences = async () => {
+    if (!data.resume_id) return;
+    setReanalyzingCompetences(true);
+    try {
+      toast.success("Réanalyse des compétences lancée.");
+      await reanalyzeCompetences(data.resume_id);
+      toast.success("Compétences réanalysées avec succès.");
+    } catch {
+      toast.error("Erreur lors de la réanalyse des compétences.");
+    } finally {
+      setReanalyzingCompetences(false);
+    }
+  };
+
+  const handleReanalyzeExperiences = async () => {
+    if (!data.resume_id) return;
+    setReanalyzingExperiences(true);
+    try {
+      toast.success("Réanalyse des expériences lancée.");
+      await reanalyzeExperiences(data.resume_id);
+      toast.success("Expériences réanalysées avec succès.");
+    } catch {
+      toast.error("Erreur lors de la réanalyse des expériences.");
+    } finally {
+      setReanalyzingExperiences(false);
+    }
+  };
+
+  const handleReanalyzeEducations = async () => {
+    if (!data.resume_id) return;
+    setReanalyzingEducations(true);
+    try {
+      toast.success("Réanalyse des formations lancée.");
+      await reanalyzeEducations(data.resume_id);
+      toast.success("Formations réanalysées avec succès.");
+    } catch {
+      toast.error("Erreur lors de la réanalyse des formations.");
+    } finally {
+      setReanalyzingEducations(false);
+    }
+  };
+
+  const handleReanalyzeLanguages = async () => {
+    if (!data.resume_id) return;
+    setReanalyzingLanguages(true);
+    try {
+      toast.success("Réanalyse des langues lancée.");
+      await reanalyzeLanguages(data.resume_id);
+      toast.success("Langues réanalysées avec succès.");
+    } catch {
+      toast.error("Erreur lors de la réanalyse des langues.");
+    } finally {
+      setReanalyzingLanguages(false);
     }
   };
 
@@ -346,7 +407,7 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
         onConfirm={handleDeleteConfirm}
         fileName={data.candidat?.fullname || "CV"}
       />
-      <div className="bg-white shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 mm">
+      <div className="bg-white shadow-xl w-full max-w-8xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-100 mm">
         
         <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
           <div className="flex items-center gap-2">
@@ -647,7 +708,7 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-2">
+        <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex flex-col sm:flex-row justify-end gap-1 w-full">
           
           {isOwner && (
             <button
@@ -656,6 +717,50 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted }
             >
               <RefreshCw size={13} />
               <span>Réanalyser l'identité</span>
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleReanalyzeCompetences}
+              disabled={reanalyzingCompetences}
+              className="text-black bg-white border border-black px-4 py-2  text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={13} className={reanalyzingCompetences ? "animate-spin" : ""} />
+              <span>{reanalyzingCompetences ? "Réanalyse en cours..." : "Réanalyser compétences"}</span>
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleReanalyzeExperiences}
+              disabled={reanalyzingExperiences}
+              className="text-black bg-white border border-black px-4 py-2  text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={13} className={reanalyzingExperiences ? "animate-spin" : ""} />
+              <span>{reanalyzingExperiences ? "Réanalyse en cours..." : "Réanalyser expériences"}</span>
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleReanalyzeEducations}
+              disabled={reanalyzingEducations}
+              className="text-black bg-white border border-black px-4 py-2  text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={13} className={reanalyzingEducations ? "animate-spin" : ""} />
+              <span>{reanalyzingEducations ? "Réanalyse en cours..." : "Réanalyser formations"}</span>
+            </button>
+          )}
+
+          {isOwner && (
+            <button
+              onClick={handleReanalyzeLanguages}
+              disabled={reanalyzingLanguages}
+              className="text-black bg-white border border-black px-4 py-2  text-xs font-medium hover:bg-slate-50 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw size={13} className={reanalyzingLanguages ? "animate-spin" : ""} />
+              <span>{reanalyzingLanguages ? "Réanalyse en cours..." : "Réanalyser langues"}</span>
             </button>
           )}
 

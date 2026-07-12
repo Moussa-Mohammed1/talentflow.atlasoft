@@ -46,8 +46,8 @@ export default function Sidebar() {
       { icon: <Building2 size={16} />, label: "Resources", href: "/resources" },
       { icon: <FolderOpen size={16} />, label: "Documents", href: "/documents" },
       { icon: <CheckSquare size={16} />, label: "Évaluations", href: "/evaluations" },
-      { icon: <Users size={16} />, label: "Talents", href: "/talents" },
       { icon: <Briefcase size={16} />, label: "Offre d'emploi", href: "/jobs" },
+      { icon: <Users size={16} />, label: "Talents", href: "/talents" },
       { icon: <LampDesk size={16} />, label: "Recruter", href: "/recruitments" },
       { icon: <BadgeQuestionMarkIcon size={16} />, label: "Aide", href: "/help" },
     ];

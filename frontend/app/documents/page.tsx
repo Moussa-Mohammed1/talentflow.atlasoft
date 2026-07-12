@@ -46,6 +46,16 @@ export default function DocumentsPage() {
     }
   }, []);
 
+  const handleRefreshDetails = useCallback(async () => {
+    if (!selectedDetails?.resume_id) return;
+    try {
+      const details = await getResumeDetails(String(selectedDetails.resume_id));
+      setSelectedDetails(details || { resume_id: selectedDetails.resume_id, recruiter_id: 0, recruiter_name: "", candidat: null, experiences: null, educations: null, certifications: null, skills: null, languages: null });
+    } catch {
+      // keep existing data on error
+    }
+  }, [selectedDetails?.resume_id]);
+
   const loadDocuments = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -235,6 +245,7 @@ export default function DocumentsPage() {
             setSelectedDetails(null);
           }}
           data={selectedDetails}
+          onRefresh={handleRefreshDetails}
           onDeleted={() => {
             loadDocuments();
           }}

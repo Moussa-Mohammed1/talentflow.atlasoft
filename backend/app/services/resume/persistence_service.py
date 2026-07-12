@@ -62,6 +62,17 @@ class PersistenceService:
         return CandidatRepository.get_by_resume_id(db, resume_id)
 
     @staticmethod
+    def persist_skills(
+        db: Session,
+        candidat_id: int,
+        analysis: ResumeSkillAnalysisRead,
+    ) -> int:
+        stored = SkillRepository.replace_for_candidate(
+            db, candidat_id=candidat_id, skills=analysis.technologies + analysis.competencies,
+        )
+        return len(stored)
+
+    @staticmethod
     def persist_experiences(
         db: Session,
         candidat_id: int,

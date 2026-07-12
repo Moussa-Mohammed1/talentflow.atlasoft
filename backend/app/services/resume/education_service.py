@@ -20,6 +20,46 @@ class ResumeEducationService:
     """Handles education extraction from resumes."""
 
     @staticmethod
+    def reanalyze(
+        db: Session,
+        recruiter_id: int,
+        resume_id: int,
+    ) -> ResumeEducationRead:
+        resume = ResumeLoader.detail(db, resume_id, recruiter_id)
+        jm = JobManager(db, recruiter_id)
+        job_id = jm.create(JobType.EDUCATION_EXTRACTION, Path(resume.path).name, "Ré-extraction des formations du CV")
+
+        try:
+            jm.start(job_id, "Ré-extraction des formations du CV")
+            resume_path = str(ResumeLoader.resolve_path(resume.path))
+            raw_text = TextExtractionService().extract(resume_path)
+            extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
+            count = len(extracted.get("educations", []))
+            jm.complete(job_id, f"{count} formation(s) trouvée(s)")
+        except UnsupportedFileTypeError as e:
+            jm.fail(job_id, f"Échec de la ré-extraction des formations : {str(e)}")
+            raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
+        except Exception:
+            jm.fail(job_id, "Une erreur inattendue s'est produite lors de la ré-extraction des formations")
+            raise
+
+        analysis = ResumeEducationAnalysisRead.model_validate({
+            "sections": extracted.get("sections", []),
+            "educations": extracted.get("educations", []),
+            "stats": extracted.get("stats", {}),
+        })
+
+        candidat = CandidatRepository.get_by_resume_id(db, resume.id)
+        if candidat is not None:
+            persisted = PersistenceService.persist_educations(db, candidat.id, analysis)
+            analysis.stats["persisted_count"] = persisted
+        else:
+            analysis.stats["persisted_count"] = 0
+            analysis.stats["persistence_reason"] = "candidate_identity_not_extracted"
+
+        return ResumeEducationRead(raw_text=raw_text, analysis=analysis)
+
+    @staticmethod
     def extract(
         db: Session,
         recruiter_id: int,
@@ -39,6 +79,9 @@ class ResumeEducationService:
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de l'extraction des formations : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
+        except Exception:
+            jm.fail(job_id, "Une erreur inattendue s'est produite lors de l'extraction des formations")
+            raise
 
         analysis = ResumeEducationAnalysisRead.model_validate({
             "sections": extracted.get("sections", []),

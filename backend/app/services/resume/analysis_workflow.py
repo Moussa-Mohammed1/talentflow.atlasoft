@@ -153,6 +153,16 @@ class ResumeAnalysisWorkflow:
             certifications=self._certification_analysis,
         )
 
+    def _fail_all_jobs(self, reason: str = "L'analyse a échoué"):
+        if self._jobs is None:
+            return
+        jm = JobManager(self.db, self.recruiter_id)
+        for job_id in (self._jobs.skill_id, self._jobs.experience_id, self._jobs.language_id, self._jobs.education_id, self._jobs.certification_id):
+            try:
+                jm.fail(job_id, reason)
+            except Exception:
+                logger.exception("Failed to mark job %s as failed", job_id)
+
     def _build_response(self) -> ResumeAnalysisRead:
         if self._persistence_stats:
             self._experience_analysis.stats.update(self._persistence_stats)
@@ -181,17 +191,20 @@ class ResumeAnalysisWorkflow:
             )
             return self._build_response()
         except UnsupportedFileTypeError as e:
+            self._fail_all_jobs(str(e))
             NotificationHelper.notify_analysis_failed(
                 self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason=str(e),
             )
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
         except HTTPException:
+            self._fail_all_jobs()
             NotificationHelper.notify_analysis_failed(
                 self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="L'analyse a échoué",
             )
             raise
         except Exception:
             logger.exception("Resume analysis failed for resume %s", getattr(self._resume, "id", "unknown"))
+            self._fail_all_jobs("Une erreur de traitement inattendue s'est produite.")
             NotificationHelper.notify_analysis_failed(
                 self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename, reason="Une erreur de traitement inattendue s'est produite.",
             )

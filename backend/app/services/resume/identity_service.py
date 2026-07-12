@@ -37,7 +37,7 @@ class ResumeIdentityService:
         job_id = jm.create(JobType.IDENTITY_EXTRACTION, resume.path, "Extraction de l'identité du candidat")
 
         try:
-            
+            jm.start(job_id, "Extraction de l'identité du candidat")
             resume_full_path = ResumeLoader.resolve_path(resume.path)
             text = TextExtractionService().extract(str(resume_full_path))
             identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
@@ -45,6 +45,9 @@ class ResumeIdentityService:
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de l'extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
+        except Exception:
+            jm.fail(job_id, "Une erreur inattendue s'est produite lors de l'extraction d'identité")
+            raise
 
         validated = ResumeIdentityRead.model_validate(identity)
         email = (validated.email.value or "").strip()
@@ -95,6 +98,9 @@ class ResumeIdentityService:
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de la ré-extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
+        except Exception:
+            jm.fail(job_id, "Une erreur inattendue s'est produite lors de la ré-extraction d'identité")
+            raise
 
         validated = ResumeIdentityRead.model_validate(identity)
         email = (validated.email.value or "").strip()

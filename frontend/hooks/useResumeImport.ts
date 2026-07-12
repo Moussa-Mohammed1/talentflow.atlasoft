@@ -114,7 +114,7 @@ export function useResumeImport() {
         setTimeout(resolve, 2000)
       );
       setStatus("analyzing");
-
+      toast.success("L'analyse commencé")
       const analyzeResponse = await api.post<ResumeFullAnalysisResult>(
         "/resumes/analyze",
         {

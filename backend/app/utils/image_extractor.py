@@ -31,32 +31,36 @@ class ExtractedImage:
 def extract_images_from_pdf(file_path: Path) -> list[ExtractedImage]:
     """Extract all embedded images from a PDF using PyMuPDF."""
     images: list[ExtractedImage] = []
+    doc = None
     try:
         doc = fitz.open(str(file_path))
     except Exception as e:
         logger.warning("Failed to open PDF %s: %s", file_path, e)
         return images
 
-    for page_num in range(len(doc)):
-        page = doc.load_page(page_num)
-        image_list = page.get_images(full=True)
-        for img_idx, img in enumerate(image_list):
-            try:
-                xref = img[0]
-                base_image = doc.extract_image(xref)
-                img_bytes = base_image["image"]
-                pil_image = Image.open(BytesIO(img_bytes)).convert("RGBA")
-                images.append(
-                    ExtractedImage(
-                        pil_image=pil_image,
-                        source_index=len(images),
-                        page_number=page_num + 1,
-                        source_type="embedded",
+    try:
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
+            image_list = page.get_images(full=True)
+            for img_idx, img in enumerate(image_list):
+                try:
+                    xref = img[0]
+                    base_image = doc.extract_image(xref)
+                    img_bytes = base_image["image"]
+                    pil_image = Image.open(BytesIO(img_bytes)).convert("RGBA")
+                    images.append(
+                        ExtractedImage(
+                            pil_image=pil_image,
+                            source_index=len(images),
+                            page_number=page_num + 1,
+                            source_type="embedded",
+                        )
                     )
-                )
-            except Exception as e:
-                logger.debug("Failed to extract image xref %s on page %s: %s", img[0], page_num + 1, e)
-    doc.close()
+                except Exception as e:
+                    logger.debug("Failed to extract image xref %s on page %s: %s", img[0], page_num + 1, e)
+    finally:
+        if doc is not None:
+            doc.close()
     logger.info("Extracted %d embedded images from PDF", len(images))
     return images
 

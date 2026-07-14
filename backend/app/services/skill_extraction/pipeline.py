@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib.util
+import threading
 from collections import defaultdict
 
 
@@ -11,6 +13,9 @@ from app.services.skill_extraction.models import SectionSpan, SkillExtractionRes
 from app.services.skill_extraction.ontology import SkillOntology
 from app.services.skill_extraction.scorer import SkillScorer
 from app.services.skill_extraction.section_analyzer import ResumeSectionAnalyzer
+
+_ST_CACHE = None  # None=untried, False=failed, Class=success
+_ST_LOCK = threading.Lock()
 
 
 class ResumeSkillExtractionPipeline:
@@ -167,11 +172,45 @@ class ResumeSkillExtractionPipeline:
 
         return reviewed, stats
 
+    @staticmethod
+    def _import_sentence_transformer():
+        global _ST_CACHE
+        from app.services.skill_extraction import ontology as _ontology
+
+        # Sync with ontology module's cache
+        if _ontology._SENTENCE_TRANSFORMER_CACHE is not None and _ST_CACHE is None:
+            _ST_CACHE = _ontology._SENTENCE_TRANSFORMER_CACHE
+        if _ST_CACHE is not None:
+            return _ST_CACHE if _ST_CACHE else None
+
+        with _ST_LOCK:
+            if _ST_CACHE is not None:
+                return _ST_CACHE if _ST_CACHE else None
+            if _ontology._SENTENCE_TRANSFORMER_CACHE is not None:
+                _ST_CACHE = _ontology._SENTENCE_TRANSFORMER_CACHE
+                return _ST_CACHE if _ST_CACHE else None
+
+            spec = importlib.util.find_spec("sentence_transformers")
+            if spec is None:
+                _ST_CACHE = False
+                _ontology._SENTENCE_TRANSFORMER_CACHE = False
+                return None
+
+            result = []
+            thread = threading.Thread(target=lambda: result.append(__import__("sentence_transformers", fromlist=["SentenceTransformer"]).SentenceTransformer))
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=30)
+            if thread.is_alive():
+                _ST_CACHE = False
+                _ontology._SENTENCE_TRANSFORMER_CACHE = False
+                return None
+            _ST_CACHE = result[0] if result else False
+            _ontology._SENTENCE_TRANSFORMER_CACHE = _ST_CACHE
+            return _ST_CACHE if _ST_CACHE else None
+
     def analyze(self, text: str) -> SkillExtractionResult:
-        try:
-            from sentence_transformers import SentenceTransformer
-        except Exception:
-            SentenceTransformer = None
+        SentenceTransformer = self._import_sentence_transformer()
 
         if not text or not text.strip():
             empty_stats = {"candidate_count": 0, "skill_count": 0, "model_available": False}

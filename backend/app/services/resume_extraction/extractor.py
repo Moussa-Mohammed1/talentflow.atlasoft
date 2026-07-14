@@ -45,15 +45,17 @@ class TextExtractionService:
         return text
 
     def _extract_pdf_pymupdf(self, file_path: str) -> str:
-        text= ""
+        text = ""
+        doc = None
         try:
             doc = fitz.open(file_path)
-
             for page in doc:
                 text += page.get_text()
-            doc.close()
         except Exception as e:
             raise Exception(f"PDF extraction failed: {str(e)}")
+        finally:
+            if doc is not None:
+                doc.close()
         return text
         
 

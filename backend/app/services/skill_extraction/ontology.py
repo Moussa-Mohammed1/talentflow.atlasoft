@@ -1,3 +1,5 @@
+import importlib.util
+import threading
 import unicodedata
 
 from sklearn.metrics.pairwise import cosine_similarity
@@ -5,6 +7,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from app.services.skill_extraction.concepts import CONCEPTS
 from app.services.skill_extraction.constants import DOMAIN_HINTS
 from app.services.skill_extraction.models import SkillConcept
+
+_SENTENCE_TRANSFORMER_CACHE = None  # None=untried, False=failed, Class=success
+_SENTENCE_TRANSFORMER_LOCK = threading.Lock()
 
 class SkillOntology:
     def __init__(self) -> None:
@@ -155,12 +160,48 @@ class SkillOntology:
             return "Technology"
         return None
 
+    @staticmethod
+    def _import_sentence_transformer():
+        global _SENTENCE_TRANSFORMER_CACHE
+        from app.services.skill_extraction import pipeline as _pipeline
+
+        # Sync with pipeline module's cache
+        if _pipeline._ST_CACHE is not None and _SENTENCE_TRANSFORMER_CACHE is None:
+            _SENTENCE_TRANSFORMER_CACHE = _pipeline._ST_CACHE
+        if _SENTENCE_TRANSFORMER_CACHE is not None:
+            return _SENTENCE_TRANSFORMER_CACHE if _SENTENCE_TRANSFORMER_CACHE else None
+
+        with _SENTENCE_TRANSFORMER_LOCK:
+            if _SENTENCE_TRANSFORMER_CACHE is not None:
+                return _SENTENCE_TRANSFORMER_CACHE if _SENTENCE_TRANSFORMER_CACHE else None
+            if _pipeline._ST_CACHE is not None:
+                _SENTENCE_TRANSFORMER_CACHE = _pipeline._ST_CACHE
+                return _SENTENCE_TRANSFORMER_CACHE if _SENTENCE_TRANSFORMER_CACHE else None
+
+            spec = importlib.util.find_spec("sentence_transformers")
+            if spec is None:
+                _SENTENCE_TRANSFORMER_CACHE = False
+                _pipeline._ST_CACHE = False
+                return None
+
+            result = []
+            thread = threading.Thread(target=lambda: result.append(__import__("sentence_transformers", fromlist=["SentenceTransformer"]).SentenceTransformer))
+            thread.daemon = True
+            thread.start()
+            thread.join(timeout=30)
+            if thread.is_alive():
+                _SENTENCE_TRANSFORMER_CACHE = False
+                _pipeline._ST_CACHE = False
+                return None
+            _SENTENCE_TRANSFORMER_CACHE = result[0] if result else False
+            _pipeline._ST_CACHE = _SENTENCE_TRANSFORMER_CACHE
+            return _SENTENCE_TRANSFORMER_CACHE if _SENTENCE_TRANSFORMER_CACHE else None
+
     def ensure_embeddings(self) -> None:
         if self._embedding_model is not None:
             return
-        try:
-            from sentence_transformers import SentenceTransformer
-        except Exception:
+        SentenceTransformer = self._import_sentence_transformer()
+        if SentenceTransformer is None:
             return
         try:
             self._embedding_model = SentenceTransformer(

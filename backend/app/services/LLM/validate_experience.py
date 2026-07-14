@@ -101,7 +101,7 @@ class LLMService:
         }
         return (
             "You verify professional experience extracted from a French or English resume.\n"
-            "Professional experience means paid employment or internships at companies/organizations.\n"
+            "Professional experience means employment or internships at companies/organizations.\n"
             "Review every candidate exactly once using its candidate_index.\n"
             "Then scan the professional experience section for missing employment records.\n"
             "For each missing record, add one item with candidate_index set to null and action corrected.\n"

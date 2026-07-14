@@ -781,8 +781,8 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted, 
               disabled={evaluating || !data.candidat?.id}
               className="bg-emerald-600 text-white px-4 py-2  text-xs font-bold hover:bg-emerald-700 transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle size={14} className={evaluating ? "animate-pulse" : ""} />
-              <span>{evaluating ? "Évaluation en cours..." : "Évaluer"}</span>
+              <CheckCircle size={14} className={evaluating ? "" : ""} />
+              <span>{evaluating ? "Évaluation..." : "Évaluer"}</span>
             </button>
           )}
 

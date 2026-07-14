@@ -15,10 +15,10 @@ import {
     FolderOpen,
     MailPlus,
     LampDesk, 
-    PanelLeftClose, 
-    Shield,
+    PanelLeftClose,
     BadgeQuestionMarkIcon, 
     PanelLeft,
+    Settings,
 } from "lucide-react";
 import { useModal } from "@/context/ModalContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -51,7 +51,7 @@ export default function Sidebar() {
     ];
 
     const adminItems = [
-      { icon: <Shield size={16} />, label: "Utilisateurs", href: "/admin" },
+      { icon: <Users size={16} />, label: "Utilisateurs", href: "/admin" },
       { icon: <MailPlus size={16} />, label: "Inviter", href: "/invitations" },
     ];
 
@@ -240,7 +240,7 @@ export default function Sidebar() {
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <Shield size={16} />
+                        <Settings size={16} />
                         <span
                           className={`
                             whitespace-nowrap cursor-pointer

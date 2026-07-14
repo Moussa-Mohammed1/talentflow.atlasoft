@@ -114,7 +114,7 @@ export default function EvaluationDetailModal({
           {loading ? (
             <div className="flex items-center justify-center py-12 text-slate-400">
               <Loader2 size={24} className="animate-spin mr-2" />
-              <span className="text-sm">Évaluation en cours...</span>
+              <span className="text-sm">Évaluation...</span>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">

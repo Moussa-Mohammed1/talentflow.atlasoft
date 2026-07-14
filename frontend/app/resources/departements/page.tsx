@@ -547,7 +547,7 @@ function DepartmentDetailModal({
           {department.required_skills && department.required_skills.length > 0 && (
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1.5">Compétences requises</label>
-              <div className="flex flex-wrap gap-1.5 h-80 overflow-y-scroll">
+              <div className="flex flex-wrap gap-1.5 max-h-80 overflow-y-scroll [scrollbar-width:none]">
                 {department.required_skills.map((skill) => (
                   <span
                     key={skill}

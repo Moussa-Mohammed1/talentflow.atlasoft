@@ -25,4 +25,5 @@ class EvaluationResult(Base):
     requirements = Column(JSON, nullable=False, default=list)
     missing_experiences = Column(JSON, nullable=False, default=list)
     candidate_extra_experiences = Column(JSON, nullable=False, default=list)
+    breakdown = Column(JSON, nullable=True, default=None)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

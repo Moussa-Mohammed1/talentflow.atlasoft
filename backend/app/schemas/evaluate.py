@@ -13,6 +13,23 @@ class RequirementScore(BaseModel):
     matched: bool
 
 
+class ScoreBreakdown(BaseModel):
+    skills_score: float
+    experience_score: float
+    education_score: float
+    certifications_score: float
+    languages_score: float
+    preferred_skills_score: float
+    total: float
+
+    skills_weight: float = 0.40
+    experience_weight: float = 0.25
+    education_weight: float = 0.15
+    certifications_weight: float = 0.05
+    languages_weight: float = 0.05
+    preferred_skills_weight: float = 0.10
+
+
 class DepartmentEvaluation(BaseModel):
     department_id: int
     department_name: str
@@ -20,6 +37,7 @@ class DepartmentEvaluation(BaseModel):
     requirements: list[RequirementScore]
     missing_experiences: list[str]
     candidate_extra_experiences: list[str]
+    breakdown: ScoreBreakdown | None = None
 
 
 class EvaluateResponse(BaseModel):

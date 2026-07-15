@@ -27,12 +27,18 @@ class LLMService:
         return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
 
     @classmethod
-    def validate(cls, file_path: str, evaluations: list[dict[str, Any]],
-                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
+    def finalize(
+        cls,
+        file_path: str,
+        candidate_info: dict[str, Any],
+        evaluations: list[dict[str, Any]],
+        db: Session | None = None,
+        recruiter_id: int | None = None,
+    ) -> dict[str, Any]:
         with open(file_path, "r", encoding="utf-8", errors="replace") as f:
             resume_text = f.read()
-        prompt = cls._build_evaluation_review_prompt(resume_text, evaluations)
-        print("calling deepseek...", flush=True)
+        prompt = cls._build_finalize_prompt(resume_text, candidate_info, evaluations)
+        print("calling deepseek (final scorer)...", flush=True)
         start = datetime.utcnow()
         response = cls._client().chat.completions.create(
             model=cls.model(),
@@ -50,7 +56,7 @@ class LLMService:
                 record_llm_usage(
                     db=db,
                     recruiter_id=recruiter_id,
-                    action="evaluation_validation",
+                    action="evaluation_finalize",
                     model=cls.model(),
                     tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
                     tokens_completion=response.usage.completion_tokens if response.usage else 0,
@@ -61,61 +67,78 @@ class LLMService:
         return cls._parse_json_response(content)
 
     @staticmethod
-    def _build_evaluation_review_prompt(text: str, evaluations: list[dict[str, Any]]) -> str:
-        serialized = json.dumps(evaluations, ensure_ascii=False, indent=2)
+    def _build_finalize_prompt(
+        text: str,
+        candidate_info: dict[str, Any],
+        evaluations: list[dict[str, Any]],
+    ) -> str:
+        candidate_json = json.dumps(candidate_info, ensure_ascii=False, indent=2)
+        evals_json = json.dumps(evaluations, ensure_ascii=False, indent=2)
+
         schema = {
             "evaluations": [
                 {
-                    "department_name": "department name",
-                    "compatibility": 0.0,
-                    "reason": "brief explanation for any correction or confirmation",
-                    "requirements": [
-                        {
-                            "experience": "skill name",
-                            "required_years": 0,
-                            "candidate_years": 0.0,
-                            "score": 0.0,
-                            "matched": True,
-                        }
-                    ],
-                    "missing_experiences": ["skill1", "skill2"],
-                    "candidate_extra_experiences": ["skill3", "skill4"],
-                }
+                    "department_name": "IT",
+                    "compatibility": 72.5,
+                    "reason": "...",
+                    "skills_score": 80.0,
+                    "experience_score": 100.0,
+                    "education_score": 100.0,
+                    "certifications_score": 0.0,
+                    "languages_score": 66.67,
+                    "preferred_skills_score": 60.0,
+                },
+                {
+                    "department_name": "RH",
+                    "compatibility": 5.0,
+                    "reason": "...",
+                    "skills_score": 0.0,
+                    "experience_score": 0.0,
+                    "education_score": 0.0,
+                    "certifications_score": 0.0,
+                    "languages_score": 100.0,
+                    "preferred_skills_score": 0.0,
+                },
             ]
         }
-        return (
-            "You are an expert ATS evaluator reviewing department-level candidate evaluations.\n"
-            "Your task is to validate and correct the computed evaluations based on the actual resume.\n\n"
 
-            "For each department evaluation:\n"
-            "1. Verify that the compatibility score reflects the candidate's actual skills and experience.\n"
-            "2. For each requirement, check if the candidate truly has that skill/experience in the resume.\n"
-            "3. Correct the candidate_years and score if they don't match the resume.\n"
-            "4. Update matched to true only if the resume explicitly shows that experience.\n"
-            "5. Fix missing_experiences: remove skills the candidate actually has, add truly missing ones.\n"
-            "6. Fix candidate_extra_experiences: keep only skills genuinely found in the resume.\n\n"
+        return (
+            "You are a senior ATS evaluator. Your task is to produce the FINAL compatibility score "
+            "for EACH department below. You MUST evaluate EVERY department — do not skip any.\n\n"
+
+            "Do NOT simply copy the computed scores. Use your judgment to decide whether they are fair. "
+            "Consider:\n"
+            "- Whether the candidate's skills are genuinely relevant to the department's domain\n"
+            "- Whether the candidate's experience truly belongs to that field — if it has nothing to do with the department or its required skills, experience_score MUST be 0\n"
+            "- Whether education, certifications, and languages meaningfully contribute\n"
+            "- Whether extra skills (beyond requirements) deserve a bonus\n\n"
 
             "Rules:\n"
-            "- A skill is matched only if it appears explicitly in the resume text.\n"
-            "- Use exact skill names as they appear in the resume.\n"
-            "- candidate_years should reflect total years of experience for that skill.\n"
-            "- score = min(candidate_years / required_years, 1.0) * 100.\n"
-            "- If required_years is 0, score is 100 if candidate_years > 0, else 0.\n"
-            "- Never invent skills or experience not present in the resume.\n"
-            "- Never remove skills that are clearly present in the resume.\n"
-            "- compatibility = average of all requirement scores, rounded to 2 decimals.\n\n"
+            "- Return ALL departments listed below. Do not omit any.\n"
+            "- Return compatibility between 0 and 100 (decimal OK)\n"
+            "- Return each component score between 0 and 100\n"
+            "- Be strict: if a candidate has NO relevant skills/experience for a department, "
+            "compatibility should be low (only languages might contribute)\n"
+            "- Be fair: if a candidate clearly excels in a domain, the score should reflect that\n"
+            "- Provide a concise reason for your decision\n\n"
 
-            "Return only one valid JSON object. No markdown and no explanation outside JSON.\n\n"
-            "JSON schema:\n"
-            f"{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
-            "Computed evaluations:\n"
-            f"{serialized}\n\n"
-            "Resume text:\n"
-            f"{text}"
+            "Candidate profile:\n"
+            f"{candidate_json}\n\n"
+
+            "Computed evaluations (per-department breakdown):\n"
+            f"{evals_json}\n\n"
+
+            "Full resume text:\n"
+            f"{text}\n\n"
+
+            "Return ONLY valid JSON. No markdown, no explanation outside JSON.\n"
+            "JSON schema (include EVERY department):\n"
+            f"{json.dumps(schema, ensure_ascii=False, indent=2)}"
         )
 
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
+        print(raw_response)
         cleaned = raw_response.strip()
         if "</think>" in cleaned:
             cleaned = cleaned.split("</think>", 1)[1].strip()
@@ -161,8 +184,8 @@ class LLMService:
         ]
 
         print(
-            f"\n\nLLM evaluation review: "
-            f"{len(parsed['evaluations'])} departments reviewed",
+            f"\n\nLLM final scores: "
+            f"{len(parsed['evaluations'])} departments evaluated",
             flush=True,
         )
 

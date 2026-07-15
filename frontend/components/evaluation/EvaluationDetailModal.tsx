@@ -15,22 +15,6 @@ interface RequirementScore {
   matched: boolean;
 }
 
-interface ScoreBreakdown {
-  skills_score: number;
-  experience_score: number;
-  education_score: number;
-  certifications_score: number;
-  languages_score: number;
-  preferred_skills_score: number;
-  total: number;
-  skills_weight: number;
-  experience_weight: number;
-  education_weight: number;
-  certifications_weight: number;
-  languages_weight: number;
-  preferred_skills_weight: number;
-}
-
 interface DepartmentEvaluation {
   department_id: number;
   department_name: string;
@@ -38,7 +22,6 @@ interface DepartmentEvaluation {
   requirements: RequirementScore[];
   missing_experiences: string[];
   candidate_extra_experiences: string[];
-  breakdown: ScoreBreakdown | null;
 }
 
 interface EvaluationDetailModalProps {
@@ -185,49 +168,6 @@ export default function EvaluationDetailModal({
 
                 {expandedDepartments.has(dept.department_id) && (
                 <div className="p-4 space-y-3">
-                  {dept.breakdown && (
-                  <div className="mb-3 pb-3 border-b border-slate-100">
-                    <p className="text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">
-                      Décomposition du score
-                    </p>
-                    <div className="space-y-1.5">
-                      {[
-                        { label: "Compétences", key: "skills_score", weight: dept.breakdown.skills_weight, value: dept.breakdown.skills_score },
-                        { label: "Expérience", key: "experience_score", weight: dept.breakdown.experience_weight, value: dept.breakdown.experience_score },
-                        { label: "Formation", key: "education_score", weight: dept.breakdown.education_weight, value: dept.breakdown.education_score },
-                        { label: "Certifications", key: "certifications_score", weight: dept.breakdown.certifications_weight, value: dept.breakdown.certifications_score },
-                        { label: "Langues", key: "languages_score", weight: dept.breakdown.languages_weight, value: dept.breakdown.languages_score },
-                        { label: "Bonus", key: "preferred_skills_score", weight: dept.breakdown.preferred_skills_weight, value: dept.breakdown.preferred_skills_score },
-                      ].map((item) => {
-                        const barColor =
-                          item.value >= 70
-                            ? "bg-emerald-500"
-                            : item.value >= 40
-                              ? "bg-amber-500"
-                              : "bg-red-400";
-                        return (
-                          <div key={item.key} className="flex items-center gap-2">
-                            <span className="text-[11px] text-slate-600 w-24 shrink-0">
-                              {item.label}
-                            </span>
-                            <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all ${barColor}`}
-                                style={{ width: `${Math.min(item.value, 100)}%` }}
-                              />
-                            </div>
-                            <span className="text-[10px] text-slate-400 w-8 text-right tabular-nums">
-                              {(item.weight * 100).toFixed(0)}%
-                            </span>
-                            <span className="text-[11px] font-medium text-slate-700 w-8 text-right tabular-nums">
-                              {item.value.toFixed(0)}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  )}
                   {dept.requirements.map((req, idx) => (
                     <div
                       key={idx}

@@ -24,7 +24,7 @@ import { useModal } from "@/context/ModalContext";
 import { useAuthStore } from "@/stores/auth.store";
 
 export default function Sidebar() {
-    const [collapsed, setCollapsed] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [adminOpen, setAdminOpen] = useState(false);
     const pathname = usePathname();

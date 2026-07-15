@@ -234,7 +234,7 @@ export default function InvitationsPage() {
             </div>
         </header>
 
-        <main className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full space-y-6">
+        <main className="flex-1 px-6  max-w-7xl mx-auto w-full space-y-6">
           <p className="text-sm text-slate-600">Invitez des recruteurs à collaborer. Consultez la liste des invitations, filtrez par <strong>statut</strong> (En attente, Acceptée, Expirée) et effectuez des actions&nbsp;: <strong>renvoyer</strong>, <strong>révoquer</strong> ou <strong>copier le lien</strong> d&apos;invitation.</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             
@@ -465,7 +465,12 @@ export default function InvitationsPage() {
                             </button>
                           </>
                         )}
-                        
+                        {status === "accepted" && (
+                          <button onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 px-3 py-1.5 bg-blue-50 ">
+                            <ExternalLink className="h-3 w-3" />
+                            Voir le profil
+                          </button>
+                        )}
                         {status === "expired" && (
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDelete(inv.id); }}
@@ -630,7 +635,15 @@ function InvitationDetailModal({
               </button>
             </>
           )}
-          
+          {status === "accepted" && (
+            <button
+              onClick={onClose}
+              className="inline-flex items-center gap-1.5 border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Voir le profil
+            </button>
+          )}
           {status === "expired" && (
             <button
               onClick={() => { onDelete(invitation.id); onClose(); }}

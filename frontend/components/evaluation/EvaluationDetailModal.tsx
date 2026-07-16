@@ -15,6 +15,22 @@ interface RequirementScore {
   matched: boolean;
 }
 
+interface ScoreBreakdown {
+  skills_score: number;
+  experience_score: number;
+  education_score: number;
+  certifications_score: number;
+  languages_score: number;
+  preferred_skills_score: number;
+  total: number;
+  skills_weight: number;
+  experience_weight: number;
+  education_weight: number;
+  certifications_weight: number;
+  languages_weight: number;
+  preferred_skills_weight: number;
+}
+
 interface DepartmentEvaluation {
   department_id: number;
   department_name: string;
@@ -22,6 +38,7 @@ interface DepartmentEvaluation {
   requirements: RequirementScore[];
   missing_experiences: string[];
   candidate_extra_experiences: string[];
+  breakdown: ScoreBreakdown | null;
 }
 
 interface EvaluationDetailModalProps {
@@ -168,6 +185,7 @@ export default function EvaluationDetailModal({
 
                 {expandedDepartments.has(dept.department_id) && (
                 <div className="p-4 space-y-3">
+                  
                   {dept.requirements.map((req, idx) => (
                     <div
                       key={idx}
@@ -205,6 +223,55 @@ export default function EvaluationDetailModal({
                       </div>
                     </div>
                   ))}
+
+                  {dept.breakdown && (() => {
+                    const bd = dept.breakdown!;
+                    const items = [
+                      { label: "Compétences", key: "skills" as const, weight: bd.skills_weight },
+                      { label: "Expérience", key: "experience" as const, weight: bd.experience_weight },
+                      { label: "Formation", key: "education" as const, weight: bd.education_weight },
+                      { label: "Certifications", key: "certifications" as const, weight: bd.certifications_weight },
+                      { label: "Langues", key: "languages" as const, weight: bd.languages_weight },
+                      { label: "Bonus", key: "preferred_skills" as const, weight: bd.preferred_skills_weight },
+                    ];
+                    return (
+                    <div className="pt-3 border-t border-slate-50">
+                    <p className="text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+                      Décomposition du score
+                    </p>
+                    <div className="space-y-1.5">
+                      {items.map((item) => {
+                        const score = bd[`${item.key}_score`];
+                        const contribution = score * item.weight;
+                        return (
+                          <div key={item.key} className="flex items-center gap-3">
+                            <span className="text-[11px] text-slate-500 w-28 shrink-0">{item.label}</span>
+                            <div className="flex-1 bg-slate-100 h-2 rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{
+                                  width: `${score}%`,
+                                  backgroundColor:
+                                    score >= 70 ? "#10b981" : score >= 40 ? "#f59e0b" : "#ef4444",
+                                }}
+                              />
+                            </div>
+                            <span className="text-[11px] font-mono text-slate-600 w-12 text-right">
+                              {score.toFixed(0)}
+                            </span>
+                            <span className="text-[10px] text-slate-400 w-16 text-right">
+                              {(item.weight * 100).toFixed(0)}%
+                            </span>
+                            <span className="text-[11px] font-mono text-slate-700 w-12 text-right font-semibold">
+                              {(contribution).toFixed(1)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                    );
+                  })()}
 
                   {dept.missing_experiences.length > 0 && (
                     <div className="pt-2 border-t border-slate-50">

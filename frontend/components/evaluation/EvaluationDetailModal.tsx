@@ -107,7 +107,7 @@ export default function EvaluationDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-      <div className="w-full max-w-2xl overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl">
+      <div className="w-full max-w-2xl overflow-hidden  border border-gray-200/80 bg-white shadow-xl">
         <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between">
           <div>
             <h3 className="text-base font-semibold text-gray-900">
@@ -186,7 +186,7 @@ export default function EvaluationDetailModal({
                 {expandedDepartments.has(dept.department_id) && (
                 <div className="p-4 space-y-3">
                   
-                  {dept.requirements.map((req, idx) => (
+                  {/* {dept.requirements.map((req, idx) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between"
@@ -222,7 +222,7 @@ export default function EvaluationDetailModal({
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))} */}
 
                   {dept.breakdown && (() => {
                     const bd = dept.breakdown!;
@@ -276,7 +276,7 @@ export default function EvaluationDetailModal({
                   {dept.missing_experiences.length > 0 && (
                     <div className="pt-2 border-t border-slate-50">
                       <p className="text-[11px] font-semibold text-red-500 mb-1">
-                        Expériences manquantes
+                        Compétences manquantes
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {dept.missing_experiences.map((m, idx) => (
@@ -294,7 +294,7 @@ export default function EvaluationDetailModal({
                   {dept.candidate_extra_experiences.length > 0 && (
                     <div className="pt-2 border-t border-slate-50">
                       <p className="text-[11px] font-semibold text-emerald-600 mb-1">
-                        Expériences supplémentaires
+                        Compétences supplémentaires
                       </p>
                       <div className="flex flex-wrap gap-1">
                         {dept.candidate_extra_experiences.map((e, idx) => (

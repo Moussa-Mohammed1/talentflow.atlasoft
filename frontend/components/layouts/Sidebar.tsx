@@ -93,8 +93,8 @@ export default function Sidebar() {
                 src="/images/logo.png"
                 alt="3GCOM Logo"
                 width={40}
-                height={20}
-                className="object-contain"
+                height={40}
+                className="w-10 h-auto object-contain"
                 priority
               />
               <button
@@ -173,8 +173,8 @@ export default function Sidebar() {
                   src="/images/logo.png"
                   alt="3GCOM Logo"
                   width={40}
-                  height={20}
-                  className="object-contain"
+                  height={40}
+                  className="w-10 h-auto object-contain"
                   priority
                 />
 

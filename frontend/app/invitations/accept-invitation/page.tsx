@@ -129,7 +129,7 @@ function AcceptInvitationContent() {
               <img
                 src="/images/logo.png"
                 alt="Logo"
-                className="w-full h-full object-contain"
+                className="w-full h-auto object-contain"
               />
             </div>
             <div>

@@ -9,12 +9,6 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserResponse
-    must_change_password: bool
-
 class UserResponse(BaseModel):
     id: int
     fullname: str
@@ -30,6 +24,14 @@ class UserResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserResponse
+    must_change_password: bool
+
 
 class UpdateProfileRequest(BaseModel):
     fullname: Optional[str] = None

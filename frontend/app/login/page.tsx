@@ -35,7 +35,7 @@ export default function LoginPage() {
                 <img 
                   src="/images/logo.png"
                   alt="Logo 3GCOM" 
-                  className="w-30 h-30 object-contain p-2" 
+                  className="w-30 h-auto object-contain p-2"
                 />
               </div>
                

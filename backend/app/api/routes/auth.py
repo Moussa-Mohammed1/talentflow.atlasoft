@@ -13,8 +13,29 @@ from app.models.resume import Resume
 from app.models.llm_usage import LLMUsage
 from app.models.invitation import Invitation
 from app.repositories.candidat_repository import CandidatRepository
-from app.core.security import get_current_user, create_access_token
-from app.schemas.auth import LoginRequest, LoginResponse, UserResponse, UpdateProfileRequest, UserStatsResponse, LLMUsageByAction, ForgotPasswordRequest, ResetPasswordRequest
+from app.core.security import (
+    REFRESH_COOKIE_NAME,
+    clear_auth_cookies,
+    consume_oauth_exchange_code,
+    create_access_token,
+    create_oauth_exchange_code,
+    create_refresh_token,
+    decode_refresh_token,
+    get_current_user,
+    set_auth_cookies,
+)
+from app.schemas.auth import (
+    ForgotPasswordRequest,
+    LLMUsageByAction,
+    LoginRequest,
+    LoginResponse,
+    OAuthExchangeRequest,
+    RefreshTokenRequest,
+    ResetPasswordRequest,
+    UpdateProfileRequest,
+    UserResponse,
+    UserStatsResponse,
+)
 from fastapi.security import OAuth2PasswordRequestForm
 from app.schemas.invitation import (
     InviteUserRequest,
@@ -26,9 +47,8 @@ from app.schemas.invitation import (
 from app.services.auth_service import AuthService, build_avatar_url, download_external_avatar, EMAIL_SUFFIX
 from app.services.invitation_service import InvitationService
 from app.services.linkedin_service import LinkedInService
+from app.services.storage import get_storage_backend
 from app.core.config import settings
-
-AVATAR_DIR = Path("storage/avatars")
 
 router = APIRouter(
     prefix="/auth",
@@ -36,29 +56,115 @@ router = APIRouter(
 )
 
 
+def _serialize_user(user: User) -> dict:
+    return {
+        "id": user.id,
+        "fullname": user.fullname,
+        "email": user.email,
+        "role": user.role,
+        "is_active": user.is_active,
+        "must_change_password": user.must_change_password,
+        "avatar": build_avatar_url(user.avatar),
+        "email_verified": user.email_verified,
+        "email_verified_at": user.email_verified_at,
+        "created_at": user.created_at,
+        "auth_provider": user.auth_provider,
+    }
+
+
 @router.post("/login")
 def login(
-        payload: LoginRequest,
-        response: Response,
-        db: Session = Depends(get_db),
-        ):
-        result = AuthService.login(
+    payload: LoginRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    result = AuthService.login(
         db=db,
         email=payload.email,
         password=payload.password,
+    )
+    user_info = result["user"]
+    refresh_token = create_refresh_token(user_info["id"], str(user_info["role"]))
+    set_auth_cookies(
+        response,
+        access_token=result["access_token"],
+        refresh_token=refresh_token,
+    )
+    return result
+
+
+@router.post("/refresh")
+def refresh_session(
+    request: Request,
+    response: Response,
+    payload: RefreshTokenRequest | None = None,
+    db: Session = Depends(get_db),
+):
+    raw_refresh = request.cookies.get(REFRESH_COOKIE_NAME) or (
+        payload.refresh_token if payload else None
+    )
+    if not raw_refresh:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Jeton de rafraîchissement manquant",
         )
 
-        response.set_cookie(
-            key="access_token",
-            value=result["access_token"],
-            httponly=True,
-            secure=False,  
-            samesite="lax",
-            max_age=60 * 60 * 24,
-            path="/",
+    try:
+        user_id = decode_refresh_token(raw_refresh)
+    except ValueError:
+        clear_auth_cookies(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Jeton de rafraîchissement invalide ou expiré",
         )
 
-        return result
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None or user.is_active is False:
+        clear_auth_cookies(response)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Utilisateur introuvable ou inactif",
+        )
+
+    access_token = create_access_token(user.id, str(user.role))
+    new_refresh_token = create_refresh_token(user.id, str(user.role))
+    set_auth_cookies(response, access_token=access_token, refresh_token=new_refresh_token)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": _serialize_user(user),
+    }
+
+
+@router.post("/linkedin/exchange")
+def exchange_linkedin_oauth_code(
+    payload: OAuthExchangeRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    try:
+        user_id = consume_oauth_exchange_code(payload.code)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Code d'échange OAuth invalide ou expiré",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None or user.is_active is False:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Utilisateur introuvable ou inactif",
+        )
+
+    access_token = create_access_token(user.id, str(user.role))
+    refresh_token = create_refresh_token(user.id, str(user.role))
+    set_auth_cookies(response, access_token=access_token, refresh_token=refresh_token)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": _serialize_user(user),
+    }
 
 # @router.post(
 #     "/login",
@@ -255,12 +361,10 @@ async def upload_avatar(
         raise HTTPException(status_code=400, detail="Type d'image invalide. Autorisés : jpg, jpeg, png, gif, webp")
 
     unique_name = f"{uuid.uuid4()}{ext}"
-    file_path = AVATAR_DIR / unique_name
+    key = f"avatars/{unique_name}"
+    get_storage_backend().save_file(key, file.file, content_type=file.content_type)
 
-    with file_path.open("wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    current_user.avatar = f"/storage/avatars/{unique_name}"
+    current_user.avatar = f"/api/files/{key}"
     db.commit()
     db.refresh(current_user)
    
@@ -291,7 +395,7 @@ async def linkedin_login():
         key="oauth_state",
         value=signed_state,
         httponly=True,
-        secure=False,
+        secure=settings.cookie_secure_effective,
         samesite="lax",
         max_age=600,
         path="/api/auth/linkedin/callback",
@@ -304,7 +408,6 @@ async def linkedin_callback(
     code: str,
     state: str,
     request: Request,
-    response: Response,
     db: Session = Depends(get_db),
 ):
     signed_state = request.cookies.get("oauth_state")
@@ -321,11 +424,6 @@ async def linkedin_callback(
             detail="État OAuth invalide",
         )
 
-    response.delete_cookie(
-        key="oauth_state",
-        path="/api/auth/linkedin/callback",
-    )
-
     token_data = await LinkedInService.exchange_code(code)
     access_token = token_data.get("access_token")
     if not access_token:
@@ -337,19 +435,25 @@ async def linkedin_callback(
     user_info = await LinkedInService.get_user_info(access_token)
 
     linkedin_email = user_info.get("email", "")
+    frontend_base = settings.frontend_url.rstrip("/")
 
-    if not linkedin_email.lower().endswith(EMAIL_SUFFIX):
-        return RedirectResponse(
-            url=f"{settings.frontend_url}/login?linkedin_error=unauthorized_email",
+    allowed_suffix = (settings.email_suffix or EMAIL_SUFFIX or "").strip().lower()
+    if allowed_suffix and not linkedin_email.lower().endswith(allowed_suffix):
+        denied = RedirectResponse(
+            url=f"{frontend_base}/login?linkedin_error=unauthorized_email",
             status_code=status.HTTP_302_FOUND,
         )
+        denied.delete_cookie(key="oauth_state", path="/api/auth/linkedin/callback")
+        return denied
 
     existing_user = db.query(User).filter(User.email == linkedin_email).first()
     if not existing_user:
-        return RedirectResponse(
-            url=f"{settings.frontend_url}/login?linkedin_error=unauthorized_email",
+        denied = RedirectResponse(
+            url=f"{frontend_base}/login?linkedin_error=unauthorized_email",
             status_code=status.HTTP_302_FOUND,
         )
+        denied.delete_cookie(key="oauth_state", path="/api/auth/linkedin/callback")
+        return denied
 
     linkedin_picture = user_info.get("picture", "")
     local_avatar = await download_external_avatar(linkedin_picture) if linkedin_picture else None
@@ -360,20 +464,17 @@ async def linkedin_callback(
         local_avatar=local_avatar,
     )
 
-    jwt_token = create_access_token(user.id, user.role)
+    jwt_token = create_access_token(user.id, str(user.role))
+    refresh_token = create_refresh_token(user.id, str(user.role))
+    oauth_code = create_oauth_exchange_code(user.id, str(user.role))
 
-    response.set_cookie(
-        key="access_token",
-        value=jwt_token,
-        httponly=True,
-        secure=False,
-        samesite="lax",
-        max_age=60 * 60 * 24,
-        path="/",
+    redirect = RedirectResponse(
+        url=f"{frontend_base}/login?oauth_code={oauth_code}",
+        status_code=status.HTTP_302_FOUND,
     )
-
-    redirect_url = f"{settings.frontend_url}/login?token={jwt_token}"
-    return RedirectResponse(url=redirect_url, status_code=status.HTTP_302_FOUND)
+    redirect.delete_cookie(key="oauth_state", path="/api/auth/linkedin/callback")
+    set_auth_cookies(redirect, access_token=jwt_token, refresh_token=refresh_token)
+    return redirect
 
 
 @router.delete("/me")
@@ -383,11 +484,12 @@ def delete_account(
     db: Session = Depends(get_db),
 ):
     if current_user.avatar:
-        avatar_path = Path(current_user.avatar.lstrip("/"))
-        if avatar_path.exists():
-            avatar_path.unlink()
+        avatar_ref = current_user.avatar
+        if avatar_ref.startswith("/api/files/"):
+            avatar_ref = avatar_ref[len("/api/files/"):]
+        get_storage_backend().delete(avatar_ref)
 
-    response.delete_cookie(key="access_token", path="/")
+    clear_auth_cookies(response)
 
     db.delete(current_user)
     db.commit()
@@ -397,10 +499,7 @@ def delete_account(
 
 @router.post("/logout")
 def logout(response: Response):
-    response.delete_cookie(
-        key="access_token",
-        path="/",
-    )
+    clear_auth_cookies(response)
 
     return {
         "message": "Déconnexion réussie"

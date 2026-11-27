@@ -32,7 +32,8 @@ class ResumeSkillService:
 
         try:
             jm.start(job_id, "Ré-extraction des compétences du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = PretrainedBilingualExtractor(db=db, recruiter_id=recruiter_id).extract_skills(raw_text)
             count = len(extracted.get("technologies", [])) + len(extracted.get("competencies", []))
             jm.complete(job_id, f"{count} compétence(s) trouvée(s)")

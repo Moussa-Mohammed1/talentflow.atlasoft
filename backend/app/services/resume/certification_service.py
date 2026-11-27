@@ -31,7 +31,8 @@ class ResumeCertificationService:
 
         try:
             jm.start(job_id, "Ré-extraction des certifications du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = PretrainedBilingualCertificationExtractor(db=db, recruiter_id=recruiter_id).extract_certifications(raw_text)
             count = len(extracted.get("certifications", []))
             jm.complete(job_id, f"{count} certification(s) trouvée(s)")
@@ -70,7 +71,8 @@ class ResumeCertificationService:
 
         try:
             jm.start(job_id, "Extraction des certifications du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = PretrainedBilingualCertificationExtractor(db=db, recruiter_id=recruiter_id).extract_certifications(raw_text)
             count = len(extracted.get("certifications", []))
             jm.complete(job_id, f"{count} certification(s) trouvée(s)")

@@ -8,6 +8,7 @@ from pathlib import Path
 import httpx
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
+from app.core.config import settings
 from app.schemas.auth import UserResponse
 from app.models.user import User
 from app.core.security import (
@@ -16,26 +17,27 @@ from app.core.security import (
     hash_password,
 )
 from app.services.email_service import EmailService
+from app.services.storage import get_storage_backend
 
-AVATAR_DIR = Path("storage/avatars")
-
-EMAIL_SUFFIX = os.getenv("EMAIL_SUFFIX")
-PASSWORD_PATTERN = os.getenv("PASSWORD_PATTERN")
-APP_URL = os.getenv("APP_URL")
+EMAIL_SUFFIX = settings.email_suffix
+PASSWORD_PATTERN = settings.password_pattern
 
 
 def build_avatar_url(avatar: str | None) -> str | None:
     if not avatar:
         return None
+    base_url = settings.app_url.rstrip("/")
+    if avatar.startswith("/storage/"):
+        normalized = "/api/files/" + avatar[len("/storage/"):]
+        return f"{base_url}{normalized}" if base_url else normalized
     if avatar.startswith("/"):
-        return f"{APP_URL}{avatar}"
+        return f"{base_url}{avatar}" if base_url else avatar
     return avatar
 
 
 async def download_external_avatar(url: str) -> str | None:
     if not url or not url.startswith(("http://", "https://")):
         return None
-    AVATAR_DIR.mkdir(parents=True, exist_ok=True)
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             response = await client.get(url)
@@ -49,10 +51,9 @@ async def download_external_avatar(url: str) -> str | None:
             elif "webp" in content_type:
                 ext = ".webp"
             unique_name = f"{uuid.uuid4()}{ext}"
-            file_path = AVATAR_DIR / unique_name
-            with open(file_path, "wb") as f:
-                f.write(response.content)
-            return f"/storage/avatars/{unique_name}"
+            key = f"avatars/{unique_name}"
+            get_storage_backend().save_bytes(key, response.content, content_type=content_type or None)
+            return f"/api/files/{key}"
     except Exception:
         return None
 
@@ -66,7 +67,8 @@ class AuthService:
         password: str
     ):
 
-        if not email.lower().endswith(EMAIL_SUFFIX):
+        allowed_suffix = (settings.email_suffix or EMAIL_SUFFIX or "").strip().lower()
+        if allowed_suffix and not email.lower().endswith(allowed_suffix):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Origine non autorisée"
@@ -77,30 +79,16 @@ class AuthService:
             .filter(User.email == email)
             .first()
         )
-        print("\n\nUSER FOUND:", user is not None)
-        if user:
-            print("EMAIL:", user.email)
-            print("HASH:", user.hashed_password)
-            print("PASSWORD:" , password)
-            result = verify_password(
-                password,
-                user.hashed_password
-            )
-
-            print("PASSWORD MATCH:", result)
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Identifiants invalides"
             )
 
-        if not verify_password(
-            password,
-            user.hashed_password
-        ):
+        if user.is_active is False:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Identifiants invalides"
+                detail="Compte désactivé"
             )
 
         token = create_access_token(

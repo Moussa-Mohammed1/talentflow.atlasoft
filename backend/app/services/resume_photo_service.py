@@ -1,19 +1,19 @@
 from __future__ import annotations
 
+import io
 import logging
 from pathlib import Path
 
 from PIL import Image
 
+from app.services.storage import get_storage_backend
 from app.utils.face_detector import FaceDetector
 from app.utils.image_extractor import ImageExtractorService, ExtractedImage
 from app.utils.image_ranker import ImageRanker
-from app.utils.image_normalizer import normalize_photo, save_compressed_jpeg
+from app.utils.image_normalizer import normalize_photo
 from app.utils.pdf_renderer import render_first_page
 
 logger = logging.getLogger(__name__)
-
-CANDIDATE_PHOTOS_DIR = Path("storage/candidate_photos")
 
 
 class ResumePhotoService:
@@ -21,7 +21,6 @@ class ResumePhotoService:
 
     def __init__(self):
         self._face_detector = FaceDetector()
-        CANDIDATE_PHOTOS_DIR.mkdir(parents=True, exist_ok=True)
 
     def extract_candidate_photo(
         self,
@@ -113,13 +112,16 @@ class ResumePhotoService:
             logger.info("No candidate photo could be extracted")
             return None
 
-        # Step 5: Normalize and save
+        # Step 5: Normalize and save via storage abstraction
         normalized = normalize_photo(best_result)
         output_filename = f"candidate_{candidate_id}.jpg"
-        output_path = str(CANDIDATE_PHOTOS_DIR / output_filename)
-        save_compressed_jpeg(normalized, output_path)
+        relative_path = f"candidate_photos/{output_filename}"
 
-        logger.info("Saved candidate photo: %s", output_path)
+        buffer = io.BytesIO()
+        normalized.convert("RGB").save(buffer, format="JPEG", quality=85, optimize=True)
+        get_storage_backend().save_bytes(relative_path, buffer.getvalue(), content_type="image/jpeg")
+
+        logger.info("Saved candidate photo: %s", relative_path)
         if best_metadata:
             logger.info(
                 "Source: %s, page: %s, confidence: %.2f, score: %s",
@@ -129,7 +131,6 @@ class ResumePhotoService:
                 best_metadata.get("score", "N/A"),
             )
 
-        relative_path = f"candidate_photos/{output_filename}"
         return relative_path
 
     def _crop_best_face(

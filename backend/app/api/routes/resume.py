@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Response, UploadFile, status
+import mimetypes
 from pathlib import Path
 from sqlalchemy.orm import Session
 
@@ -38,7 +38,8 @@ from app.services.resume.skill_service import ResumeSkillService
 from app.services.resume.upload_service import ResumeUploadService
 from app.services.resume.preview_service import ResumePreviewService
 from app.services.resume.update_service import ResumeUpdateService
-from app.services.resume_service import get_resumes_list, resolve_stored_resume_path, get_full_resume_detail, get_resume_detail
+from app.services.resume_service import get_resumes_list, get_full_resume_detail, get_resume_detail
+from app.services.storage import get_storage_backend, normalize_storage_key
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -208,7 +209,10 @@ def update_certification(
 
 
 @router.get("/", response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
-def get_resumes(db: Session = Depends(get_db)):
+def get_resumes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     return get_resumes_list(db)
 
 
@@ -220,8 +224,23 @@ def get_resume(resume_id: int, db: Session = Depends(get_db), current_user: User
 @router.get("/{resume_id}/download", status_code=status.HTTP_200_OK)
 def download_resume(resume_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     resume = ResumeLoader.view_by_id(db, resume_id)
-    file_path = resolve_stored_resume_path(resume.path)
-    return FileResponse(path=file_path, filename=Path(resume.path).name)
+    storage = get_storage_backend()
+    try:
+        key = normalize_storage_key(resume.path)
+        data = storage.read_bytes(key)
+    except (ValueError, FileNotFoundError) as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fichier CV stocké introuvable") from exc
+
+    filename = Path(key).name
+    media_type, _ = mimetypes.guess_type(filename)
+    return Response(
+        content=data,
+        media_type=media_type or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
 
 
 @router.delete("/{resume_id}", status_code=status.HTTP_200_OK)

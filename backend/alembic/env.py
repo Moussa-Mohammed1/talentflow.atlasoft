@@ -12,7 +12,7 @@ import app.models  # noqa: F401
 
 env_path = Path(__file__).resolve().parents[1] / "app" / ".env"
 if env_path.exists():
-    load_dotenv(env_path, override=True)
+    load_dotenv(env_path, override=False)
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

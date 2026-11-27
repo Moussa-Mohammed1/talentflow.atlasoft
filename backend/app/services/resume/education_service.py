@@ -31,9 +31,10 @@ class ResumeEducationService:
 
         try:
             jm.start(job_id, "Ré-extraction des formations du CV")
-            resume_path = str(ResumeLoader.resolve_path(resume.path))
-            raw_text = TextExtractionService().extract(resume_path)
-            extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
+            with ResumeLoader.open_file(resume.path) as local_path:
+                resume_path = str(local_path)
+                raw_text = TextExtractionService().extract(resume_path)
+                extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
             count = len(extracted.get("educations", []))
             jm.complete(job_id, f"{count} formation(s) trouvée(s)")
         except UnsupportedFileTypeError as e:
@@ -71,9 +72,10 @@ class ResumeEducationService:
 
         try:
             jm.start(job_id, "Extraction des formations du CV")
-            resume_path = str(ResumeLoader.resolve_path(resume.path))
-            raw_text = TextExtractionService().extract(resume_path)
-            extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
+            with ResumeLoader.open_file(resume.path) as local_path:
+                resume_path = str(local_path)
+                raw_text = TextExtractionService().extract(resume_path)
+                extracted = PretrainedBilingualEducationExtractor(db=db, recruiter_id=recruiter_id).extract_education(resume_path, raw_text)
             count = len(extracted.get("educations", []))
             jm.complete(job_id, f"{count} formation(s) trouvée(s)")
         except UnsupportedFileTypeError as e:

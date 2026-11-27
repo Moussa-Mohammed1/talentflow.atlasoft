@@ -4,7 +4,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, W
 from sqlalchemy.orm import Session
 
 from app.core.database import SessionLocal, get_db
-from app.core.security import decode_access_token, get_current_user
+from app.core.security import consume_ws_ticket, create_ws_ticket, decode_access_token, get_current_user
 from app.models.user import User
 from app.repositories.notification_repository import NotificationRepository
 from app.schemas.notification import (
@@ -96,14 +96,30 @@ def candidate_matching_completed(
     return NotificationRead.model_validate(notification)
 
 
+@router.post("/ws-ticket", status_code=status.HTTP_200_OK)
+def issue_ws_ticket(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, str]:
+    return {"ticket": create_ws_ticket(current_user.id)}
+
+
 @websocket_router.websocket("/ws/notifications/{recruiter_id}")
 async def notification_websocket(
     websocket: WebSocket,
     recruiter_id: int,
-    token: str = Query(..., min_length=1),
+    token: str | None = Query(default=None),
+    ticket: str | None = Query(default=None),
 ) -> None:
+    cookie_token = websocket.cookies.get("access_token")
+    if not cookie_token and not ticket and not token:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Jeton d'accès manquant")
+        return
+
     try:
-        token_user_id = decode_access_token(token)
+        if ticket:
+            token_user_id = consume_ws_ticket(ticket)
+        else:
+            token_user_id = decode_access_token(cookie_token or token or "")
     except ValueError:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Jeton d'accès invalide")
         return

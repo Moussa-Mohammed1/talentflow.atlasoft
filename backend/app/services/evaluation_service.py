@@ -30,7 +30,7 @@ from app.schemas.evaluate import (
     ScoreBreakdown,
     TalentCard,
 )
-from app.services.resume_service import resolve_stored_resume_path
+from app.services.resume_service import open_stored_resume
 from app.services.scoring_engine import compute_compatibility
 
 try:
@@ -354,10 +354,6 @@ class EvaluationService:
             if resume is None or not resume.path:
                 print("⚠ No resume found — skipping LLM finalize", flush=True)
                 return evaluations
-            file_path = str(resolve_stored_resume_path(resume.path))
-            if not os.path.exists(file_path):
-                print(f"⚠ Resume file not found: {file_path}", flush=True)
-                return evaluations
         except Exception as exc:
             print(f"⚠ Resume lookup failed: {exc}", flush=True)
             return evaluations
@@ -367,10 +363,11 @@ class EvaluationService:
 
             serialized = [e.model_dump() for e in evaluations]
             print("🚀 Calling LLM final scorer...", flush=True)
-            payload = LLMService.finalize(
-                file_path, candidate_info, serialized,
-                db=self.db, recruiter_id=resume.recruiter_id,
-            )
+            with open_stored_resume(resume.path) as local_resume_path:
+                payload = LLMService.finalize(
+                    str(local_resume_path), candidate_info, serialized,
+                    db=self.db, recruiter_id=resume.recruiter_id,
+                )
         except Exception as exc:
             print(f"⚠ LLM finalize failed: {exc}", flush=True)
             return evaluations

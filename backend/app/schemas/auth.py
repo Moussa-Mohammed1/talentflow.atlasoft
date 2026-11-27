@@ -63,3 +63,11 @@ class UserStatsResponse(BaseModel):
     invitations_sent: int = 0
     invitations_accepted: int = 0
     invitations_refused: int = 0
+
+
+class OAuthExchangeRequest(BaseModel):
+    code: str
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: Optional[str] = None

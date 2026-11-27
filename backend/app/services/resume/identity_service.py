@@ -38,10 +38,10 @@ class ResumeIdentityService:
 
         try:
             jm.start(job_id, "Extraction de l'identité du candidat")
-            resume_full_path = ResumeLoader.resolve_path(resume.path)
-            text = TextExtractionService().extract(str(resume_full_path))
-            identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
-            jm.complete(job_id, "Extraction d'identité terminée")
+            with ResumeLoader.open_file(resume.path) as resume_full_path:
+                text = TextExtractionService().extract(str(resume_full_path))
+                identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
+                jm.complete(job_id, "Extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de l'extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
@@ -65,7 +65,8 @@ class ResumeIdentityService:
 
         candidat = CandidatRepository.upsert_from_identity(db, resume_id=resume.id, identity=validated)
 
-        photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
+        with ResumeLoader.open_file(resume.path) as resume_full_path:
+            photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
         if photo_path:
             try:
                 candidat.photo = photo_path
@@ -91,10 +92,10 @@ class ResumeIdentityService:
 
         try:
             jm.start(job_id, "Ré-extraction de l'identité du candidat")
-            resume_full_path = ResumeLoader.resolve_path(resume.path)
-            text = TextExtractionService().extract(str(resume_full_path))
-            identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
-            jm.complete(job_id, "Ré-extraction d'identité terminée")
+            with ResumeLoader.open_file(resume.path) as resume_full_path:
+                text = TextExtractionService().extract(str(resume_full_path))
+                identity = ResumeIdentityPipeline().analyze(text, db=db, recruiter_id=recruiter_id)
+                jm.complete(job_id, "Ré-extraction d'identité terminée")
         except UnsupportedFileTypeError as e:
             jm.fail(job_id, f"Échec de la ré-extraction d'identité : {str(e)}")
             raise HTTPException(status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, detail=str(e) + ", allowed: pdf, docx")
@@ -116,7 +117,8 @@ class ResumeIdentityService:
             update_candidat_from_identity(db, candidat, validated)
             notify = NotificationHelper.notify_identity_completed
 
-        photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
+        with ResumeLoader.open_file(resume.path) as resume_full_path:
+            photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)
         if photo_path:
             try:
                 candidat.photo = photo_path

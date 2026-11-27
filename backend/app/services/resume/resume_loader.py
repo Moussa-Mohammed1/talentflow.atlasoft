@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import AbstractContextManager
 from pathlib import Path
 
 from fastapi import HTTPException, status
@@ -12,6 +13,7 @@ from app.services.resume_service import (
     get_resume_detail,
     get_full_resume_detail,
     delete_resume_and_file,
+    open_stored_resume,
     resolve_stored_resume_path,
 )
 from app.models.user import User
@@ -56,3 +58,7 @@ class ResumeLoader:
     @staticmethod
     def resolve_path(path: str) -> Path:
         return resolve_stored_resume_path(path)
+
+    @staticmethod
+    def open_file(path: str) -> AbstractContextManager[Path]:
+        return open_stored_resume(path)

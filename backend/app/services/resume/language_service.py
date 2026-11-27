@@ -33,7 +33,8 @@ class ResumeLanguageService:
 
         try:
             jm.start(job_id, "Ré-extraction des langues du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = ResumeLanguageExtractionPipeline().extract_languages(raw_text)
             lang_count = len(extracted.get("languages", []))
             jm.complete(job_id, f"{lang_count} langue(s) trouvée(s)")
@@ -74,7 +75,8 @@ class ResumeLanguageService:
 
         try:
             jm.start(job_id, "Extraction des langues du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = ResumeLanguageExtractionPipeline().extract_languages(raw_text)
             lang_count = len(extracted.get("languages", []))
             jm.complete(job_id, f"{lang_count} langue(s) trouvée(s)")

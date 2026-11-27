@@ -78,8 +78,8 @@ class ResumeAnalysisWorkflow:
         self._jobs = jm.create_analysis_jobs(self._filename)
         jm.start_analysis_jobs(self._jobs)
 
-    def _extract_text(self):
-        self._resume_path = str(ResumeLoader.resolve_path(self._resume.path))
+    def _extract_text(self, resume_path: Path):
+        self._resume_path = str(resume_path)
         self._raw_text = TextExtractionService().extract(self._resume_path)
 
     def _extract_skills(self):
@@ -179,12 +179,13 @@ class ResumeAnalysisWorkflow:
         try:
             self._load_resume()
             self._create_and_start_jobs()
-            self._extract_text()
-            self._extract_skills()
-            self._extract_experiences()
-            self._extract_educations()
-            self._extract_certifications()
-            self._extract_languages()
+            with ResumeLoader.open_file(self._resume.path) as local_resume_path:
+                self._extract_text(local_resume_path)
+                self._extract_skills()
+                self._extract_experiences()
+                self._extract_educations()
+                self._extract_certifications()
+                self._extract_languages()
             self._persist()
             NotificationHelper.notify_analysis_completed(
                 self.background_tasks, self.db, recruiter_id=self.recruiter_id, filename=self._filename,

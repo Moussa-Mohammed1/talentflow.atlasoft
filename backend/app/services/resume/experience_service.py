@@ -31,7 +31,8 @@ class ResumeExperienceService:
 
         try:
             jm.start(job_id, "Ré-extraction des expériences du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = PretrainedBilingualExperienceExtractor(db=db, recruiter_id=recruiter_id).extract_experiences(raw_text)
             count = len(extracted.get("experiences", []))
             jm.complete(job_id, f"{count} expérience(s) trouvée(s)")
@@ -70,7 +71,8 @@ class ResumeExperienceService:
 
         try:
             jm.start(job_id, "Extraction des expériences du CV")
-            raw_text = TextExtractionService().extract(str(ResumeLoader.resolve_path(resume.path)))
+            with ResumeLoader.open_file(resume.path) as resume_path:
+                raw_text = TextExtractionService().extract(str(resume_path))
             extracted = PretrainedBilingualExperienceExtractor(db=db, recruiter_id=recruiter_id).extract_experiences(raw_text)
             count = len(extracted.get("experiences", []))
             jm.complete(job_id, f"{count} expérience(s) trouvée(s)")

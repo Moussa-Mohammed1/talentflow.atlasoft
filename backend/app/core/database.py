@@ -1,20 +1,21 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
-from dotenv import load_dotenv, find_dotenv
-from pathlib import Path
-import os
+from __future__ import annotations
 
-#safely load the .env file 
+import os
+from pathlib import Path
+
+from dotenv import find_dotenv, load_dotenv
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+
+# Load fallback .env only when environment variables are not already exported.
 package_env = Path(__file__).resolve().parents[1] / ".env"
 if package_env.exists():
-    load_dotenv(package_env, override=True)
+    load_dotenv(package_env, override=False)
 else:
-   
     located = find_dotenv()
     if located:
-        load_dotenv(located, override=True)
+        load_dotenv(located, override=False)
 
-# safety check for Database Url 
 DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise RuntimeError(
@@ -22,19 +23,24 @@ if not DATABASE_URL:
         "Put a .env file at backend/app/.env or export DATABASE_URL in your environment."
     )
 
+DB_ECHO = os.getenv("DB_ECHO", "false").strip().lower() in {"1", "true", "yes"}
+
 engine = create_engine(
     DATABASE_URL,
-    echo=True,
-    pool_pre_ping=True
+    echo=DB_ECHO,
+    pool_pre_ping=True,
 )
 
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
-) 
+    bind=engine,
+)
 
-class Base(DeclarativeBase): pass
+
+class Base(DeclarativeBase):
+    pass
+
 
 def get_db():
     db = SessionLocal()

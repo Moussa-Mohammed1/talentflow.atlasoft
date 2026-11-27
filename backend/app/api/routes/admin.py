@@ -10,7 +10,7 @@ from app.models.resume import Resume
 from app.models.llm_usage import LLMUsage
 from app.schemas.admin import AdminUserResponse
 from app.schemas.auth import UserStatsResponse, LLMUsageByAction
-import os
+from app.services.auth_service import build_avatar_url
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
@@ -25,15 +25,6 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
             detail="Seuls les administrateurs peuvent accéder à cette ressource",
         )
     return current_user
-APP_URL = os.getenv("APP_URL")
-
-
-def build_avatar_url(avatar: str | None) -> str | None:
-    if not avatar:
-        return None
-    if avatar.startswith("/"):
-        return f"{APP_URL}{avatar}"
-    return avatar
 
 
 @router.get("/users", response_model=list[AdminUserResponse])

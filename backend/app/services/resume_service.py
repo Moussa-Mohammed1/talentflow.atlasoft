@@ -1,7 +1,7 @@
+from contextlib import AbstractContextManager
 from datetime import datetime
 from fastapi import HTTPException, UploadFile
 from pathlib import Path
-import shutil
 import uuid
 
 from sqlalchemy.orm import Session
@@ -16,11 +16,7 @@ from app.models.skills import Skills
 from app.models.skills_category import SkillsCategory
 from app.models.candidat_language import CandidatLanguages
 from app.models.language import Language
-
-
-# UPLOAD_DIR = Path(__file__).resolve().parents[2] / "storage" / "resumes"
-UPLOAD_DIR = Path("storage/resumes")
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+from app.services.storage import LocalStorageBackend, get_storage_backend, normalize_storage_key
 
 # Allowed file extensions and MIME types for resumes
 ALLOWED_EXTENSIONS = {".pdf", ".docx"}
@@ -34,7 +30,6 @@ def create_resume(file: UploadFile, recruiter_id: int, db: Session) -> Resume:
 	if not file.filename:
 		raise HTTPException(status_code=400, detail="Fichier CV requis")
 
-	# Validate file extension and content type
 	file_ext = Path(file.filename).suffix.lower()
 	content_type = (file.content_type or "").lower()
 	if file_ext not in ALLOWED_EXTENSIONS or content_type not in ALLOWED_CONTENT_TYPES:
@@ -44,12 +39,11 @@ def create_resume(file: UploadFile, recruiter_id: int, db: Session) -> Resume:
 		)
 
 	unique_name = f"{uuid.uuid4()}-{Path(file.filename).name}"
-	file_path = UPLOAD_DIR / unique_name
+	storage_key = f"resumes/{unique_name}"
+	storage = get_storage_backend()
+	stored_path = storage.save_file(storage_key, file.file, content_type=content_type)
 
-	with file_path.open("wb") as buffer:
-		shutil.copyfileobj(file.file, buffer)
-
-	resume = Resume(path=str(file_path), recruiter_id=recruiter_id)
+	resume = Resume(path=stored_path, recruiter_id=recruiter_id)
 	db.add(resume)
 	db.commit()
 	db.refresh(resume)
@@ -63,29 +57,45 @@ def get_resume_by_path(path: str, recruiter_id: int, db: Session) -> Resume | No
 		.first()
 	)
 
+
 def get_resume_by_id(resume_id: int, recruiter_id: int, db: Session) -> Resume | None:
-     return (
-          db.query(Resume)
-          .filter(Resume.id == resume_id, Resume.recruiter_id == recruiter_id)
-          .first()
-     )
+	return (
+		db.query(Resume)
+		.filter(Resume.id == resume_id, Resume.recruiter_id == recruiter_id)
+		.first()
+	)
+
+
+def open_stored_resume(path: str) -> AbstractContextManager[Path]:
+	storage = get_storage_backend()
+	try:
+		key = normalize_storage_key(path)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Le chemin du CV est invalide") from exc
+
+	if not storage.exists(key):
+		raise HTTPException(status_code=404, detail="Fichier CV stocké introuvable")
+
+	return storage.open_local_path(key)
 
 
 def resolve_stored_resume_path(path: str) -> Path:
-	resume_path = Path(path)
-	if not resume_path.is_absolute():
-		resume_path = Path.cwd() / resume_path
+	storage = get_storage_backend()
+	try:
+		key = normalize_storage_key(path)
+	except ValueError as exc:
+		raise HTTPException(status_code=400, detail="Le chemin du CV est en dehors du stockage") from exc
 
-	resolved_path = resume_path.resolve()
-	resolved_upload_dir = UPLOAD_DIR.resolve()
+	if isinstance(storage, LocalStorageBackend):
+		resolved = storage.resolve_safe_path(key)
+		if not resolved.exists():
+			raise HTTPException(status_code=404, detail="Fichier CV stocké introuvable")
+		return resolved
 
-	if resolved_upload_dir not in resolved_path.parents:
-		raise HTTPException(status_code=400, detail="Le chemin du CV est en dehors du stockage")
-
-	if not resolved_path.exists():
-		raise HTTPException(status_code=404, detail="Fichier CV stocké introuvable")
-
-	return resolved_path
+	raise HTTPException(
+		status_code=500,
+		detail="resolve_stored_resume_path requires open_stored_resume for remote storage",
+	)
 
 import os
 from app.repositories.resumer_repository import ResumeRepository
@@ -98,16 +108,17 @@ def get_resumes_list(db: Session):
         .join(User, User.id == Resume.recruiter_id)
     )
 
+    storage = get_storage_backend()
     docs = []
 
     for resume, candidat, recruiter in records:
-        try:
-            size_bytes = os.path.getsize(resume.path)
+        size_bytes = storage.size(resume.path)
+        if size_bytes is not None:
             if size_bytes >= 1024 * 1024:
                 file_size = f"{size_bytes / (1024 * 1024):.1f} MB"
             else:
                 file_size = f"{size_bytes / 1024:.0f} KB"
-        except OSError:
+        else:
             file_size = "Unknown"
 
         file_name = Path(resume.path).name
@@ -243,10 +254,8 @@ def delete_resume_and_file(db: Session, resume_id: int, recruiter_id: int):
     if not resume:
         raise HTTPException(status_code=404, detail="CV introuvable")
     
+    stored_path = resume.path
     ResumeRepository.delete(db, resume)
-    
-    file_path = Path(resume.path)
-    if file_path.exists():
-        file_path.unlink()
+    get_storage_backend().delete(stored_path)
         
     return {"status": "success", "message": "CV supprimé"}

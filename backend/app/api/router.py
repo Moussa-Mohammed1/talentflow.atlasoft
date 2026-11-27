@@ -11,6 +11,8 @@ from app.api.routes.evaluate import router as evaluate_router
 from app.api.routes.job_offers import router as job_offers_router
 from app.api.routes.recruitment import router as recruitment_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.files import router as files_router
+from app.api.routes.health import router as health_router
 
 api_router = APIRouter()
 @api_router.get("/", tags=["API"])
@@ -19,6 +21,8 @@ async def root():
         "message":  "Welcome to the TalentFlow API",
         "status" : "online",
     }
+api_router.include_router(health_router)
+api_router.include_router(files_router)
 api_router.include_router(resume_router)
 api_router.include_router(auth_router)
 api_router.include_router(notification_router)

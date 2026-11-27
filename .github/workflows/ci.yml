@@ -50,7 +50,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Ruff lint on hardened Phase 1 modules & tests
+      - name: Run Ruff lint on hardened Phase 1 & Phase 2 modules & tests
         run: >
           ruff check
           app/main.py
@@ -58,6 +58,11 @@ jobs:
           app/api/router.py
           app/api/routes/health.py
           app/api/routes/files.py
+          app/api/routes/job.py
+          app/models/job.py
+          app/schemas/job.py
+          app/repositories/job_repository.py
+          app/services/job_service.py
           app/services/storage
           app/services/notification_manager.py
           app/workers
@@ -106,17 +111,27 @@ jobs:
           lib/query-client.ts
           lib/query-keys.ts
           stores/auth.store.ts
+          stores/job.store.ts
           components/providers/QueryProvider.tsx
           components/auth/SessionProvider.tsx
           components/auth/LoginForm.tsx
+          components/ui/SystemJobs.tsx
           hooks/useAuth.ts
           hooks/useNotifications.ts
           hooks/useJobs.ts
+          hooks/useResumeImport.ts
           hooks/queries/useAppQueries.ts
           services/auth.service.ts
           services/notification.service.ts
+          services/job.service.ts
+          services/resume.service.ts
+          services/job-offers.service.ts
+          types/job.ts
+          types/notification.ts
           app/layout.tsx
+          app/jobs/page.tsx
           __tests__/api-and-media.test.ts
+          __tests__/job-store.test.ts
 
       - name: Run Vitest unit tests
         run: npm test

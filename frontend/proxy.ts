@@ -5,8 +5,8 @@ import { isPublicPath } from "@/lib/auth-routes";
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip static asset files safely
-  if (pathname.includes(".")) {
+  // Skip Next.js API rewrites and static asset files safely
+  if (pathname.startsWith("/api/") || pathname === "/api" || pathname.includes(".")) {
     return NextResponse.next();
   }
 
@@ -27,6 +27,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|images/|static/|fonts/).*)",
+    "/((?!api/|_next/static|_next/image|favicon.ico|images/|static/|fonts/).*)",
   ],
 };

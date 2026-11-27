@@ -6,6 +6,7 @@ import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 interface ProfileSectionProps {
   collapsed?: boolean;
@@ -33,6 +34,7 @@ export default function ProfileSection({
   const { t, l } = useLanguage();
 
   const initials = useMemo(() => getInitials(user?.fullname ?? ""), [user?.fullname]);
+  const avatarSrc = useMemo(() => resolveMediaUrl(user?.avatar), [user?.avatar]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -104,10 +106,10 @@ export default function ProfileSection({
             collapsed ? "justify-center px-0" : ""
           }`}
         >
-          {user?.avatar ? (
+          {avatarSrc ? (
             <img
-              src={user.avatar}
-              alt={user.fullname || ""}
+              src={avatarSrc}
+              alt={user?.fullname || ""}
               className="h-6 w-6 shrink-0 rounded-full object-cover"
             />
           ) : (
@@ -147,10 +149,10 @@ export default function ProfileSection({
             {secondaryLabel}
           </div>
         </div>
-        {user?.avatar ? (
+        {avatarSrc ? (
           <img
-            src={user.avatar}
-            alt={user.fullname || ""}
+            src={avatarSrc}
+            alt={user?.fullname || ""}
             className="h-7 w-7 shrink-0 rounded-full border border-white/25 object-cover"
           />
         ) : (
@@ -185,10 +187,10 @@ export default function ProfileSection({
           </div>
 
           <div className="flex items-center gap-3 px-4 py-3.5">
-            {user?.avatar ? (
+            {avatarSrc ? (
               <img
-                src={user.avatar}
-                alt={user.fullname || ""}
+                src={avatarSrc}
+                alt={user?.fullname || ""}
                 className="h-12 w-12 shrink-0 rounded-full border border-[#edebe9] dark:border-[#3b3a39] object-cover"
               />
             ) : (

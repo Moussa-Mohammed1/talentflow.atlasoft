@@ -9,6 +9,7 @@ import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useToast } from "@/hooks/useToast";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 import type { UserStats } from "@/types/auth";
 
 interface EditableField {
@@ -43,7 +44,7 @@ export default function ProfilePage() {
   const { user, setUser, updateUserField } = useAuthStore();
   const { success } = useToast();
   const { locale, t, l } = useLanguage();
-  const [isLoadingUser, setIsLoadingUser] = useState(false);
+  const [isLoadingUser, setIsLoadingUser] = useState(!user);
   const [editingField, setEditingField] = useState<string | null>(null);
   const [draftValues, setDraftValues] = useState<Record<string, string>>({});
   const [savingFields, setSavingFields] = useState<Record<string, boolean>>({});
@@ -54,7 +55,7 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState<string | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   const editableFields: EditableField[] = [
     { key: "fullname", label: l("Nom complet", "Full name"), type: "text", icon: User },
@@ -81,7 +82,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!user) {
-      setIsLoadingUser(true);
       AuthService.me()
         .then((data) => {
           setUser(data.user);
@@ -97,7 +97,6 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setIsLoadingStats(true);
       AuthService.getUserStats()
         .then(setStats)
         .finally(() => setIsLoadingStats(false));
@@ -256,9 +255,9 @@ export default function ProfilePage() {
                         alt={l("Aperçu", "Preview")}
                         className="w-14 h-14 rounded-full object-cover border-2 border-blue-500"
                       />
-                    ) : user.avatar ? (
+                    ) : resolveMediaUrl(user.avatar) ? (
                       <img
-                        src={user.avatar}
+                        src={resolveMediaUrl(user.avatar) || undefined}
                         alt={user.fullname}
                         className="w-14 h-14 rounded-full object-cover border border-slate-200 dark:border-[#3b3a39]"
                       />

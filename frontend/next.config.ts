@@ -10,6 +10,8 @@ const backendOrigin = (
   .replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
+  output: "standalone",
+  skipTrailingSlashRedirect: true,
   // Avoid selecting an unrelated parent lockfile as the workspace root.
   turbopack: {
     root: path.resolve(__dirname),

@@ -25,6 +25,7 @@ import type { UserStats } from "@/types/auth";
 import { useToast } from "@/hooks/useToast";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 function formatDate(dateStr: string | null | undefined, locale: string): string {
   if (!dateStr) return "-";
@@ -81,8 +82,23 @@ export default function AdminUsersPage() {
   }, [l, toast]);
 
   useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
+    let active = true;
+    AdminService.listUsers()
+      .then((data) => {
+        if (active) setUsers(data);
+      })
+      .catch(() => {
+        if (active) {
+          toast.error(l("Une erreur est survenue, veuillez réessayer !", "An error occurred, please try again!"));
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [l, toast]);
 
   const filteredUsers = useMemo(() => {
     if (!searchQuery.trim()) return users;
@@ -213,9 +229,9 @@ export default function AdminUsersPage() {
                     className="bg-white dark:bg-[#252423] rounded-xl border border-slate-200 dark:border-[#3b3a39] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-indigo-200 dark:hover:border-[#0078d4] hover:shadow-sm transition-all cursor-pointer"
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
-                      {user.avatar ? (
+                      {resolveMediaUrl(user.avatar) ? (
                         <img
-                          src={user.avatar}
+                          src={resolveMediaUrl(user.avatar) || undefined}
                           alt=""
                           className="w-10 h-10 rounded-full object-cover shrink-0"
                         />
@@ -276,9 +292,9 @@ export default function AdminUsersPage() {
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               <div className="flex items-start gap-4">
-                {selectedUser.avatar ? (
+                {resolveMediaUrl(selectedUser.avatar) ? (
                   <img
-                    src={selectedUser.avatar}
+                    src={resolveMediaUrl(selectedUser.avatar) || undefined}
                     alt=""
                     className="w-14 h-14 rounded-full object-cover shrink-0"
                   />

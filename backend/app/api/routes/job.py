@@ -23,6 +23,19 @@ def list_jobs(
     return service.list_jobs(current_user.id, limit, offset)
 
 
+@router.get("/{job_id}", response_model=JobRead)
+def get_job(
+    job_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JobRead:
+    service = JobService(db)
+    job = service.get_job(job_id, current_user.id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return job
+
+
 @router.post("", response_model=JobRead, status_code=status.HTTP_201_CREATED)
 def create_job(
     job_in: JobCreate,

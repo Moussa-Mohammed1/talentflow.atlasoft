@@ -9,6 +9,7 @@ from typing import Any
 
 from fastapi import WebSocket
 
+from app.core.config import settings
 from app.core.redis import create_async_redis
 from app.models.notification import Notification
 from app.schemas.notification import NotificationRead
@@ -83,6 +84,30 @@ class NotificationConnectionManager:
             "data": NotificationRead.model_validate(notification).model_dump(mode="json"),
         }
         await self.broadcast_payload(notification.recruiter_id, payload)
+
+    def publish_sync(self, recruiter_id: int, payload: dict[str, Any]) -> None:
+        """Synchronous publish for Celery worker processes and sync FastAPI endpoints."""
+        envelope = json.dumps({"recruiter_id": recruiter_id, "payload": payload})
+        url = (settings.redis_url or "").strip()
+        if url:
+            try:
+                import redis as sync_redis
+
+                client = sync_redis.from_url(url, decode_responses=True)
+                try:
+                    client.publish(NOTIFICATION_CHANNEL, envelope)
+                    return
+                finally:
+                    client.close()
+            except Exception:
+                logger.warning("Sync Redis publish failed; attempting local fallback")
+
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(self.deliver_local(recruiter_id, payload))
+        except RuntimeError:
+            # No running event loop (e.g., synchronous worker/test without Redis)
+            pass
 
     async def start_listener(self) -> None:
         if self._listener_task is not None and not self._listener_task.done():

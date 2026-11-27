@@ -9,9 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
+from app.models.job import JobType
 from app.models.user import User
 from app.schemas.experience_extraction import ResumeExperienceRead
 from app.schemas.identity_extraction import ResumeIdentityRead
+from app.schemas.job import JobAcceptedResponse
 from app.schemas.language_extraction import ResumeLanguageRead
 from app.schemas.education_extraction import ResumeEducationRead
 from app.schemas.certification_extraction import ResumeCertificationRead
@@ -40,6 +42,9 @@ from app.services.resume.preview_service import ResumePreviewService
 from app.services.resume.update_service import ResumeUpdateService
 from app.services.resume_service import get_resumes_list, get_full_resume_detail, get_resume_detail
 from app.services.storage import get_storage_backend, normalize_storage_key
+from app.workers.celery_app import QUEUE_CV_PARSING
+from app.workers.dispatcher import dispatch_background_job
+from app.workers.tasks import execute_resume_analysis_job
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])
 
@@ -72,6 +77,48 @@ def re_analyze_resume(
     current_user: User = Depends(get_current_user),
 ):
     return ResumeAnalysisService.reanalyze(db=db, recruiter_id=current_user.id, background_tasks=background_tasks, resume_id=payload.resume_id)
+
+
+@router.post("/analyze-async", response_model=JobAcceptedResponse, status_code=status.HTTP_202_ACCEPTED)
+def analyze_resume_async(
+    payload: ResumePathRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JobAcceptedResponse:
+    return dispatch_background_job(
+        db,
+        background_tasks,
+        recruiter_id=current_user.id,
+        job_type=JobType.RESUME_SCREENING,
+        target=Path(payload.path).name,
+        task_name="talentflow.cv.analyze_resume",
+        queue_name=QUEUE_CV_PARSING,
+        task_kwargs={"resume_path": payload.path, "require_candidat": False},
+        fallback_fn=execute_resume_analysis_job,
+        initial_message="Resume analysis queued",
+    )
+
+
+@router.post("/re-analyze-async", response_model=JobAcceptedResponse, status_code=status.HTTP_202_ACCEPTED)
+def re_analyze_resume_async(
+    payload: ResumeIdRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JobAcceptedResponse:
+    return dispatch_background_job(
+        db,
+        background_tasks,
+        recruiter_id=current_user.id,
+        job_type=JobType.RESUME_SCREENING,
+        target=f"resume#{payload.resume_id}",
+        task_name="talentflow.cv.analyze_resume",
+        queue_name=QUEUE_CV_PARSING,
+        task_kwargs={"resume_id": payload.resume_id, "require_candidat": True},
+        fallback_fn=execute_resume_analysis_job,
+        initial_message="Resume re-analysis queued",
+    )
 
 
 @router.post("/identity", response_model=ResumeIdentityRead, status_code=status.HTTP_200_OK)

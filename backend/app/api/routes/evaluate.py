@@ -2,13 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.candidat import Candidat
+from app.models.job import JobType
 from app.models.user import User
 from app.schemas.evaluate import (
     DepartmentEvaluation,
@@ -18,7 +19,11 @@ from app.schemas.evaluate import (
     EvaluatedCandidateCard,
     TalentCard,
 )
+from app.schemas.job import JobAcceptedResponse
 from app.services.evaluation_service import EvaluationService
+from app.workers.celery_app import QUEUE_AI_WORKFLOWS
+from app.workers.dispatcher import dispatch_background_job
+from app.workers.tasks import execute_evaluate_candidate_job
 
 router = APIRouter(prefix="/evaluate", tags=["Evaluate"])
 
@@ -54,6 +59,27 @@ def evaluate_candidate(
 ) -> EvaluateResponse:
     service = EvaluationService(db)
     return service.evaluate(payload.candidate_id)
+
+
+@router.post("/async", response_model=JobAcceptedResponse, status_code=status.HTTP_202_ACCEPTED)
+def evaluate_candidate_async(
+    payload: EvaluateRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> JobAcceptedResponse:
+    return dispatch_background_job(
+        db,
+        background_tasks,
+        recruiter_id=current_user.id,
+        job_type=JobType.CANDIDATE_MATCHING,
+        target=f"candidate#{payload.candidate_id}",
+        task_name="talentflow.ai.evaluate_candidate",
+        queue_name=QUEUE_AI_WORKFLOWS,
+        task_kwargs={"candidate_id": payload.candidate_id},
+        fallback_fn=execute_evaluate_candidate_job,
+        initial_message="Candidate evaluation queued",
+    )
 
 
 @router.patch("/{candidate_id}/talent")

@@ -10,6 +10,9 @@ from app.services.skill_extraction.models import SkillConcept
 
 _SENTENCE_TRANSFORMER_CACHE = None  # None=untried, False=failed, Class=success
 _SENTENCE_TRANSFORMER_LOCK = threading.Lock()
+_EMBEDDING_MODEL_INSTANCE = None
+_CATEGORY_EMBEDDINGS_CACHE = None
+_CONCEPT_EMBEDDINGS_CACHE = None
 
 class SkillOntology:
     def __init__(self) -> None:
@@ -198,25 +201,44 @@ class SkillOntology:
             return _SENTENCE_TRANSFORMER_CACHE if _SENTENCE_TRANSFORMER_CACHE else None
 
     def ensure_embeddings(self) -> None:
+        global _EMBEDDING_MODEL_INSTANCE, _CATEGORY_EMBEDDINGS_CACHE, _CONCEPT_EMBEDDINGS_CACHE
         if self._embedding_model is not None:
+            return
+        if _EMBEDDING_MODEL_INSTANCE is not None:
+            self._embedding_model = _EMBEDDING_MODEL_INSTANCE
+            self._category_embeddings = _CATEGORY_EMBEDDINGS_CACHE
+            self._concept_embeddings = _CONCEPT_EMBEDDINGS_CACHE
             return
         SentenceTransformer = self._import_sentence_transformer()
         if SentenceTransformer is None:
             return
-        try:
-            self._embedding_model = SentenceTransformer(
-                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-                local_files_only=True,
-            )
-        except Exception:
-            self._embedding_model = None
-            return
+        with _SENTENCE_TRANSFORMER_LOCK:
+            if _EMBEDDING_MODEL_INSTANCE is not None:
+                self._embedding_model = _EMBEDDING_MODEL_INSTANCE
+                self._category_embeddings = _CATEGORY_EMBEDDINGS_CACHE
+                self._concept_embeddings = _CONCEPT_EMBEDDINGS_CACHE
+                return
+            try:
+                model = SentenceTransformer(
+                    "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+                    local_files_only=True,
+                )
+            except Exception:
+                self._embedding_model = None
+                return
 
-        category_texts = [f"{category}: {description}" for category, description in self.category_profiles.items()]
-        self._category_embeddings = self._embedding_model.encode(category_texts, normalize_embeddings=True)
+            category_texts = [f"{category}: {description}" for category, description in self.category_profiles.items()]
+            category_embeddings = model.encode(category_texts, normalize_embeddings=True)
 
-        concept_texts = [f"{concept.canonical}. {concept.description}. {', '.join(concept.aliases)}" for concept in self.concepts]
-        self._concept_embeddings = self._embedding_model.encode(concept_texts, normalize_embeddings=True)
+            concept_texts = [f"{concept.canonical}. {concept.description}. {', '.join(concept.aliases)}" for concept in self.concepts]
+            concept_embeddings = model.encode(concept_texts, normalize_embeddings=True)
+
+            _EMBEDDING_MODEL_INSTANCE = model
+            _CATEGORY_EMBEDDINGS_CACHE = category_embeddings
+            _CONCEPT_EMBEDDINGS_CACHE = concept_embeddings
+            self._embedding_model = model
+            self._category_embeddings = category_embeddings
+            self._concept_embeddings = concept_embeddings
 
     def _best_category_by_embedding(self, value: str) -> tuple[float, str | None]:
         self.ensure_embeddings()

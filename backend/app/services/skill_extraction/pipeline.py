@@ -19,8 +19,17 @@ _ST_LOCK = threading.Lock()
 
 
 class ResumeSkillExtractionPipeline:
-    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
-        self.ontology = SkillOntology()
+    def __init__(
+        self,
+        db: Session | None = None,
+        recruiter_id: int | None = None,
+        ontology: SkillOntology | None = None,
+    ) -> None:
+        if ontology is None:
+            from app.workers.model_registry import get_shared_ontology
+
+            ontology = get_shared_ontology(preload_embeddings=False)
+        self.ontology = ontology
         self.section_analyzer = ResumeSectionAnalyzer()
         self.extractor = CandidateExtractor(self.ontology)
         self.scorer = SkillScorer(self.ontology, db=db, recruiter_id=recruiter_id)

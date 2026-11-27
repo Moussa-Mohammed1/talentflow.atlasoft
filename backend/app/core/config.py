@@ -56,6 +56,18 @@ class Settings(BaseSettings):
     s3_use_ssl: bool = False
 
     redis_url: str = ""
+    celery_broker_url: str = ""
+    celery_result_backend: str = ""
+    celery_task_always_eager: bool = False
+    celery_preload_models: bool = True
+
+    @property
+    def effective_celery_broker_url(self) -> str:
+        return (self.celery_broker_url or self.redis_url or "redis://localhost:6379/0").strip()
+
+    @property
+    def effective_celery_result_backend(self) -> str:
+        return (self.celery_result_backend or self.redis_url or "redis://localhost:6379/1").strip()
 
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parent.parent / ".env"),

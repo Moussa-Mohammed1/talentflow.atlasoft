@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Index, Integer, String, Text, func
+from sqlalchemy import JSON, DateTime, Enum as SQLEnum, ForeignKey, Index, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -26,6 +27,8 @@ class JobType(str, Enum):
     LANGUAGE_EXTRACTION = "language_extraction"
     EDUCATION_EXTRACTION = "education_extraction"
     CERTIFICATION_EXTRACTION = "certification_extraction"
+    JOB_OFFER_GENERATION = "job_offer_generation"
+    EVALUATION_VALIDATION = "evaluation_validation"
 
 
 class Job(Base):
@@ -63,11 +66,25 @@ class Job(Base):
         nullable=False,
         default=JobStatus.PENDING,
     )
+    celery_task_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    queue_name: Mapped[str] = mapped_column(String(64), nullable=False, default="default", server_default="default")
+    progress: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    current_step: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    retries: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3, server_default="3")
     message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_details: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
     )

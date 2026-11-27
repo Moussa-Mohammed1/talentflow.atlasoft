@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, CheckCircle2, CircleAlert, PenLine, Mail, User, Shield, Calendar, BadgeCheck, Camera, FileText, Cpu, Send, XCircle } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftProfileIcon } from "@/components/layouts/AtlasoftIcons";
 import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useToast } from "@/hooks/useToast";
@@ -229,25 +229,27 @@ export default function ProfilePage() {
 
   if (isLoadingUser || !user) {
     return (
-      <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans">
-        <Sidebar />
+      <AppShell
+        title="Mon Profil"
+        icon={<AtlasoftProfileIcon size={22} />}
+        breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Mon Profil" }]}
+        backgroundClassName="bg-[#f3f2f1]"
+      >
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin text-slate-400" />
+          <Loader2 size={24} className="animate-spin text-[#0078d4]" />
         </div>
-      </div>
+      </AppShell>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-slate-50 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-slate-900">Mon Profil</h1>
-          <NotificationButton />
-        </header>
-
-        <main className="flex-1 px-6 pb-8 overflow-y-auto">
+    <AppShell
+      title="Mon Profil"
+      icon={<AtlasoftProfileIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Mon Profil" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+    >
+        <main className="flex-1 px-6 py-6 overflow-y-auto">
           <div className="max-w-2xl mx-auto">
             <p className="text-sm text-slate-600 mb-6">Consultez et modifiez vos informations personnelles. Téléchargez un <strong>avatar</strong>, modifiez votre <strong>nom</strong> et votre <strong>email</strong>, changez votre <strong>mot de passe</strong> et consultez vos <strong>statistiques d&apos;utilisation</strong> de l&apos;IA.</p>
             <div className="space-y-6">
@@ -552,7 +554,6 @@ export default function ProfilePage() {
           </div>
         </div>
         </main>
-      </div>
-    </div>
+    </AppShell>
   );
 }

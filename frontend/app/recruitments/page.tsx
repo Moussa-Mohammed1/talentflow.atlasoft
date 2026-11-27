@@ -11,8 +11,8 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftRecruitIcon } from "@/components/layouts/AtlasoftIcons";
 import { recruitmentService } from "@/services/recruitment.service";
 import { RecruitmentCard } from "@/components/recruitment/RecruitmentCard";
 import { RecruitmentDetailModal } from "@/components/recruitment/RecruitmentDetailModal";
@@ -90,76 +90,79 @@ export default function RecruitmentsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900 shrink-0">Recrutements</h1>
-          <div className="relative max-w-md w-full hidden md:block mx-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input
-              type="text"
-              placeholder="Rechercher un candidat, un poste..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 px-4 py-2.5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
-            />
-          </div>
-          <div ref={filtersRef} className="flex items-center gap-3 shrink-0 relative">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 px-2.5 py-2.5 border text-xs font-medium transition-colors cursor-pointer ${
-                showFilters ? "bg-slate-200 text-slate-900 border-slate-300" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              <SlidersHorizontal size={14} />
-              Filtres
-            </button>
-            {showFilters && (
-              <div className="absolute top-full right-0 mt-2 z-40 bg-white border border-slate-200 shadow-xl p-4 min-w-[220px]">
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 block mb-1">Statut</label>
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
-                    >
-                      <option value="">Tous</option>
-                      {Object.entries(statusLabels).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium text-slate-500 block mb-1">Priorité</label>
-                    <select
-                      value={priorityFilter}
-                      onChange={(e) => setPriorityFilter(e.target.value)}
-                      className="w-full border border-slate-200 px-3 py-1.5 text-xs outline-none focus:border-indigo-500"
-                    >
-                      <option value="">Toutes</option>
-                      {Object.entries(priorityLabels).map(([value, label]) => (
-                        <option key={value} value={value}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {(statusFilter || priorityFilter) && (
-                    <button
-                      onClick={() => { setStatusFilter(""); setPriorityFilter(""); }}
-                      className="w-full text-xs text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 py-1 cursor-pointer"
-                    >
-                      <X size={12} /> Réinitialiser
-                    </button>
-                  )}
+    <AppShell
+      title="Recrutements"
+      icon={<AtlasoftRecruitIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Recrutements" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerCenter={
+        <div className="relative hidden md:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#605e5c]" size={15} />
+          <input
+            type="text"
+            placeholder="Rechercher un candidat, un poste..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-[2px] border border-[#8a8886] bg-white py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] outline-none transition-colors focus:border-[#0078d4]"
+          />
+        </div>
+      }
+      headerActions={
+        <div ref={filtersRef} className="relative flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center gap-2 rounded-[2px] border px-3 py-1.5 text-[12.5px] font-medium transition-colors cursor-pointer font-atlasoft ${
+              showFilters
+                ? "border-[#0078d4] bg-[#eff6fc] text-[#0078d4]"
+                : "border-[#8a8886] bg-white text-[#323130] hover:bg-[#f3f2f1]"
+            }`}
+          >
+            <SlidersHorizontal size={14} />
+            Filtres
+          </button>
+          {showFilters && (
+            <div className="absolute right-0 top-full z-40 mt-1.5 min-w-[220px] rounded-[2px] border border-[#edebe9] bg-white p-4 shadow-xl">
+              <div className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[#605e5c]">Statut</label>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="w-full rounded-[2px] border border-[#8a8886] px-3 py-1.5 text-xs outline-none focus:border-[#0078d4]"
+                  >
+                    <option value="">Tous</option>
+                    {Object.entries(statusLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-[#605e5c]">Priorité</label>
+                  <select
+                    value={priorityFilter}
+                    onChange={(e) => setPriorityFilter(e.target.value)}
+                    className="w-full rounded-[2px] border border-[#8a8886] px-3 py-1.5 text-xs outline-none focus:border-[#0078d4]"
+                  >
+                    <option value="">Toutes</option>
+                    {Object.entries(priorityLabels).map(([value, label]) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                {(statusFilter || priorityFilter) && (
+                  <button
+                    onClick={() => { setStatusFilter(""); setPriorityFilter(""); }}
+                    className="flex w-full cursor-pointer items-center justify-center gap-1 py-1 text-xs text-[#0078d4] hover:underline"
+                  >
+                    <X size={12} /> Réinitialiser
+                  </button>
+                )}
               </div>
-            )}
-            <NotificationButton />
-          </div>
-        </header>
-
+            </div>
+          )}
+        </div>
+      }
+    >
         <main className="flex-1 flex flex-col min-h-0 max-w-7xl mx-auto w-full">
           <div className="flex-1 overflow-y-auto px-6 pt-6">
             <div className="mb-6">
@@ -243,7 +246,6 @@ export default function RecruitmentsPage() {
             </div>
           )}
         </main>
-      </div>
 
       {selectedId && (
         <RecruitmentDetailModal
@@ -252,6 +254,6 @@ export default function RecruitmentsPage() {
           onUpdated={fetchRecruitments}
         />
       )}
-    </div>
+    </AppShell>
   );
 }

@@ -3,8 +3,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Search, FileQuestionMark, ChevronLeft, ChevronRight } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftDocumentsIcon } from "@/components/layouts/AtlasoftIcons";
 import DocumentPreviewCard from "@/components/resume/documents/DocumentPreviewCard";
 import DocumentResumeInfos, {
   ResumeDetails,
@@ -15,7 +15,6 @@ import {
   getResumeDetails,
   revokeResumeDocumentPreviews,
 } from "@/services/resume.service";
-import SystemJobs from "@/components/ui/SystemJobs";
 
 const ImportResumeButton = dynamic(
   () => import("@/components/resume/ImportResumeButton"),
@@ -126,31 +125,28 @@ export default function DocumentsPage() {
   }, [filteredDocuments, currentPage]);
 
   return (
-    <div className="flex min-h-screen bg-slate-100  text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen [scrollbar-width:none]">
-        <header className="bg-white border-b border-slate-100 px-6 pt-4 pb-3 flex justify-between items-center z-30">
-          <h1 className="text-lg font-bold text-slate-900 shrink-0">Documents</h1>
-          <div className="relative max-w-md w-full hidden md:block mx-4">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Rechercher un candidat, un fichier, une catégorie ou un rôle..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full pl-10 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 px-4 py-2.5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
-            />
-          </div>
-          <div className="flex items-center text-lg gap-4 shrink-0">
-            <SystemJobs/>
-            <ImportResumeButton />
-            <NotificationButton />
-          </div>
-        </header>
-
+    <AppShell
+      title="Documents"
+      icon={<AtlasoftDocumentsIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Documents" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerCenter={
+        <div className="relative hidden md:block">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#605e5c]"
+            size={15}
+          />
+          <input
+            type="text"
+            placeholder="Rechercher un candidat, un fichier, une catégorie ou un rôle..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="w-full rounded-[2px] border border-[#8a8886] bg-white py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] outline-none transition-colors focus:border-[#0078d4]"
+          />
+        </div>
+      }
+      headerActions={<ImportResumeButton />}
+    >
         <main className="flex-1 flex flex-col min-h-0 p-4 pb-0 max-w-7xl mx-auto w-full">
           <div className="flex-1 overflow-y-auto space-y-6 relative">
             <p className="text-sm text-slate-600 hidden lg:block">Importez et gérez les CV des candidats. Utilisez la <strong>barre de recherche</strong> pour filtrer, cliquez sur une carte pour voir les <strong>détails extraits</strong> (identité, compétences, expériences, formations). Lancez une <strong>ré-analyse</strong> ou <strong>extraction</strong> depuis le panneau de détails.</p>
@@ -235,7 +231,6 @@ export default function DocumentsPage() {
             </div>
           )}
         </main>
-      </div>
 
       {modalOpen && selectedDetails && (
         <DocumentResumeInfos
@@ -260,7 +255,7 @@ export default function DocumentsPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }
 

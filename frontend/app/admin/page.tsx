@@ -17,8 +17,8 @@ import {
   BadgeCheck,
   Mail,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftAdminUsersIcon } from "@/components/layouts/AtlasoftIcons";
 import { AdminService } from "@/services/admin.service";
 import type { AdminUser } from "@/types/admin";
 import type { UserStats } from "@/types/auth";
@@ -146,29 +146,28 @@ export default function AdminUsersPage() {
   }, [selectedUser, newRole, toast]);
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-3">
-            <div>
-              <h1 className="text-lg font-bold text-slate-900">Administration</h1>
-              <p className="text-xs text-slate-500">Gestion des utilisateurs. Consultez la liste des recruteurs, leurs rôles et leur statut. Utilisez les actions pour <strong>activer</strong>, <strong>désactiver</strong> ou <strong>changer le rôle</strong> d&apos;un utilisateur.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={loadUsers}
-              disabled={isLoading}
-              className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer disabled:opacity-50"
-              title="Actualiser"
-            >
-              <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
-            </button>
-            <NotificationButton />
-          </div>
-        </header>
-
+    <AppShell
+      title="Administration"
+      subtitle={
+        <>
+          Gestion des utilisateurs. Consultez la liste des recruteurs, leurs rôles et leur statut. Utilisez les actions pour <strong>activer</strong>, <strong>désactiver</strong> ou <strong>changer le rôle</strong> d&apos;un utilisateur.
+        </>
+      }
+      icon={<AtlasoftAdminUsersIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Administration" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerActions={
+        <button
+          onClick={loadUsers}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 rounded-[2px] border border-[#8a8886] bg-white px-3 py-1.5 text-[12.5px] font-medium text-[#323130] hover:bg-[#f3f2f1] transition-colors cursor-pointer disabled:opacity-50 font-atlasoft"
+          title="Actualiser"
+        >
+          <RefreshCw size={14} className={isLoading ? "animate-spin text-[#0078d4]" : "text-[#0078d4]"} />
+          <span>Actualiser</span>
+        </button>
+      }
+    >
         <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6">
           {isLoading ? (
             <div className="space-y-4">
@@ -253,7 +252,6 @@ export default function AdminUsersPage() {
             </>
           )}
         </main>
-      </div>
 
       {/* User Detail Modal */}
       {selectedUser && (
@@ -474,6 +472,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }

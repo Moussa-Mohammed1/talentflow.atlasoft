@@ -12,8 +12,8 @@ import {
   Briefcase,
   X,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftDepartmentsIcon } from "@/components/layouts/AtlasoftIcons";
 import { useToast } from "@/hooks/useToast";
 import { DepartmentService } from "@/services/department.service";
 import type { Department, DepartmentUpdateRequest } from "@/types/department";
@@ -146,23 +146,25 @@ export default function DepartementsPage() {
   );
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900">Départements</h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleOpenCreate}
-              className="flex  items-center justify-center gap-2 border bg-white px-4 py-2.5 text-sm not-lg:text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
-            >
-              <Plus className="h-4 w-4" />
-              <p className="not-lg:hidden ">Nouveau département</p>
-            </button>
-            <NotificationButton />
-          </div>
-        </header>
-
+    <AppShell
+      title="Départements"
+      icon={<AtlasoftDepartmentsIcon size={22} />}
+      breadcrumbs={[
+        { label: "Accueil", href: "/dashboard" },
+        { label: "Resources", href: "/resources" },
+        { label: "Départements" },
+      ]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerActions={
+        <button
+          onClick={handleOpenCreate}
+          className="flex items-center justify-center gap-2 rounded-[2px] border border-[#0078d4] bg-[#0078d4] px-3.5 py-1.5 text-[12.5px] font-medium text-white transition-colors hover:bg-[#106ebe] font-atlasoft"
+        >
+          <Plus className="h-4 w-4" />
+          <span className="not-lg:hidden">Nouveau département</span>
+        </button>
+      }
+    >
         <main className="flex-1 px-6 py-6 max-w-7xl mx-auto w-full space-y-6">
           <p className="text-sm text-slate-600">Gérez les départements de l&apos;entreprise. Pour chaque département, renseignez les <strong>compétences requises</strong> et le nombre d&apos;<strong>années d&apos;expérience</strong> nécessaire. Utilisez la <strong>barre de recherche</strong> et le <strong>tri</strong> pour naviguer. Cliquez sur un département pour voir ses détails, le <strong>modifier</strong> ou le <strong>supprimer</strong>.</p>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm text-slate-600">
@@ -347,7 +349,6 @@ export default function DepartementsPage() {
             </>
           )}
         </main>
-      </div>
 
       <DepartmentModal
         isOpen={isModalOpen}
@@ -370,7 +371,7 @@ export default function DepartementsPage() {
           onCancelDelete={() => setDeleteConfirmId(null)}
         />
       )}
-    </div>
+    </AppShell>
   );
 }
 

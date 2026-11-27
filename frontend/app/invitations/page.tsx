@@ -18,8 +18,8 @@ import {
   MailPlus,
   UserPlus,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftInviteIcon } from "@/components/layouts/AtlasoftIcons";
 import InvitationFormModal from "@/components/invitation/InvitationFormModal";
 import { useToast } from "@/hooks/useToast";
 import type { Invitation, InvitationStatus } from "@/types/invitation";
@@ -211,30 +211,26 @@ export default function InvitationsPage() {
   const hasFilters = searchQuery || statusFilter !== "all" || sortBy !== "recent";
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-4">
-            <h1 className="text-lg font-bold text-slate-900">
-                Invitations
-            </h1>
-
-            <div className="flex items-center gap-3">
-                
-                <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2  border bg-white px-2.5 py-2.5 text-xs font-medium text-black shadow-xs transition-all hover:bg-black hover:text-white"
-                >
-                <UserPlus className="h-4 w-4" />
-                Inviter un recruteur
-                </button>
-                <NotificationButton />
-
-            </div>
-        </header>
-
-        <main className="flex-1 px-6  max-w-7xl mx-auto w-full space-y-6">
+    <AppShell
+      title="Invitations"
+      icon={<AtlasoftInviteIcon size={22} />}
+      breadcrumbs={[
+        { label: "Accueil", href: "/dashboard" },
+        { label: "Administration", href: "/admin" },
+        { label: "Invitations" },
+      ]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerActions={
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 rounded-[2px] border border-[#0078d4] bg-[#0078d4] px-3 py-1.5 text-[12.5px] font-medium text-white transition-colors hover:bg-[#106ebe] font-atlasoft"
+        >
+          <UserPlus className="h-4 w-4" />
+          Inviter un recruteur
+        </button>
+      }
+    >
+        <main className="flex-1 px-6 max-w-7xl mx-auto w-full space-y-6 pt-6">
           <p className="text-sm text-slate-600">Invitez des recruteurs à collaborer. Consultez la liste des invitations, filtrez par <strong>statut</strong> (En attente, Acceptée, Expirée) et effectuez des actions&nbsp;: <strong>renvoyer</strong>, <strong>révoquer</strong> ou <strong>copier le lien</strong> d&apos;invitation.</p>
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
             
@@ -488,7 +484,6 @@ export default function InvitationsPage() {
             </>
           )}
         </main>
-      </div>
 
       <InvitationFormModal
         isOpen={isModalOpen}
@@ -516,7 +511,7 @@ export default function InvitationsPage() {
           </button>
         </div>
       )}
-    </div>
+    </AppShell>
   );
 }
 

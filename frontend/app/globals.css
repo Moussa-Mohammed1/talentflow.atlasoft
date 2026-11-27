@@ -22,8 +22,19 @@
 
 @theme {
   --font-sans: 'Iosevka Charon', ui-sans-serif, system-ui, sans-serif;
+  --font-atlasoft: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
   --font-playwrite: 'Playwrite BE VLG', cursive;
   --font-herr: 'Herr Von Muellerhoff', cursive;
+  --color-atlasoft-topbar: #1b1a19;
+  --color-atlasoft-sidebar: #252423;
+  --color-atlasoft-sidebar-hover: #323130;
+  --color-atlasoft-sidebar-border: #3b3a39;
+  --color-atlasoft-blue: #0078d4;
+  --color-atlasoft-blue-bright: #2899f5;
+  --color-atlasoft-cyan: #50e6ff;
+  --color-atlasoft-border: #edebe9;
+  --color-atlasoft-text: #323130;
+  --color-atlasoft-muted: #605e5c;
   --animate-toast-enter: toast-enter 0.35s cubic-bezier(0.21, 1.02, 0.73, 1);
   --animate-toast-exit: toast-exit 0.3s ease-in forwards;
 }

@@ -127,7 +127,7 @@ function AcceptInvitationContent() {
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden">
               <img
-                src="/images/logo.png"
+                src="/images/black-logo.png"
                 alt="Logo"
                 className="w-full h-auto object-contain"
               />

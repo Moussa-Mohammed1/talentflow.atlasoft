@@ -5,8 +5,8 @@ import {
   Loader2, AlertCircle, User, X, Mail, Phone,
   Trophy, Briefcase, Clock, Star, UserPlus,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftTalentsIcon } from "@/components/layouts/AtlasoftIcons";
 import api from "@/lib/axios";
 import { recruitmentService } from "@/services/recruitment.service";
 import { jobOffersService } from "@/services/job-offers.service";
@@ -638,15 +638,12 @@ export default function TalentsPage() {
   }, [fetchTalents]);
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-white px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Talents</h1>
-          <NotificationButton />
-        </header>
-
+    <AppShell
+      title="Talents"
+      icon={<AtlasoftTalentsIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Talents" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+    >
         <main className="flex-1 px-6 py-3">
           <div className="max-w-7xl mx-auto">
             <div className="mb-6">
@@ -683,7 +680,6 @@ export default function TalentsPage() {
             )}
           </div>
         </main>
-      </div>
 
       {selectedTalent && (
         <TalentDetailModal
@@ -705,6 +701,6 @@ export default function TalentsPage() {
           onSuccess={() => setRecruitTalent(null)}
         />
       )}
-    </div>
+    </AppShell>
   );
 }

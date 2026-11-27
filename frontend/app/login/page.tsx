@@ -33,7 +33,7 @@ export default function LoginPage() {
                
               <div className="w-40 h-40 rounded-full border-none flex items-center justify-center overflow-hidden">
                 <img 
-                  src="/images/logo.png"
+                  src="/images/black-logo.png"
                   alt="Logo 3GCOM" 
                   className="w-30 h-auto object-contain p-2"
                 />

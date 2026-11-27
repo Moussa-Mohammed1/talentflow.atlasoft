@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftEvaluationsIcon } from "@/components/layouts/AtlasoftIcons";
 import EvaluatedCandidateCard, { type EvaluatedCandidate } from "@/components/evaluation/EvaluatedCandidateCard";
 import EvaluationDetailModal from "@/components/evaluation/EvaluationDetailModal";
 import api from "@/lib/axios";
@@ -28,15 +28,12 @@ export default function EvaluationsPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-white px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Évaluations</h1>
-          <NotificationButton/>
-        </header>
-
+    <AppShell
+      title="Évaluations"
+      icon={<AtlasoftEvaluationsIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Évaluations" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+    >
         <main className="flex-1 px-6 py-3">
           <div className="max-w-6xl mx-auto">
             <div className="mb-6">
@@ -71,13 +68,12 @@ export default function EvaluationsPage() {
             )}
           </div>
         </main>
-      </div>
 
       <EvaluationDetailModal
         isOpen={selectedCandidate !== null}
         onClose={() => setSelectedCandidate(null)}
         candidate={selectedCandidate!}
       />
-    </div>
+    </AppShell>
   );
 }

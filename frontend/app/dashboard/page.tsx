@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { ArrowRight, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
-import Sidebar from '@/components/layouts/Sidebar';
-import NotificationButton from '@/components/ui/NotificationButton';
+import AppShell from '@/components/layouts/AppShell';
+import { AtlasoftHomeIcon } from '@/components/layouts/AtlasoftIcons';
 import PasswordChangeBanner from '@/components/ui/PasswordChangeBanner';
 import RecentActivities from '@/components/ui/RecentActivities';
 import { useRouter } from 'next/navigation';
@@ -50,18 +50,13 @@ export default function Dashboard() {
 ];
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      
-      <Sidebar/>
- 
-      <div className="flex-1 flex flex-col min-h-screen">
-        
-        <header className="bg-white px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Accueil</h1>
-          <NotificationButton/>
-        </header>
-       
-        <main className="flex-1 px-6 py-6">
+    <AppShell
+      title="Accueil"
+      icon={<AtlasoftHomeIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+    >
+      <main className="flex-1 px-6 py-6">
           <div className="mb-6 rounded-lg">
             <p className="text-sm leading-7 text-slate-600">
               Page d&apos;accueil de TalentFlow. Retrouvez les raccourcis vers les principales fonctionnalités&nbsp;: <strong>Guide de démarrage</strong>, <strong>Gestion des talents</strong>, <strong>Analyse &amp; Statistiques</strong>, <strong>Documents &amp; Ressources</strong>. Consultez le <strong>parcours recommandé</strong> pour suivre les bonnes pratiques et visionnez les <strong>activités récentes</strong>.
@@ -177,8 +172,7 @@ export default function Dashboard() {
             <RecentActivities />
           </div>
         </main>
-      </div>
-    </div>
+    </AppShell>
   );
 }
 

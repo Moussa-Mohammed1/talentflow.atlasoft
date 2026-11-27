@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, ActivityIcon, ActivitySquare, Loader2, Plane, Workflow } from "lucide-react";
+import { Loader2, TerminalSquare } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { formatJobType, formatTimeAgo } from "@/types/job";
 import { useJobs } from "@/hooks/useJobs";
@@ -24,32 +24,26 @@ export default function SystemJobs() {
     switch (status) {
       case "running":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-            <Loader2 className="animate-spin h-3 w-3 text-blue-600" />
+          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[#c7e0f4] bg-[#eff6fc] px-2 py-0.5 text-[11px] font-medium text-[#0078d4]">
+            <Loader2 className="h-3 w-3 animate-spin text-[#0078d4]" />
             En cours
           </span>
         );
       case "completed":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-            </svg>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#bad80a]/40 bg-[#dff6dd] px-2 py-0.5 text-[11px] font-medium text-[#107c10]">
             Terminé
           </span>
         );
       case "failed":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-50 text-rose-700 border border-rose-100">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3 h-3">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#f1707b]/40 bg-[#fde7e9] px-2 py-0.5 text-[11px] font-medium text-[#a80000]">
             Échoué
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-700 border border-slate-100">
+          <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#edebe9] bg-[#f3f2f1] px-2 py-0.5 text-[11px] font-medium text-[#605e5c]">
             En attente
           </span>
         );
@@ -70,102 +64,86 @@ export default function SystemJobs() {
   };
 
   const statusMessageClass = (status: string) => {
-    return status === "failed" ? "text-rose-500 font-medium" : "text-slate-400";
+    return status === "failed" ? "text-[#a80000] font-medium" : "text-[#605e5c]";
   };
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
-     <button
+    <div className="relative inline-flex h-full items-center text-left font-atlasoft" ref={dropdownRef}>
+      <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`group relative flex items-center px-3.5 py-2 transition-all duration-300 border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-            isOpen
-            ? "bg-slate-100 text-slate-800 border-slate-300 shadow-inner"
-            : "bg-white text-slate-600 border-black hover:bg-slate-50 hover:text-slate-800 shadow-sm"
+        className={`relative flex h-10 w-10 items-center justify-center text-white transition-colors focus:outline-none ${
+          isOpen ? "bg-[#323130]" : "hover:bg-[#323130]"
         }`}
         title="Tâches de fond"
-        >
-        {/* Smoothly expanding text container on the left */}
-        <span className="max-w-0 opacity-0 overflow-hidden transition-all duration-500 ease-in-out group-hover:max-w-32 group-hover:opacity-100 group-focus:max-w-32 group-focus:opacity-100 whitespace-nowrap text-xs font-medium">
-            <span className="pr-2 ">tâches de fond</span>
-        </span>
-
-        {/* Icon and Badge Container */}
-        <div className="relative flex items-center justify-center">
-            <Workflow size={18}/>
-
-            {runningCount > 0 && (
-            <span className="absolute -top-3.5 -right-5 flex h-4 w-4">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75 " />
-                <span className="relative inline-flex rounded-full h-4 w-4 bg-blue-600 text-[10px] font-bold text-white items-center justify-center">
-                {runningCount}
-                </span>
-            </span>
-            )}
-        </div>
-        </button>
+        aria-label="Tâches de fond"
+        aria-expanded={isOpen}
+      >
+        <TerminalSquare size={16} strokeWidth={1.75} />
+        {runningCount > 0 && (
+          <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#0078d4] px-1 text-[10px] font-bold leading-none text-white ring-1 ring-[#1b1a19]">
+            {runningCount}
+          </span>
+        )}
+      </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-120 not-lg:w-screen  border border-slate-200 bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transform opacity-100 scale-100 transition-all">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-xl">
-            <h3 className="font-semibold text-slate-800 text-sm flex items-center gap-2">
-              Tâches de Fond
-              <span className="px-2 py-0.5 text-xs font-medium bg-slate-200/70 text-slate-700 rounded-full">
-                {jobs.length} total
+        <div className="absolute right-0 top-full z-50 w-96 max-w-[calc(100vw-1rem)] rounded-[2px] border border-[#edebe9] bg-white text-[#323130] shadow-xl">
+          <div className="flex items-center justify-between border-b border-[#edebe9] bg-[#faf9f8] px-4 py-3">
+            <h3 className="flex items-center gap-2 text-[13px] font-semibold text-[#323130]">
+              Tâches de fond
+              <span className="rounded-[2px] bg-[#edebe9] px-1.5 py-0.5 text-[11px] font-medium text-[#323130]">
+                {jobs.length}
               </span>
             </h3>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={refresh}
-                className="text-xs text-blue-600 hover:text-blue-700 underline"
-              >
-                Réessayer
-              </button>
-              
-            </div>
+            <button
+              type="button"
+              onClick={refresh}
+              className="text-[12px] font-medium text-[#0078d4] hover:text-[#106ebe] hover:underline"
+            >
+              Actualiser
+            </button>
           </div>
 
-          <div className="max-h-[400px] overflow-y-auto divide-y divide-slate-100">
+          <div className="max-h-96 divide-y divide-[#edebe9] overflow-y-auto">
             {isLoading ? (
-              <div className="p-4 text-center text-slate-400 text-sm">
-                <Loader2 className="animate-spin h-4 w-4 mx-auto text-blue-600 mb-2" />
+              <div className="p-6 text-center text-[12px] text-[#605e5c]">
+                <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin text-[#0078d4]" />
                 Chargement des tâches...
               </div>
             ) : error ? (
-              <div className="p-4 text-center text-rose-500 text-sm">
+              <div className="p-4 text-center text-[12px] text-[#a80000]">
                 {error}
                 <button
+                  type="button"
                   onClick={refresh}
-                  className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
+                  className="ml-2 text-[12px] text-[#0078d4] underline"
                 >
                   Réessayer
                 </button>
               </div>
             ) : jobs.length === 0 ? (
-              <div className="p-4 text-center text-slate-400 text-sm">Aucune tâche de fond trouvée
-              <button
-                  onClick={refresh}
-                  className="ml-2 text-xs text-blue-600 hover:text-blue-700 underline"
-                >
-                  Réessayer
-                </button></div>
+              <div className="p-6 text-center text-[12px] text-[#605e5c]">
+                Aucune tâche de fond trouvée.
+              </div>
             ) : (
               jobs.map((job) => (
-                <div key={job.id} className="p-4 hover:bg-slate-50/70 transition-colors">
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                <div key={job.id} className="px-4 py-3 transition-colors hover:bg-[#f3f2f1]">
+                  <div className="mb-1 flex items-start justify-between gap-2">
                     <div className="flex flex-col">
-                      <span className="font-medium text-slate-900 text-sm">
+                      <span className="text-[12px] font-semibold text-[#323130]">
                         {formatJobType(job.type)}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-[10px] text-[#8a8886]">
                         {formatTimeAgo(job.created_at)}
                       </span>
                     </div>
                     {statusBadge(job.status)}
                   </div>
 
-                  <p className="text-xs text-slate-600 break-words line-clamp-2 leading-relaxed">
+                  <p className="line-clamp-2 break-words text-[11px] leading-relaxed text-[#605e5c]">
                     {formatJobType(job.type)} {statusText(job.status)}{" "}
-                    <strong className="text-slate-800 font-medium font-mono bg-slate-100 px-1 py-0.5 rounded text-[11px]">
+                    <strong className="rounded-[2px] bg-[#f3f2f1] px-1 py-0.5 font-mono text-[11px] font-medium text-[#323130]">
                       {job.target}
                     </strong>
                   </p>
@@ -178,15 +156,14 @@ export default function SystemJobs() {
             )}
           </div>
 
-          <div className="p-2 border-t border-slate-100 bg-slate-50/30 text-center rounded-b-xl">
-
-                <button
-                  onClick={() => deleteAll()}
-                  className="text-xs text-rose-500 hover:bg-red-500 w-full hover:text-white py-1 rounded-lg transition-all"
-                >
-                  Supprimer Tout
-                </button>
-            
+          <div className="border-t border-[#edebe9] bg-[#faf9f8] p-2 text-center">
+            <button
+              type="button"
+              onClick={() => deleteAll()}
+              className="w-full rounded-[2px] py-1.5 text-[12px] font-medium text-[#a80000] transition-colors hover:bg-[#fde7e9]"
+            >
+              Tout supprimer
+            </button>
           </div>
         </div>
       )}

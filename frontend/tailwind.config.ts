@@ -22,6 +22,15 @@ const config: Config = {
           "Segoe UI Symbol", 
           "Noto Color Emoji"
         ],
+        atlasoft: [
+          '"Segoe UI"',
+          '"Segoe UI Web (West European)"',
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Roboto",
+          '"Helvetica Neue"',
+          "sans-serif",
+        ],
         playwrite: ['"Playwrite BE VLG"', 'cursive'],
         herr: ['"Herr Von Muellerhoff"', 'cursive'],
       },

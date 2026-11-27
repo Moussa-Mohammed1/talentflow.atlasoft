@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/layouts/Sidebar';
-import NotificationButton from '@/components/ui/NotificationButton';
+import AppShell from '@/components/layouts/AppShell';
+import { AtlasoftResourcesIcon } from '@/components/layouts/AtlasoftIcons';
 
 const resources = [
   {
@@ -19,13 +19,12 @@ export default function ResourcesPage() {
   const router = useRouter();
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="bg-white px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-900">Resources</h1>
-          <NotificationButton />
-        </header>
+    <AppShell
+      title="Resources"
+      icon={<AtlasoftResourcesIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Resources" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+    >
         <main className="flex-1 px-6 py-8">
           <p className="text-sm text-slate-600 mb-6">Accédez aux ressources de configuration de la plateforme. Gérez les <strong>départements</strong>, leurs <strong>compétences requises</strong> et les seuils d&apos;expérience pour affiner les évaluations des candidats.</p>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-5xl mx-auto">
@@ -61,7 +60,6 @@ export default function ResourcesPage() {
             ))}
           </div>
         </main>
-      </div>
-    </div>
+    </AppShell>
   );
 }

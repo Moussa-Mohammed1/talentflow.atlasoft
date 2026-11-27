@@ -13,8 +13,8 @@ import {
   ChevronRight,
   Search,
 } from "lucide-react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftHelpIcon } from "@/components/layouts/AtlasoftIcons";
 
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -643,36 +643,33 @@ export default function HelpPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   return (
-    <div className="flex min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="grid grid-cols-3 items-center border-b border-slate-100 bg-white px-6 py-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-1 -ml-1 text-slate-400 hover:text-slate-600 lg:hidden"
-            >
-              <BookOpen className="h-5 w-5" />
-            </button>
-            <h1 className="text-lg font-bold text-slate-900 whitespace-nowrap">Guide d&apos;utilisation</h1>
-          </div>
-          <div className="flex justify-center">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-200 rounded-full focus:outline-none focus:ring-1 focus:ring-slate-400 bg-slate-50"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end">
-            <NotificationButton />
-          </div>
-        </header>
-
+    <AppShell
+      title="Guide d'utilisation"
+      icon={<AtlasoftHelpIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Aide" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerLeftExtra={
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="p-1 text-[#605e5c] hover:text-[#323130] lg:hidden"
+          aria-label="Sommaire"
+        >
+          <BookOpen className="h-5 w-5" />
+        </button>
+      }
+      headerCenter={
+        <div className="relative w-full">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#605e5c]" />
+          <input
+            type="text"
+            placeholder="Rechercher dans la documentation..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-[2px] border border-[#8a8886] bg-white pl-9 pr-3 py-1.5 text-[12.5px] text-[#323130] focus:border-[#0078d4] focus:outline-none"
+          />
+        </div>
+      }
+    >
         <main className="flex-1 px-6 max-w-7xl mx-auto w-full py-6">
           <div className="flex gap-6">
             <aside className={`shrink-0 w-56 ${sidebarOpen ? "block" : "hidden"} lg:block`}>
@@ -701,7 +698,6 @@ export default function HelpPage() {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+    </AppShell>
   );
 }

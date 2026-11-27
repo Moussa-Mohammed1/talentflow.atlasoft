@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Sidebar from "@/components/layouts/Sidebar";
-import NotificationButton from "@/components/ui/NotificationButton";
+import AppShell from "@/components/layouts/AppShell";
+import { AtlasoftJobsIcon } from "@/components/layouts/AtlasoftIcons";
 import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, Plus, Search } from "lucide-react";
 import { jobOffersService } from "@/services/job-offers.service";
 import { DepartmentService } from "@/services/department.service";
@@ -106,36 +106,36 @@ export default function JobsPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-slate-200">
-      <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-6 py-4">
-          <h1 className="text-lg font-bold text-slate-900 shrink-0">Offres d&apos;emploi</h1>
-          <div className="relative max-w-md w-full hidden md:block mx-4">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Rechercher un titre, un type de contrat, un mode de travail..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="w-full pl-10 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 px-4 py-2.5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
-            />
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-2.5 py-2.5 bg-white text-black border text-xs font-medium hover:bg-black hover:text-white transition-colors cursor-pointer"
-            >
-              <Plus size={16} />
-              Ajouter une offre
-            </button>
-            <NotificationButton />
-          </div>
-        </header>
-
+    <AppShell
+      title="Offres d'emploi"
+      icon={<AtlasoftJobsIcon size={22} />}
+      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Offres d'emploi" }]}
+      backgroundClassName="bg-[#f3f2f1]"
+      headerCenter={
+        <div className="relative hidden md:block">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#605e5c]"
+            size={15}
+          />
+          <input
+            type="text"
+            placeholder="Rechercher un titre, un type de contrat, un mode de travail..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="w-full rounded-[2px] border border-[#8a8886] bg-white py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] outline-none transition-colors focus:border-[#0078d4]"
+          />
+        </div>
+      }
+      headerActions={
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 rounded-[2px] border border-[#0078d4] bg-[#0078d4] px-3 py-1.5 text-[12.5px] font-medium text-white hover:bg-[#106ebe] transition-colors cursor-pointer font-atlasoft"
+        >
+          <Plus size={15} />
+          Ajouter une offre
+        </button>
+      }
+    >
         <main className="flex-1 flex flex-col min-h-0 max-w-7xl mx-auto w-full">
           <div className="flex-1 overflow-y-auto px-6 pt-6">
             <div className="bg-white border rounded-full border-slate-100 shadow-sm md:hidden flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -242,7 +242,6 @@ export default function JobsPage() {
             </div>
           )}
         </main>
-      </div>
 
       {isModalOpen && (
         <CreateOfferModal
@@ -263,6 +262,6 @@ export default function JobsPage() {
           onDeleted={handleDetailDeleted}
         />
       )}
-    </div>
+    </AppShell>
   );
 }

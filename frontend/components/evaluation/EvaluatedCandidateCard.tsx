@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Loader2, AlertCircle } from "lucide-react";
 import api from "@/lib/axios";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 export interface EvaluatedCandidate {
   candidate_id: number;
@@ -17,8 +18,6 @@ export interface EvaluatedCandidate {
   last_evaluation_date: string;
   is_talent?: boolean;
 }
-
-const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
 
 export default function EvaluatedCandidateCard({ candidate, onClick }: { candidate: EvaluatedCandidate; onClick?: () => void }) {
   const { l } = useLanguage();
@@ -62,10 +61,10 @@ export default function EvaluatedCandidateCard({ candidate, onClick }: { candida
         <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-white/40 to-transparent dark:from-[#252423]/95 dark:via-[#252423]/50" />
 
         <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center pb-3 pt-6">
-          {candidate.photo && (
+          {candidate.photo && resolveMediaUrl(candidate.photo) && (
             <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white dark:border-[#252423] shadow-md mb-2">
               <img
-                src={`${storage_url}${candidate.photo}`}
+                src={resolveMediaUrl(candidate.photo) || undefined}
                 alt={candidate.fullname}
                 className="w-full h-full object-cover"
               />

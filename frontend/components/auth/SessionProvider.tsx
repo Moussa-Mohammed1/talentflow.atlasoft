@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { clearAuthSession, restoreSession } from "@/lib/auth";
+import { restoreSession } from "@/lib/auth";
 import { isPublicPath } from "@/lib/auth-routes";
 import { SettingsService } from "@/services/settings.service";
 import { useTheme } from "@/context/ThemeContext";
@@ -28,28 +28,18 @@ export default function SessionProvider({
     let cancelled = false;
 
     (async () => {
-      const hasToken =
-        typeof window !== "undefined" &&
-        Boolean(localStorage.getItem("access_token"));
-
-      if (!hasToken) {
-        prefsSyncedRef.current = false;
-        if (!publicRoute) {
-          clearAuthSession();
-          router.replace("/login");
-        }
-        return;
-      }
-
       if (!user) {
+        if (publicRoute) {
+          prefsSyncedRef.current = false;
+          return;
+        }
+
         const valid = await restoreSession();
         if (cancelled) return;
 
         if (!valid) {
           prefsSyncedRef.current = false;
-          if (!publicRoute) {
-            router.replace("/login?expired=true");
-          }
+          router.replace("/login");
           return;
         }
       }

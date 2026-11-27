@@ -19,8 +19,7 @@ import { recruitmentService } from "@/services/recruitment.service";
 import { useToast } from "@/hooks/useToast";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLanguage } from "@/context/LanguageContext";
-
-const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
+import { resolveMediaUrl } from "@/lib/media";
 
 function formatDate(dateStr: string, locale: string): string {
   return new Date(dateStr).toLocaleDateString(locale, {
@@ -331,8 +330,8 @@ export function RecruitmentDetailModal({
           {activeTab === "info" && (
             <div className="space-y-6">
               <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-[#3b3a39]">
-                {candidate?.photo ? (
-                  <img src={`${storage_url}${candidate.photo}`} alt={candidate.fullname} className="w-16 h-16 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]" />
+                {candidate?.photo && resolveMediaUrl(candidate.photo) ? (
+                  <img src={resolveMediaUrl(candidate.photo) || undefined} alt={candidate.fullname} className="w-16 h-16 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]" />
                 ) : (
                   <div className="w-16 h-16 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-[#0078d4]/20 text-indigo-400 dark:text-[#4ea8ff]">
                     <User size={28} />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 
 import { jobService } from "@/services/job.service";
 import { useAuthStore } from "@/stores/auth.store";
@@ -8,23 +8,9 @@ import { useJobStore } from "@/stores/job.store";
 import { useLanguage } from "@/context/LanguageContext";
 import type { JobListResponse } from "@/types/job";
 
-function userIdFromToken(token: string | null): number | null {
-  if (!token) return null;
-  try {
-    const payload = token.split(".")[1];
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(window.atob(normalized)) as { sub?: string };
-    const userId = Number(decoded.sub);
-    return Number.isInteger(userId) ? userId : null;
-  } catch {
-    return null;
-  }
-}
-
 export function useJobs() {
   const { l } = useLanguage();
   const authUser = useAuthStore((state) => state.user);
-  const authToken = useAuthStore((state) => state.token);
   const jobs = useJobStore((state) => state.jobs);
   const runningCount = useJobStore((state) => state.runningCount);
   const isLoading = useJobStore((state) => state.isLoading);
@@ -33,14 +19,10 @@ export function useJobs() {
   const setLoading = useJobStore((state) => state.setLoading);
   const setError = useJobStore((state) => state.setError);
 
-  const token = useMemo(
-    () => authToken || (typeof window !== "undefined" ? localStorage.getItem("access_token") : null),
-    [authToken],
-  );
-  const recruiterId = authUser?.id ?? userIdFromToken(token);
+  const recruiterId = authUser?.id ?? null;
 
   useEffect(() => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
     let cancelled = false;
 
     setLoading(true);
@@ -56,20 +38,20 @@ export function useJobs() {
     return () => {
       cancelled = true;
     };
-  }, [hydrate, l, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading]);
 
   const deleteAll = useCallback(async () => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
     try {
       await jobService.deleteAll();
       hydrate([], 0);
     } catch {
       setError(l("Impossible de supprimer toutes les tâches.", "Failed to delete all tasks."));
     }
-  }, [hydrate, l, recruiterId, setError, token]);
+  }, [hydrate, l, recruiterId, setError]);
 
   const refresh = useCallback(async () => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
     setLoading(true);
     try {
       const response = await jobService.list();
@@ -77,7 +59,7 @@ export function useJobs() {
     } catch {
       setError(l("Impossible d'actualiser les tâches.", "Failed to refresh tasks."));
     }
-  }, [hydrate, l, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading]);
 
   return { jobs, runningCount, isLoading, error, refresh, deleteAll };
 }

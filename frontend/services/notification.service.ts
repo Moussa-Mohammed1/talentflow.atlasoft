@@ -24,11 +24,17 @@ export const notificationService = {
     return response.data;
   },
 
-  websocketUrl(recruiterId: number, token: string): string {
+  async getWsTicket(): Promise<string> {
+    const response = await api.post<{ ticket: string }>("/notifications/ws-ticket");
+    return response.data.ticket;
+  },
+
+  websocketUrl(recruiterId: number, ticket?: string): string {
     const configuredBase = process.env.NEXT_PUBLIC_WS_URL;
     const websocketBase = configuredBase
       ? configuredBase.replace(/\/$/, "")
       : apiBaseUrl.replace(/^http/, "ws").replace(/\/api\/?$/, "");
-    return `${websocketBase}/ws/notifications/${recruiterId}?token=${encodeURIComponent(token)}`;
+    const base = `${websocketBase}/ws/notifications/${recruiterId}`;
+    return ticket ? `${base}?ticket=${encodeURIComponent(ticket)}` : base;
   },
 };

@@ -1,6 +1,7 @@
 import { ModalProvider } from "@/context/ModalContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import QueryProvider from "@/components/providers/QueryProvider";
 import ToastProvider from "@/components/ui/toast/ToastProvider";
 import SessionProvider from "@/components/auth/SessionProvider";
 import PasswordChangeBanner from "@/components/ui/PasswordChangeBanner";
@@ -42,18 +43,20 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: prefsInitScript }} />
       </head>
       <body className="min-h-full [scrollbar-width:none] flex flex-col font-sans bg-white text-[#323130] dark:bg-[#141414] dark:text-[#f3f2f1]">
-        <LanguageProvider>
-          <ThemeProvider>
-            <ModalProvider>
-              <ToastProvider>
-                <SessionProvider>
-                  {children}
-                  <PasswordChangeBanner />
-                </SessionProvider>
-              </ToastProvider>
-            </ModalProvider>
-          </ThemeProvider>
-        </LanguageProvider>
+        <QueryProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              <ModalProvider>
+                <ToastProvider>
+                  <SessionProvider>
+                    {children}
+                    <PasswordChangeBanner />
+                  </SessionProvider>
+                </ToastProvider>
+              </ModalProvider>
+            </ThemeProvider>
+          </LanguageProvider>
+        </QueryProvider>
       </body>
     </html>
   );

@@ -10,6 +10,14 @@ export const AuthService = {
         });
         return response.data;
     },
+    exchangeOAuthCode: async (code: string) => {
+        const response = await api.post("/auth/linkedin/exchange", { code });
+        return response.data;
+    },
+    refresh: async () => {
+        const response = await api.post("/auth/refresh");
+        return response.data;
+    },
     me: async () => {
         const response = await api.get("/auth/me", { withCredentials: true });
         return response.data;
@@ -36,7 +44,6 @@ export const AuthService = {
         } finally {
             if (typeof window !== "undefined") {
                 localStorage.removeItem("access_token");
-                document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
             }
             useAuthStore.getState().logout();
         }

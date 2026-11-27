@@ -1,5 +1,6 @@
 import { CheckCircle2, User, Mail, Phone, Camera, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 interface IdentityData {
   name?: {
@@ -29,7 +30,7 @@ export default function SuccessExtractingIdentityModal({
   const fullName = data?.name?.full_name || notSpecified;
   const email = data?.email?.value || notSpecified;
   const phone = data?.phone?.value || notSpecified;
-  const photoUrl = data?.photo ? `/storage/${data.photo}` : null;
+  const photoUrl = resolveMediaUrl(data?.photo);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300">

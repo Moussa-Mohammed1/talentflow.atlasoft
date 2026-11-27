@@ -7,6 +7,7 @@ import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useToastStore } from "@/stores/toast-store";
 import { useLanguage } from "@/context/LanguageContext";
+import { getErrorMessage } from "@/lib/api-error";
 
 export default function LoginForm() {
     const [email, setEmail] = useState("");
@@ -33,20 +34,21 @@ export default function LoginForm() {
     const searchParams = useSearchParams();
     const { addToast } = useToastStore();
 
-    const { setUser, setToken } = useAuthStore();
+    const { setUser } = useAuthStore();
 
     useEffect(() => {
-        const tokenParam = searchParams.get("token");
-        if (tokenParam) {
-            localStorage.setItem("access_token", tokenParam);
-            document.cookie = `access_token=${tokenParam}; path=/; max-age=86400; SameSite=Lax`;
-            useAuthStore.getState().setToken(tokenParam);
-            AuthService.me().then((res) => {
-                useAuthStore.getState().setUser(res.user);
-                router.replace("/dashboard");
-            }).catch(() => {
-                router.replace("/login");
-            });
+        const oauthCode = searchParams.get("oauth_code");
+        if (oauthCode) {
+            AuthService.exchangeOAuthCode(oauthCode)
+                .then((res) => {
+                    if (res?.user) {
+                        useAuthStore.getState().setUser(res.user);
+                    }
+                    router.replace("/dashboard");
+                })
+                .catch(() => {
+                    router.replace("/login");
+                });
             return;
         }
         if (searchParams.get("expired") === "true") {
@@ -81,22 +83,16 @@ export default function LoginForm() {
 
         try {
             const response = await AuthService.login(email, password);
-            const token = response.access_token;
-
-            localStorage.setItem("access_token", token);
-            document.cookie = `access_token=${token}; path=/; max-age=86400; SameSite=Lax`;
-            setToken(token);
-
-            await AuthService.me();
             setUser(response.user);
             router.push("/dashboard");
         } catch (err: unknown) {
-            const detail = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail;
             setError(
-                detail ||
-                l(
-                  "Une erreur de connexion est survenue. Nous vous invitons à réessayer plus tard.",
-                  "A connection error occurred. Please try again later."
+                getErrorMessage(
+                    err,
+                    l(
+                      "Une erreur de connexion est survenue. Nous vous invitons à réessayer plus tard.",
+                      "A connection error occurred. Please try again later."
+                    )
                 )
             );
         } finally {

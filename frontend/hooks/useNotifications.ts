@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 
 import { notificationService } from "@/services/notification.service";
 import { useAuthStore } from "@/stores/auth.store";
@@ -8,23 +8,9 @@ import { useNotificationStore } from "@/stores/notification.store";
 import { useLanguage } from "@/context/LanguageContext";
 import type { Notification, NotificationSocketMessage } from "@/types/notification";
 
-function userIdFromToken(token: string | null): number | null {
-  if (!token) return null;
-  try {
-    const payload = token.split(".")[1];
-    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const decoded = JSON.parse(window.atob(normalized)) as { sub?: string };
-    const userId = Number(decoded.sub);
-    return Number.isInteger(userId) ? userId : null;
-  } catch {
-    return null;
-  }
-}
-
 export function useNotifications() {
   const { l } = useLanguage();
   const authUser = useAuthStore((state) => state.user);
-  const authToken = useAuthStore((state) => state.token);
   const notifications = useNotificationStore((state) => state.notifications);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const isLoading = useNotificationStore((state) => state.isLoading);
@@ -36,14 +22,10 @@ export function useNotifications() {
   const setLoading = useNotificationStore((state) => state.setLoading);
   const setError = useNotificationStore((state) => state.setError);
 
-  const token = useMemo(
-    () => authToken || (typeof window !== "undefined" ? localStorage.getItem("access_token") : null),
-    [authToken],
-  );
-  const recruiterId = authUser?.id ?? userIdFromToken(token);
+  const recruiterId = authUser?.id ?? null;
 
   useEffect(() => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
     let cancelled = false;
 
     setLoading(true);
@@ -59,10 +41,10 @@ export function useNotifications() {
     return () => {
       cancelled = true;
     };
-  }, [hydrate, l, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading]);
 
   useEffect(() => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
 
     let socket: WebSocket | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -70,9 +52,18 @@ export function useNotifications() {
     let stopped = false;
     let retry = 0;
 
-    const connect = () => {
+    const connect = async () => {
       if (stopped) return;
-      socket = new WebSocket(notificationService.websocketUrl(recruiterId, token));
+
+      let ticket: string | undefined;
+      try {
+        ticket = await notificationService.getWsTicket();
+      } catch {
+        // Fallback to HttpOnly cookie handshake if ticket fetch fails
+      }
+      if (stopped) return;
+
+      socket = new WebSocket(notificationService.websocketUrl(recruiterId, ticket));
 
       socket.onopen = () => {
         retry = 0;
@@ -96,19 +87,19 @@ export function useNotifications() {
         if (pingTimer) clearInterval(pingTimer);
         if (!stopped) {
           const delay = Math.min(30_000, 1_000 * 2 ** retry++);
-          reconnectTimer = setTimeout(connect, delay);
+          reconnectTimer = setTimeout(() => void connect(), delay);
         }
       };
     };
 
-    connect();
+    void connect();
     return () => {
       stopped = true;
       if (reconnectTimer) clearTimeout(reconnectTimer);
       if (pingTimer) clearInterval(pingTimer);
       socket?.close();
     };
-  }, [prepend, recruiterId, token]);
+  }, [prepend, recruiterId]);
 
   const markAsRead = useCallback(async (notificationId: number) => {
     const current = useNotificationStore
@@ -125,14 +116,14 @@ export function useNotifications() {
   }, [hydrate, markRead]);
 
   const deleteAll = useCallback(async () => {
-    if (!token || !recruiterId) return;
+    if (!recruiterId) return;
     try {
       await notificationService.deleteAll();
       hydrate([], 0);
     } catch {
       setError(l("Impossible de supprimer toutes les notifications.", "Failed to clear all notifications."));
     }
-  }, [hydrate, l, recruiterId, setError, token]);
+  }, [hydrate, l, recruiterId, setError]);
 
   const markAllAsRead = useCallback(async () => {
     markAllRead();

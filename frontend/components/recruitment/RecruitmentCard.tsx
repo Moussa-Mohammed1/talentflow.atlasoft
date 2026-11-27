@@ -4,8 +4,7 @@ import { CalendarDays, Mail, User, UserPlus } from "lucide-react";
 import type { RecruitmentListItem } from "@/types/recruitment";
 import { statusColors, priorityColors } from "@/types/recruitment";
 import { useLanguage } from "@/context/LanguageContext";
-
-const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
+import { resolveMediaUrl } from "@/lib/media";
 
 function formatDate(dateStr: string, locale: string): string {
   const d = new Date(dateStr);
@@ -27,9 +26,9 @@ export function RecruitmentCard({
     <div className="bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] transition-all duration-300 flex flex-col overflow-hidden mrc">
       <div className="p-4 flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          {item.candidate?.photo ? (
+          {item.candidate?.photo && resolveMediaUrl(item.candidate.photo) ? (
             <img
-              src={`${storage_url}${item.candidate.photo}`}
+              src={resolveMediaUrl(item.candidate.photo) || undefined}
               alt={item.candidate.fullname}
               className="w-10 h-10 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]"
             />

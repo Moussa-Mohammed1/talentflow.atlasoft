@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/useToast";
 import { reanalyzeIdentity, reanalyzeAll, reanalyzeCompetences, reanalyzeExperiences, reanalyzeEducations, reanalyzeLanguages, updateCandidat, updateExperience, updateEducation, updateCertification, deleteResume } from "@/services/resume.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 
 export interface ExtractedSkill {
@@ -254,7 +255,6 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted, 
   const [reanalyzingEducations, setReanalyzingEducations] = useState(false);
   const [reanalyzingLanguages, setReanalyzingLanguages] = useState(false);
   const [evaluating, setEvaluating] = useState(false);
-  const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -477,11 +477,11 @@ export default function DocumentResumeInfos({ isOpen, onClose, data, onDeleted, 
             </div>
 
             <div className="flex gap-4">
-              {data.candidat?.photo && (
+              {data.candidat?.photo && resolveMediaUrl(data.candidat.photo) && (
                 <div className="shrink-0">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 dark:border-[#3b3a39]">
                     <img
-                      src={`${storage_url}${data.candidat.photo}`}
+                      src={resolveMediaUrl(data.candidat.photo) || undefined}
                       alt={l("Photo du candidat", "Candidate photo")}
                       className="w-full h-full object-cover"
                     />

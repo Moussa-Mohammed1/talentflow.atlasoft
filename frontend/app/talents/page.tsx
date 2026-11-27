@@ -11,6 +11,7 @@ import { recruitmentService } from "@/services/recruitment.service";
 import { jobOffersService } from "@/services/job-offers.service";
 import { useToast } from "@/hooks/useToast";
 import { useLanguage } from "@/context/LanguageContext";
+import { resolveMediaUrl } from "@/lib/media";
 import type { JobOffer } from "@/types/job-offers";
 import type { RecruitmentPriority } from "@/types/recruitment";
 
@@ -26,8 +27,6 @@ interface TalentCardData {
   talent_recruiter_name: string | null;
 }
 
-const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
-
 function formatDate(dateStr: string | null, locale: string): string {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
@@ -39,9 +38,9 @@ function TalentCard({ talent, onClick }: { talent: TalentCardData; onClick: () =
   return (
     <div onClick={onClick} className="bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] hover:border-slate-200 dark:hover:border-[#605e5c] transition-all duration-300 flex flex-col overflow-hidden mrc cursor-pointer">
       <div className="relative aspect-square overflow-hidden bg-slate-100 dark:bg-[#1b1a19]">
-        {talent.photo ? (
+        {talent.photo && resolveMediaUrl(talent.photo) ? (
           <img
-            src={`${storage_url}${talent.photo}`}
+            src={resolveMediaUrl(talent.photo) || undefined}
             alt={talent.fullname}
             className="absolute inset-0 w-full h-full object-cover object-center"
           />
@@ -203,9 +202,9 @@ function TalentDetailModal({
           ) : (
             <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6 [scrollbar-width:none]">
               <div className="flex items-center gap-4">
-                {details?.candidat?.photo ? (
+                {details?.candidat?.photo && resolveMediaUrl(details.candidat.photo) ? (
                   <img
-                    src={`${storage_url}${details.candidat.photo}`}
+                    src={resolveMediaUrl(details.candidat.photo) || undefined}
                     alt={talent.fullname}
                     className="w-16 h-16 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]"
                   />
@@ -510,8 +509,8 @@ function RecruitModal({
 
         <div className="flex-1 p-6 overflow-y-auto">
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100 dark:border-[#3b3a39] mb-5">
-            {talent.photo ? (
-              <img src={`${storage_url}${talent.photo}`} alt={talent.fullname} className="w-12 h-12 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]" />
+            {talent.photo && resolveMediaUrl(talent.photo) ? (
+              <img src={resolveMediaUrl(talent.photo) || undefined} alt={talent.fullname} className="w-12 h-12 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]" />
             ) : (
               <div className="w-12 h-12 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-[#0078d4]/20 text-indigo-400 dark:text-[#4ea8ff]">
                 <User size={22} />

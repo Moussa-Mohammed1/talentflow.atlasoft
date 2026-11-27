@@ -6,6 +6,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from sqlalchemy.exc import OperationalError, TimeoutError as SQLAlchemyTimeoutError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.logging import correlation_id_ctx
@@ -105,6 +106,25 @@ def register_exception_handlers(app: FastAPI) -> None:
                 code="VALIDATION_ERROR",
                 message="Validation error",
                 details=errors,
+                correlation_id=cid,
+            ),
+            headers={"X-Request-ID": cid},
+        )
+
+    @app.exception_handler(OperationalError)
+    @app.exception_handler(SQLAlchemyTimeoutError)
+    async def database_unavailable_handler(
+        request: Request,
+        exc: Exception,
+    ) -> JSONResponse:
+        cid = _extract_correlation_id(request)
+        logger.error("Database unavailable during %s %s: %s", request.method, request.url.path, exc)
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=build_error_payload(
+                code="DATABASE_UNAVAILABLE",
+                message="Database service is unavailable. Please ensure PostgreSQL is running.",
+                details=None,
                 correlation_id=cid,
             ),
             headers={"X-Request-ID": cid},

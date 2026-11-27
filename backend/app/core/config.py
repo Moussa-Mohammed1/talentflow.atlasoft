@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     s3_secret_access_key: str | None = None
     s3_use_ssl: bool = False
 
+    redis_url: str = ""
+
     model_config = SettingsConfigDict(
         env_file=str(Path(__file__).resolve().parent.parent / ".env"),
         extra="ignore",

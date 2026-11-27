@@ -6,12 +6,13 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.redis import ping_redis
 
 router = APIRouter(tags=["Health"])
 
 
 @router.get("/health", status_code=status.HTTP_200_OK)
-def health_check(db: Session = Depends(get_db)) -> dict:
+async def health_check(db: Session = Depends(get_db)) -> dict:
     try:
         db.execute(text("SELECT 1"))
     except Exception as exc:
@@ -24,10 +25,24 @@ def health_check(db: Session = Depends(get_db)) -> dict:
             },
         ) from exc
 
+    try:
+        redis_status = await ping_redis()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "code": "REDIS_UNAVAILABLE",
+                "message": "Redis connectivity check failed",
+                "details": None,
+            },
+        ) from exc
+
     return {
         "status": "ok",
         "environment": settings.environment,
         "checks": {
             "database": "ok",
+            "redis": redis_status,
+            "storage": settings.storage_backend,
         },
     }

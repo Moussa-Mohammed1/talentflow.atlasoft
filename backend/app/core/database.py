@@ -25,10 +25,13 @@ if not DATABASE_URL:
 
 DB_ECHO = os.getenv("DB_ECHO", "false").strip().lower() in {"1", "true", "yes"}
 
+connect_args = {"connect_timeout": 5} if DATABASE_URL.startswith("postgres") else {}
+
 engine = create_engine(
     DATABASE_URL,
     echo=DB_ECHO,
     pool_pre_ping=True,
+    connect_args=connect_args,
 )
 
 SessionLocal = sessionmaker(

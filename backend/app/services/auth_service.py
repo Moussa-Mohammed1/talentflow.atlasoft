@@ -26,13 +26,23 @@ PASSWORD_PATTERN = settings.password_pattern
 def build_avatar_url(avatar: str | None) -> str | None:
     if not avatar:
         return None
+    cleaned = avatar.strip().replace("\\", "/")
+    if cleaned.startswith(("http://", "https://")):
+        return cleaned
+    if cleaned.startswith("/storage/"):
+        normalized = "/api/files/" + cleaned[len("/storage/"):]
+    elif cleaned.startswith("storage/"):
+        normalized = "/api/files/" + cleaned[len("storage/"):]
+    elif cleaned.startswith("/avatars/"):
+        normalized = "/api/files" + cleaned
+    elif cleaned.startswith("avatars/"):
+        normalized = "/api/files/" + cleaned
+    elif cleaned.startswith("/"):
+        normalized = cleaned
+    else:
+        return cleaned
     base_url = settings.app_url.rstrip("/")
-    if avatar.startswith("/storage/"):
-        normalized = "/api/files/" + avatar[len("/storage/"):]
-        return f"{base_url}{normalized}" if base_url else normalized
-    if avatar.startswith("/"):
-        return f"{base_url}{avatar}" if base_url else avatar
-    return avatar
+    return f"{base_url}{normalized}" if base_url else normalized
 
 
 async def download_external_avatar(url: str) -> str | None:

@@ -93,6 +93,9 @@ export default function ImportResumeButton() {
         status,
         identityResult,
         analysisResult,
+        error: importError,
+        progress: importProgress,
+        currentStep: importStep,
         importResume,
         reset,
     } = useResumeImport();
@@ -314,6 +317,9 @@ export default function ImportResumeButton() {
                     status={status}
                     identityData={identityResult}
                     analysisData={analysisResult}
+                    progress={importProgress}
+                    currentStep={importStep}
+                    errorMessage={importError?.message ?? null}
                     onClose={closeProgressModal}
                 />
             )}

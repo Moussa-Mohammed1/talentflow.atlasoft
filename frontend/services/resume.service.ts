@@ -1,5 +1,21 @@
 import api from "@/lib/axios";
 import { ResumeDetails } from "@/components/resume/documents/DocumentResumeInfos";
+import type { JobAcceptedResponse } from "@/types/job";
+
+export async function analyzeResumeAsync(path: string, require_candidat = false): Promise<JobAcceptedResponse> {
+  const response = await api.post<JobAcceptedResponse>("/resumes/analyze-async", {
+    path,
+    require_candidat,
+  });
+  return response.data;
+}
+
+export async function reanalyzeAllAsync(resume_id: number): Promise<JobAcceptedResponse> {
+  const response = await api.post<JobAcceptedResponse>("/resumes/re-analyze-async", {
+    resume_id,
+  });
+  return response.data;
+}
 
 export interface DocumentListItem {
   id: string;

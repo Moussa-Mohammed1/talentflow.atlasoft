@@ -136,9 +136,19 @@ export default function SystemJobs() {
                       <span className="text-[12px] font-semibold text-[#323130] dark:text-[#f3f2f1]">
                         {formatJobType(job.type, language)}
                       </span>
-                      <span className="text-[10px] text-[#8a8886]">
-                        {formatTimeAgo(job.created_at, language)}
-                      </span>
+                      <div className="flex items-center gap-1.5 text-[10px] text-[#8a8886]">
+                        <span>{formatTimeAgo(job.created_at, language)}</span>
+                        {job.queue_name && (
+                          <span className="rounded-[2px] border border-[#edebe9] dark:border-[#3b3a39] px-1 py-0.2 font-mono text-[9px]">
+                            {job.queue_name}
+                          </span>
+                        )}
+                        {(job.retries ?? 0) > 0 && (
+                          <span className="rounded-[2px] bg-[#fff4ce] dark:bg-[#4f3a00] px-1 py-0.2 font-medium text-[#797775] dark:text-[#fce100]">
+                            {l(`Tentative ${job.retries}`, `Retry ${job.retries}`)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {statusBadge(job.status)}
                   </div>
@@ -150,9 +160,31 @@ export default function SystemJobs() {
                     </strong>
                   </p>
 
+                  {(job.status === "running" || job.status === "pending") && (
+                    <div className="mt-2">
+                      <div className="mb-1 flex items-center justify-between text-[10px] text-[#605e5c] dark:text-[#a19f9d]">
+                        <span className="truncate">{job.current_step || l("En file d'attente", "Queued")}</span>
+                        <span className="font-mono font-semibold text-[#0078d4] dark:text-[#4ea8ff]">
+                          {job.progress ?? 0}%
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#edebe9] dark:bg-[#323130]">
+                        <div
+                          className="h-full rounded-full bg-[#0078d4] transition-all duration-300"
+                          style={{ width: `${Math.max(4, Math.min(100, job.progress ?? 0))}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   <p className={`mt-1 text-[11px] ${statusMessageClass(job.status)}`}>
                     {job.message || l("Aucun détail supplémentaire", "No additional details")}
                   </p>
+                  {job.status === "failed" && job.error_details && (
+                    <p className="mt-1 line-clamp-2 rounded-[2px] bg-[#fde7e9]/60 dark:bg-[#a80000]/15 px-1.5 py-1 font-mono text-[10px] text-[#a80000] dark:text-[#f1707b]">
+                      {job.error_details}
+                    </p>
+                  )}
                 </div>
               ))
             )}

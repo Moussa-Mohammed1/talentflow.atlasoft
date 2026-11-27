@@ -5,6 +5,7 @@ import AppShell from "@/components/layouts/AppShell";
 import { AtlasoftJobsIcon } from "@/components/layouts/AtlasoftIcons";
 import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, Plus, Search } from "lucide-react";
 import { jobOffersService } from "@/services/job-offers.service";
+import { jobService } from "@/services/job.service";
 import { DepartmentService } from "@/services/department.service";
 import { useToast } from "@/hooks/useToast";
 import { useLanguage } from "@/context/LanguageContext";
@@ -54,6 +55,7 @@ export default function JobsPage() {
     try {
       const data = await jobOffersService.list();
       setOffers(data);
+      setCurrentPage(1);
       setError(null);
     } catch {
       setOffers([]);
@@ -61,35 +63,53 @@ export default function JobsPage() {
     }
   }, [l]);
 
-  const fetchDepartments = useCallback(async () => {
-    try {
-      const data = await DepartmentService.list();
-      setDepartments(data);
-    } catch {
-      // non-critical
-    }
-  }, []);
-
   useEffect(() => {
-    Promise.all([fetchOffers(), fetchDepartments()]);
-  }, [fetchOffers, fetchDepartments]);
+    let cancelled = false;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [offers]);
+    jobOffersService
+      .list()
+      .then((data) => {
+        if (!cancelled) {
+          setOffers(data);
+          setError(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setOffers([]);
+          setError(l("Impossible de charger les offres d'emploi.", "Unable to load job offers."));
+        }
+      });
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
+    DepartmentService.list()
+      .then((data) => {
+        if (!cancelled) setDepartments(data);
+      })
+      .catch(() => {
+        // non-critical
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [l]);
 
   const handleSubmit = async () => {
     if (!description.trim()) return;
     setIsSubmitting(true);
     try {
-      await jobOffersService.generateFromDescription(description);
+      const accepted = await jobOffersService.generateFromDescriptionAsync(description);
       setIsModalOpen(false);
       setDescription("");
+      toast.success(
+        l(
+          "Génération de l'offre en cours en arrière-plan...",
+          "Generating job offer in the background...",
+        ),
+      );
+      await jobService.waitForJob(accepted.job_id);
       await fetchOffers();
+      toast.success(l("Offre d'emploi générée avec succès.", "Job offer generated successfully."));
     } catch {
       toast.error(l("Une erreur est survenue, veuillez réessayer ultérieurement.", "An error occurred, please try again later."));
     } finally {
@@ -126,7 +146,10 @@ export default function JobsPage() {
               "Search a title, contract type, or work mode..."
             )}
             value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full rounded-[2px] border border-[#8a8886] dark:border-[#3b3a39] bg-white dark:bg-[#252423] py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] dark:text-[#f3f2f1] placeholder:text-[#605e5c] dark:placeholder:text-[#a19f9d] outline-none transition-colors focus:border-[#0078d4]"
           />
         </div>

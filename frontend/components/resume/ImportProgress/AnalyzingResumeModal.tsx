@@ -4,9 +4,24 @@ import { useLanguage } from '@/context/LanguageContext';
 
 const skillSkeletonWidths = [84, 102, 72, 96, 118, 88, 108];
 
-export default function AnalyzingResumeModal({ isOpen = true }) {
+interface AnalyzingResumeModalProps {
+  isOpen?: boolean;
+  progress?: number | null;
+  currentStep?: string | null;
+  errorMessage?: string | null;
+}
+
+export default function AnalyzingResumeModal({
+  isOpen = true,
+  progress = null,
+  currentStep = null,
+  errorMessage = null,
+}: AnalyzingResumeModalProps) {
   const { l } = useLanguage();
   if (!isOpen) return null;
+
+  const hasLiveProgress = typeof progress === "number" && Number.isFinite(progress);
+  const clampedProgress = hasLiveProgress ? Math.max(0, Math.min(100, progress)) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300">
@@ -22,7 +37,11 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
               {l("Analyse du CV", "Analyzing resume")}
             </h2>
             <p className="text-sm font-medium text-gray-600">
-              {l("Extraction des données structurées de votre document...", "Extracting structured data from your document...")}
+              {errorMessage
+                ? errorMessage
+                : currentStep
+                  ? `${currentStep} (${clampedProgress}%)`
+                  : l("Extraction des données structurées de votre document...", "Extracting structured data from your document...")}
             </p>
           </div>
         </div>
@@ -110,9 +129,24 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
         </div>
         
          <div className="p-4 bg-gray-50 border-t border-gray-100 rounded-b-2xl">
-          <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-            <div className="bg-blue-600 h-1.5 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
-          </div>
+          {hasLiveProgress ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-medium text-gray-600">
+                <span>{currentStep || l("Traitement en cours...", "Processing...")}</span>
+                <span>{clampedProgress}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className={`h-1.5 rounded-full transition-all duration-300 ${errorMessage ? "bg-red-600" : "bg-blue-600"}`}
+                  style={{ width: `${Math.max(4, clampedProgress)}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+              <div className="bg-blue-600 h-1.5 rounded-full animate-[progress_2s_ease-in-out_infinite]"></div>
+            </div>
+          )}
           <style dangerouslySetInnerHTML={{__html: `
             @keyframes progress {
               0% { width: 0%; transform: translateX(-100%); }

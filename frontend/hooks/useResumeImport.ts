@@ -1,5 +1,7 @@
 import { useState } from "react";
 import api from "@/lib/axios";
+import { jobService } from "@/services/job.service";
+import { analyzeResumeAsync } from "@/services/resume.service";
 import { useToast } from "./useToast";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -73,6 +75,8 @@ export function useResumeImport() {
   const [analysisResult, setAnalysisResult] = useState<ResumeFullAnalysisResult | null>(null);
   const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
+  const [progress, setProgress] = useState<number>(0);
+  const [currentStep, setCurrentStep] = useState<string | null>(null);
   const toast = useToast();
   const { l } = useLanguage();
 
@@ -84,6 +88,8 @@ export function useResumeImport() {
       setError(null);
       setIdentityResult(null);
       setAnalysisResult(null);
+      setProgress(0);
+      setCurrentStep(null);
       setStatus("uploading");
 
       const formData = new FormData();
@@ -116,24 +122,43 @@ export function useResumeImport() {
         setTimeout(resolve, 2000)
       );
       setStatus("analyzing");
+      setProgress(5);
+      setCurrentStep(l("En file d'attente...", "Queued..."));
       toast.success(l("L'analyse a commencé", "Analysis started"));
-      const analyzeResponse = await api.post<ResumeFullAnalysisResult>(
-        "/resumes/analyze",
-        {
-          path: uploadResponse.data.path,
-        }
-      );
+
+      const acceptedJob = await analyzeResumeAsync(uploadResponse.data.path);
+      const completedJob = await jobService.waitForJob(acceptedJob.job_id, {
+        onProgress: (job) => {
+          setProgress(job.progress ?? 0);
+          setCurrentStep(job.message || job.current_step || null);
+        },
+      });
+
+      const payloadAnalysis = completedJob.result_payload?.analysis as
+        | ResumeFullAnalysisResult["analysis"]
+        | undefined;
+      const resolvedAnalysis: ResumeFullAnalysisResult = {
+        analysis: payloadAnalysis ?? {
+          sections: [],
+          technologies: [],
+          competencies: [],
+          skills_by_category: {},
+          flattened_skills: [],
+        },
+      };
+
       toast.success(
         l(
           "L'analyse complète du CV importé est terminée",
           "Full analysis of the uploaded resume is complete"
         )
       );
-      setAnalysisResult(analyzeResponse.data);
+      setProgress(100);
+      setAnalysisResult(resolvedAnalysis);
       setStatus("success");
       return {
         identity: identityResponse.data,
-        analysis: analyzeResponse.data,
+        analysis: resolvedAnalysis,
       };
     } catch (err) {
       setStatus("error");
@@ -155,6 +180,8 @@ export function useResumeImport() {
     setAnalysisResult(null);
     setError(null);
     setStatus("idle");
+    setProgress(0);
+    setCurrentStep(null);
   };
 
   return {
@@ -164,6 +191,8 @@ export function useResumeImport() {
     analysisResult,
     error,
     status,
+    progress,
+    currentStep,
     importResume,
     reset,
   };

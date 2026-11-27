@@ -2,7 +2,7 @@
 import { XCircle } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
-export default function ErrorProcessModal() {
+export default function ErrorProcessModal({ message }: { message?: string | null }) {
   const { l } = useLanguage();
   return (
     <>
@@ -11,7 +11,7 @@ export default function ErrorProcessModal() {
         {l("Une erreur est survenue", "An error occurred")}
       </h2>
       <p className="text-slate-500 dark:text-[#a19f9d]">
-        {l("Impossible d'importer le CV.", "Unable to import the resume.")}
+        {message || l("Impossible d'importer le CV.", "Unable to import the resume.")}
       </p>
     </>
   );

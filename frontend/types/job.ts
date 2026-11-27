@@ -6,7 +6,10 @@ export type JobType =
   | "skill_extraction"
   | "experience_extraction"
   | "education_extraction"
-  | "candidate_matching";
+  | "certification_extraction"
+  | "candidate_matching"
+  | "job_offer_generation"
+  | "evaluation_validation";
 
 export type JobStatus = "pending" | "running" | "completed" | "failed";
 
@@ -17,9 +20,27 @@ export interface Job {
   target: string;
   status: JobStatus;
   message: string | null;
+  celery_task_id?: string | null;
+  queue_name?: string | null;
+  progress?: number;
+  current_step?: string | null;
+  retries?: number;
+  max_retries?: number;
+  error_details?: string | null;
+  result_payload?: Record<string, unknown> | null;
   started_at: string | null;
   completed_at: string | null;
   created_at: string;
+  updated_at?: string | null;
+}
+
+export interface JobAcceptedResponse {
+  job_id: number;
+  celery_task_id: string | null;
+  status: JobStatus;
+  queue_name: string | null;
+  poll_url: string;
+  message: string;
 }
 
 export interface JobListResponse {
@@ -59,6 +80,12 @@ export function formatJobType(type: JobType, language: "fr" | "en" = "fr"): stri
       return en ? "Language extraction" : "Extraction des langues";
     case "education_extraction":
       return en ? "Education extraction" : "Extraction de formations";
+    case "certification_extraction":
+      return en ? "Certification extraction" : "Extraction des certifications";
+    case "job_offer_generation":
+      return en ? "AI job offer generation" : "Génération d'offre IA";
+    case "evaluation_validation":
+      return en ? "Evaluation validation" : "Validation d'évaluation";
     default:
       return type;
   }

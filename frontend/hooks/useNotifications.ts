@@ -4,8 +4,10 @@ import { useCallback, useEffect } from "react";
 
 import { notificationService } from "@/services/notification.service";
 import { useAuthStore } from "@/stores/auth.store";
+import { useJobStore } from "@/stores/job.store";
 import { useNotificationStore } from "@/stores/notification.store";
 import { useLanguage } from "@/context/LanguageContext";
+import type { Job } from "@/types/job";
 import type { Notification, NotificationSocketMessage } from "@/types/notification";
 
 export function useNotifications() {
@@ -77,6 +79,8 @@ export function useNotifications() {
           const payload = JSON.parse(event.data) as NotificationSocketMessage;
           if (payload.event === "notification.created") {
             prepend(payload.data as Notification);
+          } else if (payload.event === "job.updated") {
+            useJobStore.getState().upsertJob(payload.data as Job);
           }
         } catch {
           // Ignore malformed messages without terminating a healthy connection.

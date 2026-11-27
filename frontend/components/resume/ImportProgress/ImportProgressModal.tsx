@@ -19,6 +19,9 @@ interface ImportProgressModalProps {
   status: ImportStatus;
   identityData: ResumeIdentityResult | null;
   analysisData: ResumeFullAnalysisResult | null;
+  progress?: number | null;
+  currentStep?: string | null;
+  errorMessage?: string | null;
   onClose: () => void;
 }
 
@@ -26,6 +29,9 @@ export default function ImportProgressModal({
   status,
   identityData,
   analysisData,
+  progress = null,
+  currentStep = null,
+  errorMessage = null,
   onClose,
 }: ImportProgressModalProps) {
   const { setModalOpen } = useModal();
@@ -57,7 +63,7 @@ export default function ImportProgressModal({
           />
         );
       case "analyzing":
-        return <AnalyzingResumeModal/>
+        return <AnalyzingResumeModal progress={progress} currentStep={currentStep} errorMessage={errorMessage} />;
       case "success":
         return (
           <SuccessAnalyzingModal
@@ -67,7 +73,7 @@ export default function ImportProgressModal({
         );
 
       case "error":
-        return <ErrorProcessModal />;
+        return <ErrorProcessModal message={errorMessage} />;
 
       default:
         return null;

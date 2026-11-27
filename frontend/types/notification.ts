@@ -1,3 +1,5 @@
+import type { Job } from "@/types/job";
+
 export type NotificationType = "success" | "warning" | "error" | "info";
 
 export interface Notification {
@@ -15,7 +17,16 @@ export interface NotificationListResponse {
   unread_count: number;
 }
 
-export interface NotificationSocketMessage {
-  event: "notification.created" | "notifications.connected";
-  data: Notification | { recruiter_id: number };
-}
+export type NotificationSocketMessage =
+  | {
+      event: "notification.created";
+      data: Notification;
+    }
+  | {
+      event: "notifications.connected";
+      data: { recruiter_id: number };
+    }
+  | {
+      event: "job.updated";
+      data: Job;
+    };

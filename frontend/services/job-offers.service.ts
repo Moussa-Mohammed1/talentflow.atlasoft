@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import type { JobAcceptedResponse } from "@/types/job";
 import type { JobOffer } from "@/types/job-offers";
 
 export type JobOfferUpdatePayload = Partial<Pick<JobOffer, "title" | "description" | "responsibilities" | "employment_type" | "work_mode" | "seniority_level" | "status" | "openings" | "publish_date" | "closing_date" | "department_id">>;
@@ -25,6 +26,11 @@ export const jobOffersService = {
 
   async generateFromDescription(description: string): Promise<JobOffer> {
     const response = await api.post<JobOffer>("/job-offers/generate", { description });
+    return response.data;
+  },
+
+  async generateFromDescriptionAsync(description: string): Promise<JobAcceptedResponse> {
+    const response = await api.post<JobAcceptedResponse>("/job-offers/generate-async", { description });
     return response.data;
   },
 };

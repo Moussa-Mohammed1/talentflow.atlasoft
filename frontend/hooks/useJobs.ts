@@ -40,6 +40,24 @@ export function useJobs() {
     };
   }, [hydrate, l, recruiterId, setError, setLoading]);
 
+  // Fallback polling while background jobs are active so UI stays current even if WS drops.
+  useEffect(() => {
+    if (!recruiterId || runningCount <= 0) return;
+
+    const timer = setInterval(() => {
+      jobService
+        .list()
+        .then((response: JobListResponse) => {
+          hydrate(response.items, response.running_count);
+        })
+        .catch(() => {
+          // Non-fatal fallback; WebSocket or next poll recovers.
+        });
+    }, 3_000);
+
+    return () => clearInterval(timer);
+  }, [hydrate, recruiterId, runningCount]);
+
   const deleteAll = useCallback(async () => {
     if (!recruiterId) return;
     try {

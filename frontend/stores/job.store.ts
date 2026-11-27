@@ -8,11 +8,25 @@ interface JobState {
   isLoading: boolean;
   error: string | null;
   hydrate: (jobs: Job[], runningCount: number) => void;
+  upsertJob: (job: Job) => void;
   updateJob: (job: Job) => void;
   addJob: (job: Job) => void;
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   reset: () => void;
+}
+
+const isActiveJob = (job: Job) => job.status === "running" || job.status === "pending";
+
+function mergeJobs(existing: Job[], incoming: Job): { jobs: Job[]; runningCount: number } {
+  const exists = existing.some((item) => item.id === incoming.id);
+  const nextJobs = exists
+    ? existing.map((item) => (item.id === incoming.id ? incoming : item))
+    : [incoming, ...existing].slice(0, 100);
+  return {
+    jobs: nextJobs,
+    runningCount: nextJobs.filter(isActiveJob).length,
+  };
 }
 
 export const useJobStore = create<JobState>((set) => ({
@@ -24,17 +38,11 @@ export const useJobStore = create<JobState>((set) => ({
   hydrate: (jobs, runningCount) =>
     set({ jobs, runningCount, isLoading: false, error: null }),
 
-  updateJob: (job) =>
-    set((state) => ({
-      jobs: state.jobs.map((item) => (item.id === job.id ? job : item)),
-      runningCount: state.jobs.filter((j) => j.id !== job.id && j.status === "running").length + (job.status === "running" ? 1 : 0),
-    })),
+  upsertJob: (job) => set((state) => mergeJobs(state.jobs, job)),
 
-  addJob: (job) =>
-    set((state) => ({
-      jobs: [job, ...state.jobs].slice(0, 100),
-      runningCount: job.status === "running" ? state.runningCount + 1 : state.runningCount,
-    })),
+  updateJob: (job) => set((state) => mergeJobs(state.jobs, job)),
+
+  addJob: (job) => set((state) => mergeJobs(state.jobs, job)),
 
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error, isLoading: false }),

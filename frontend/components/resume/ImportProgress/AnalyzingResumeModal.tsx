@@ -1,9 +1,11 @@
 import { Loader2 } from 'lucide-react';
 import React from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const skillSkeletonWidths = [84, 102, 72, 96, 118, 88, 108];
 
 export default function AnalyzingResumeModal({ isOpen = true }) {
+  const { l } = useLanguage();
   if (!isOpen) return null;
 
   return (
@@ -17,10 +19,10 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           </div>
           <div>
             <h2 className="text-lg text-left font-bold text-gray-900">
-              Analyse du CV
+              {l("Analyse du CV", "Analyzing resume")}
             </h2>
             <p className="text-sm font-medium text-gray-600">
-              Extraction des données structurées de votre document...
+              {l("Extraction des données structurées de votre document...", "Extracting structured data from your document...")}
             </p>
           </div>
         </div>
@@ -31,7 +33,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Expériences</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Expériences", "Experience")}</h3>
             </div>
             <div className="animate-pulse space-y-4 pl-4 border-l-2 border-gray-100">
               <div className="space-y-2">
@@ -48,7 +50,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Formation</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Formation", "Education")}</h3>
             </div>
             <div className="animate-pulse pl-4 space-y-2 border-l-2 border-gray-100">
               <div className="h-4 bg-gray-200 rounded w-2/5"></div>
@@ -59,7 +61,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
            <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Compétences</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Compétences", "Skills")}</h3>
             </div>
             <div className="flex flex-wrap gap-2 pl-4">
               {skillSkeletonWidths.map((width) => (
@@ -75,7 +77,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
            <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Certifications</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Certifications", "Certifications")}</h3>
             </div>
             <div className="animate-pulse pl-4 space-y-3 border-l-2 border-gray-100">
               <div className="flex items-center space-x-3">
@@ -91,7 +93,7 @@ export default function AnalyzingResumeModal({ isOpen = true }) {
            <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Langues</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Langues", "Languages")}</h3>
             </div>
             <div className="animate-pulse pl-4 flex space-x-6">
               <div className="space-y-2 w-24">

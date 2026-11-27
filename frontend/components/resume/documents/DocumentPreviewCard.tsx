@@ -2,6 +2,7 @@
 
 import { Calendar, FileText } from "lucide-react";
 import { DocumentListItem } from "@/services/resume.service";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface DocumentPreviewCardProps {
   document: DocumentListItem;
@@ -11,15 +12,15 @@ interface DocumentPreviewCardProps {
 function getCategoryClasses(category: string) {
   const normalizedCategory = category.toLowerCase();
 
-  if (normalizedCategory == "PDF") {
-    return "bg-indigo-50 text-indigo-600";
+  if (normalizedCategory == "pdf") {
+    return "bg-indigo-50 dark:bg-[#0078d4]/20 text-indigo-600 dark:text-[#4ea8ff]";
   }
 
-  if (normalizedCategory == "DOCX") {
-    return "bg-slate-100 text-slate-600";
+  if (normalizedCategory == "docx") {
+    return "bg-slate-100 dark:bg-[#323130] text-slate-600 dark:text-[#d2d0ce]";
   }
 
-  return "bg-slate-100 text-slate-600";
+  return "bg-slate-100 dark:bg-[#323130] text-slate-600 dark:text-[#d2d0ce]";
 }
 
 function DocumentPlaceholder({ document }: DocumentPreviewCardProps) {
@@ -73,17 +74,18 @@ function DocumentPlaceholder({ document }: DocumentPreviewCardProps) {
 }
 
 export default function DocumentPreviewCard({ document, onClick }: DocumentPreviewCardProps) {
+  const { l } = useLanguage();
   return (
     <article
       onClick={onClick}
-      className="group bg-white border border-slate-100 mm p-2 shadow-sm hover:shadow-md hover:border-slate-200 transition-all duration-300 flex flex-col justify-between cursor-pointer"
+      className="group bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] mm p-2 shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-[#605e5c] transition-all duration-300 flex flex-col justify-between cursor-pointer"
     >
       <div className="mb-4 overflow-hidden rounded">
         {document.previewUrl ? (
           <div
             role="img"
-            aria-label={`Aperçu de ${document.name}`}
-            className="w-full aspect-[3/4] bg-white bg-cover bg-top border border-slate-200/60 rounded shadow-sm"
+            aria-label={l(`Aperçu de ${document.name}`, `Preview of ${document.name}`)}
+            className="w-full aspect-[3/4] bg-white dark:bg-[#1b1a19] bg-cover bg-top border border-slate-200/60 dark:border-[#3b3a39] rounded shadow-sm"
             style={{ backgroundImage: `url("${document.previewUrl}")` }}
           />
         ) : (
@@ -93,7 +95,7 @@ export default function DocumentPreviewCard({ document, onClick }: DocumentPrevi
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-1">
-          <span className="text-xs font-bold text-slate-800 truncate block">
+          <span className="text-xs font-bold text-slate-800 dark:text-[#f3f2f1] truncate block">
             {document.candidateName}
           </span>
           <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold shrink-0 ${getCategoryClasses(document.category)}`}>
@@ -101,15 +103,15 @@ export default function DocumentPreviewCard({ document, onClick }: DocumentPrevi
           </span>
         </div>
 
-        <p className="text-[10px] text-slate-500 font-medium truncate">
+        <p className="text-[10px] text-slate-500 dark:text-[#a19f9d] font-medium truncate">
           {document.role}
         </p>
 
-        <p className="text-[9px] text-slate-400 truncate">
-          Importé par {document.recruiter_name}
+        <p className="text-[9px] text-slate-400 dark:text-[#8a8886] truncate">
+          {l(`Importé par ${document.recruiter_name}`, `Imported by ${document.recruiter_name}`)}
         </p>
 
-        <div className="flex items-center justify-between text-[10px] text-slate-400 pt-1.5 border-t border-slate-100">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 dark:text-[#8a8886] pt-1.5 border-t border-slate-100 dark:border-[#3b3a39]">
           <span className="flex items-center gap-1">
             <Calendar size={11} />
             {document.importDate}

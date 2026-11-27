@@ -13,6 +13,7 @@ import SuccessAnalyzingModal from "./SuccessAnalyzingModal";
 import ErrorProcessModal from "./ErrorProcessModal";
 import AnalyzingResumeModal from "./AnalyzingResumeModal";
 import { X } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ImportProgressModalProps {
   status: ImportStatus;
@@ -28,6 +29,7 @@ export default function ImportProgressModal({
   onClose,
 }: ImportProgressModalProps) {
   const { setModalOpen } = useModal();
+  const { l } = useLanguage();
 
   useEffect(() => {
     setModalOpen(true);
@@ -73,22 +75,25 @@ export default function ImportProgressModal({
   };
 
   return (
-    <div className="fixed [scrollbar-width:none] inset-0 bg-white/50 backdrop-blur-xl flex items-center justify-center p-4 z-50 transition-opacity">
+    <div className="fixed [scrollbar-width:none] inset-0 bg-white/50 dark:bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 z-50 transition-opacity">
       <div className="group fixed right-5 top-5 z-[60]">
         <button
           type="button"
           onClick={onClose}
-          aria-label="Fermer le modal"
-          className="flex h-9 w-9 items-center justify-center  border border-yellow-200 bg-black text-yellow-500 shadow-lg transition-colors hover:text-yellow-700 cursor-pointer"
+          aria-label={l("Fermer le modal", "Close modal")}
+          className="flex h-9 w-9 items-center justify-center border border-yellow-200 bg-black text-yellow-500 shadow-lg transition-colors hover:text-yellow-700 cursor-pointer"
         >
           <X className="h-4 w-4" />
         </button>
-        <div className="pointer-events-none absolute right-0 top-full mt-2 w-max max-w-xs  bg-gray-900 px-3 py-2 text-center text-xs font-medium text-amber-400 opacity-0 invisible shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:visible">
-          Fermer le modal n&apos;affectera pas le processus d&apos;extraction.
+        <div className="pointer-events-none absolute right-0 top-full mt-2 w-max max-w-xs bg-gray-900 px-3 py-2 text-center text-xs font-medium text-amber-400 opacity-0 invisible shadow-lg transition-all duration-200 group-hover:opacity-100 group-hover:visible">
+          {l(
+            "Fermer le modal n'affectera pas le processus d'extraction.",
+            "Closing this modal will not interrupt the extraction process."
+          )}
           <div className="absolute bottom-full right-3 border-4 border-transparent border-b-gray-900" />
         </div>
       </div>
-      <div className="bg-white mrc shadow-xl p-8 w-[400px]">
+      <div className="bg-white dark:bg-[#252423] border border-transparent dark:border-[#3b3a39] mrc shadow-xl p-8 w-[400px]">
         <div className="flex flex-col items-center gap-4 text-center">
           {renderContent()}
         </div>

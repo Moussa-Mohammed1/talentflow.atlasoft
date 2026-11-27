@@ -34,7 +34,10 @@ export const AuthService = {
         try {
             await api.post("/auth/logout");
         } finally {
-            localStorage.removeItem("access_token");
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("access_token");
+                document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+            }
             useAuthStore.getState().logout();
         }
     },

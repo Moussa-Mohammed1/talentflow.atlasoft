@@ -40,30 +40,31 @@ export interface JobStatusUpdate {
   completed_at?: string | null;
 }
 
-export function formatJobType(type: JobType): string {
+export function formatJobType(type: JobType, language: "fr" | "en" = "fr"): string {
+  const en = language === "en";
   switch (type) {
     case "identity_extraction":
-      return "Extraction d'identité";
+      return en ? "Identity extraction" : "Extraction d'identité";
     case "resume_screening":
-      return "Analyse de CV IA";
+      return en ? "AI resume screening" : "Analyse de CV IA";
     case "bulk_export":
-      return "Export de données";
+      return en ? "Data export" : "Export de données";
     case "skill_extraction":
-      return "Extraction de compétences";
+      return en ? "Skill extraction" : "Extraction de compétences";
     case "experience_extraction":
-      return "Extraction d'expériences";
+      return en ? "Experience extraction" : "Extraction d'expériences";
     case "candidate_matching":
-      return "Correspondance de candidats";
+      return en ? "Candidate matching" : "Correspondance de candidats";
     case "language_extraction":
-      return "Extraction des langues";
+      return en ? "Language extraction" : "Extraction des langues";
     case "education_extraction":
-      return "Extraction de formations";
+      return en ? "Education extraction" : "Extraction de formations";
     default:
       return type;
   }
 }
 
-export function formatTimeAgo(dateString: string): string {
+export function formatTimeAgo(dateString: string, language: "fr" | "en" = "fr"): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -71,9 +72,17 @@ export function formatTimeAgo(dateString: string): string {
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
+  if (language === "en") {
+    if (diffMins < 1) return "Just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString("en-US");
+  }
+
   if (diffMins < 1) return "À l'instant";
   if (diffMins < 60) return `il y a ${diffMins} min`;
   if (diffHours < 24) return `il y a ${diffHours} h`;
   if (diffDays < 7) return `il y a ${diffDays} j`;
-  return date.toLocaleDateString();
+  return date.toLocaleDateString("fr-FR");
 }

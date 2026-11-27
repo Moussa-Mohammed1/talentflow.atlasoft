@@ -1,4 +1,5 @@
 import { CheckCircle2, User, Mail, Phone, Camera, X } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface IdentityData {
   name?: {
@@ -22,11 +23,12 @@ interface SuccessExtractingIdentityModalProps {
 export default function SuccessExtractingIdentityModal({
   data,
   onClose,
-  onConfirm,
 }: SuccessExtractingIdentityModalProps) {
-  const fullName = data?.name?.full_name || "Non spécifié";
-  const email = data?.email?.value || "Non spécifié";
-  const phone = data?.phone?.value || "Non spécifié";
+  const { l } = useLanguage();
+  const notSpecified = l("Non spécifié", "Not specified");
+  const fullName = data?.name?.full_name || notSpecified;
+  const email = data?.email?.value || notSpecified;
+  const phone = data?.phone?.value || notSpecified;
   const photoUrl = data?.photo ? `/storage/${data.photo}` : null;
 
   return (
@@ -36,7 +38,7 @@ export default function SuccessExtractingIdentityModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={l("Fermer", "Close")}
             className="absolute right-4 top-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors cursor-pointer z-10"
           >
             <X className="w-4 h-4" />
@@ -49,10 +51,10 @@ export default function SuccessExtractingIdentityModal({
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900">
-              Importation terminée
+              {l("Importation terminée", "Upload complete")}
             </h2>
             <p className="text-sm font-medium text-gray-600">
-              Les informations ont été extraites avec succès.
+              {l("Les informations ont été extraites avec succès.", "Information extracted successfully.")}
             </p>
           </div>
         </div>
@@ -63,7 +65,7 @@ export default function SuccessExtractingIdentityModal({
               <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-green-200">
                 <img
                   src={photoUrl}
-                  alt="Photo du candidat"
+                  alt={l("Photo du candidat", "Candidate photo")}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -72,49 +74,49 @@ export default function SuccessExtractingIdentityModal({
 
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <h3 className="text-sm font-semibold text-gray-800">Données extraites</h3>
+            <h3 className="text-sm font-semibold text-gray-800">{l("Données extraites", "Extracted data")}</h3>
           </div>
 
           <div className="space-y-4 pl-4 border-l-2 border-gray-100">
            
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+              <div className="flex items-center justify-center w-8 h-8 bg-gray-50 border border-gray-200 text-gray-500">
                 <User className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Nom complet</p>
+                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">{l("Nom complet", "Full name")}</p>
                 <p className="text-sm font-semibold text-gray-900">{fullName}</p>
               </div>
             </div>
 
               <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+              <div className="flex items-center justify-center w-8 h-8 bg-gray-50 border border-gray-200 text-gray-500">
                 <Mail className="w-4 h-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Adresse email</p>
+                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">{l("Adresse email", "Email address")}</p>
                 <p className="text-sm font-semibold text-gray-900 truncate">{email}</p>
               </div>
             </div>
 
              <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+              <div className="flex items-center justify-center w-8 h-8 bg-gray-50 border border-gray-200 text-gray-500">
                 <Phone className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Téléphone</p>
+                <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">{l("Téléphone", "Phone")}</p>
                 <p className="text-sm font-semibold text-gray-900">{phone}</p>
               </div>
             </div>
 
             {photoUrl && (
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+                <div className="flex items-center justify-center w-8 h-8 bg-gray-50 border border-gray-200 text-gray-500">
                   <Camera className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
                   <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-0.5">Photo</p>
-                  <p className="text-xs font-medium text-green-600">Photo extraite avec succès</p>
+                  <p className="text-xs font-medium text-green-600">{l("Photo extraite avec succès", "Photo extracted successfully")}</p>
                 </div>
               </div>
             )}

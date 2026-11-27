@@ -4,11 +4,13 @@ import { Loader2, TerminalSquare } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
 import { formatJobType, formatTimeAgo } from "@/types/job";
 import { useJobs } from "@/hooks/useJobs";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function SystemJobs() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { jobs, runningCount, isLoading, error, refresh, deleteAll } = useJobs();
+  const { language, l } = useLanguage();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -26,25 +28,25 @@ export default function SystemJobs() {
         return (
           <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-[#c7e0f4] bg-[#eff6fc] px-2 py-0.5 text-[11px] font-medium text-[#0078d4]">
             <Loader2 className="h-3 w-3 animate-spin text-[#0078d4]" />
-            En cours
+            {l("En cours", "Running")}
           </span>
         );
       case "completed":
         return (
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#bad80a]/40 bg-[#dff6dd] px-2 py-0.5 text-[11px] font-medium text-[#107c10]">
-            Terminé
+            {l("Terminé", "Completed")}
           </span>
         );
       case "failed":
         return (
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#f1707b]/40 bg-[#fde7e9] px-2 py-0.5 text-[11px] font-medium text-[#a80000]">
-            Échoué
+            {l("Échoué", "Failed")}
           </span>
         );
       default:
         return (
           <span className="inline-flex items-center gap-1 rounded-[2px] border border-[#edebe9] bg-[#f3f2f1] px-2 py-0.5 text-[11px] font-medium text-[#605e5c]">
-            En attente
+            {l("En attente", "Pending")}
           </span>
         );
     }
@@ -53,18 +55,18 @@ export default function SystemJobs() {
   const statusText = (status: string) => {
     switch (status) {
       case "running":
-        return "en cours depuis";
+        return l("en cours depuis", "running for");
       case "completed":
-        return "terminé depuis";
+        return l("terminé depuis", "completed");
       case "failed":
-        return "échoué depuis";
+        return l("échoué depuis", "failed");
       default:
-        return "en attente depuis";
+        return l("en attente depuis", "pending");
     }
   };
 
   const statusMessageClass = (status: string) => {
-    return status === "failed" ? "text-[#a80000] font-medium" : "text-[#605e5c]";
+    return status === "failed" ? "text-[#a80000] dark:text-[#f1707b] font-medium" : "text-[#605e5c] dark:text-[#a19f9d]";
   };
 
   return (
@@ -75,8 +77,8 @@ export default function SystemJobs() {
         className={`relative flex h-10 w-10 items-center justify-center text-white transition-colors focus:outline-none ${
           isOpen ? "bg-[#323130]" : "hover:bg-[#323130]"
         }`}
-        title="Tâches de fond"
-        aria-label="Tâches de fond"
+        title={l("Tâches de fond", "Background tasks")}
+        aria-label={l("Tâches de fond", "Background tasks")}
         aria-expanded={isOpen}
       >
         <TerminalSquare size={16} strokeWidth={1.75} />
@@ -88,81 +90,81 @@ export default function SystemJobs() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full z-50 w-96 max-w-[calc(100vw-1rem)] rounded-[2px] border border-[#edebe9] bg-white text-[#323130] shadow-xl">
-          <div className="flex items-center justify-between border-b border-[#edebe9] bg-[#faf9f8] px-4 py-3">
-            <h3 className="flex items-center gap-2 text-[13px] font-semibold text-[#323130]">
-              Tâches de fond
-              <span className="rounded-[2px] bg-[#edebe9] px-1.5 py-0.5 text-[11px] font-medium text-[#323130]">
+        <div className="absolute right-0 top-full z-50 w-96 max-w-[calc(100vw-1rem)] rounded-[2px] border border-[#edebe9] dark:border-[#3b3a39] bg-white dark:bg-[#252423] text-[#323130] dark:text-[#f3f2f1] shadow-xl">
+          <div className="flex items-center justify-between border-b border-[#edebe9] dark:border-[#3b3a39] bg-[#faf9f8] dark:bg-[#1b1a19] px-4 py-3">
+            <h3 className="flex items-center gap-2 text-[13px] font-semibold text-[#323130] dark:text-[#f3f2f1]">
+              {l("Tâches de fond", "Background tasks")}
+              <span className="rounded-[2px] bg-[#edebe9] dark:bg-[#323130] px-1.5 py-0.5 text-[11px] font-medium text-[#323130] dark:text-[#f3f2f1]">
                 {jobs.length}
               </span>
             </h3>
             <button
               type="button"
               onClick={refresh}
-              className="text-[12px] font-medium text-[#0078d4] hover:text-[#106ebe] hover:underline"
+              className="text-[12px] font-medium text-[#0078d4] dark:text-[#4ea8ff] hover:text-[#106ebe] hover:underline"
             >
-              Actualiser
+              {l("Actualiser", "Refresh")}
             </button>
           </div>
 
-          <div className="max-h-96 divide-y divide-[#edebe9] overflow-y-auto">
+          <div className="max-h-96 divide-y divide-[#edebe9] dark:divide-[#3b3a39] overflow-y-auto">
             {isLoading ? (
-              <div className="p-6 text-center text-[12px] text-[#605e5c]">
-                <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin text-[#0078d4]" />
-                Chargement des tâches...
+              <div className="p-6 text-center text-[12px] text-[#605e5c] dark:text-[#a19f9d]">
+                <Loader2 className="mx-auto mb-2 h-4 w-4 animate-spin text-[#0078d4] dark:text-[#4ea8ff]" />
+                {l("Chargement des tâches...", "Loading tasks...")}
               </div>
             ) : error ? (
-              <div className="p-4 text-center text-[12px] text-[#a80000]">
+              <div className="p-4 text-center text-[12px] text-[#a80000] dark:text-[#f1707b]">
                 {error}
                 <button
                   type="button"
                   onClick={refresh}
-                  className="ml-2 text-[12px] text-[#0078d4] underline"
+                  className="ml-2 text-[12px] text-[#0078d4] dark:text-[#4ea8ff] underline"
                 >
-                  Réessayer
+                  {l("Réessayer", "Retry")}
                 </button>
               </div>
             ) : jobs.length === 0 ? (
-              <div className="p-6 text-center text-[12px] text-[#605e5c]">
-                Aucune tâche de fond trouvée.
+              <div className="p-6 text-center text-[12px] text-[#605e5c] dark:text-[#a19f9d]">
+                {l("Aucune tâche de fond trouvée.", "No background tasks found.")}
               </div>
             ) : (
               jobs.map((job) => (
-                <div key={job.id} className="px-4 py-3 transition-colors hover:bg-[#f3f2f1]">
+                <div key={job.id} className="px-4 py-3 transition-colors hover:bg-[#f3f2f1] dark:hover:bg-[#323130]">
                   <div className="mb-1 flex items-start justify-between gap-2">
                     <div className="flex flex-col">
-                      <span className="text-[12px] font-semibold text-[#323130]">
-                        {formatJobType(job.type)}
+                      <span className="text-[12px] font-semibold text-[#323130] dark:text-[#f3f2f1]">
+                        {formatJobType(job.type, language)}
                       </span>
                       <span className="text-[10px] text-[#8a8886]">
-                        {formatTimeAgo(job.created_at)}
+                        {formatTimeAgo(job.created_at, language)}
                       </span>
                     </div>
                     {statusBadge(job.status)}
                   </div>
 
-                  <p className="line-clamp-2 break-words text-[11px] leading-relaxed text-[#605e5c]">
-                    {formatJobType(job.type)} {statusText(job.status)}{" "}
-                    <strong className="rounded-[2px] bg-[#f3f2f1] px-1 py-0.5 font-mono text-[11px] font-medium text-[#323130]">
+                  <p className="line-clamp-2 break-words text-[11px] leading-relaxed text-[#605e5c] dark:text-[#c8c6c4]">
+                    {formatJobType(job.type, language)} {statusText(job.status)}{" "}
+                    <strong className="rounded-[2px] bg-[#f3f2f1] dark:bg-[#323130] px-1 py-0.5 font-mono text-[11px] font-medium text-[#323130] dark:text-[#f3f2f1]">
                       {job.target}
                     </strong>
                   </p>
 
                   <p className={`mt-1 text-[11px] ${statusMessageClass(job.status)}`}>
-                    {job.message || "Aucun détail supplémentaire"}
+                    {job.message || l("Aucun détail supplémentaire", "No additional details")}
                   </p>
                 </div>
               ))
             )}
           </div>
 
-          <div className="border-t border-[#edebe9] bg-[#faf9f8] p-2 text-center">
+          <div className="border-t border-[#edebe9] dark:border-[#3b3a39] bg-[#faf9f8] dark:bg-[#1b1a19] p-2 text-center">
             <button
               type="button"
               onClick={() => deleteAll()}
-              className="w-full rounded-[2px] py-1.5 text-[12px] font-medium text-[#a80000] transition-colors hover:bg-[#fde7e9]"
+              className="w-full rounded-[2px] py-1.5 text-[12px] font-medium text-[#a80000] dark:text-[#f1707b] transition-colors hover:bg-[#fde7e9] dark:hover:bg-[#a80000]/20"
             >
-              Tout supprimer
+              {l("Tout supprimer", "Clear all")}
             </button>
           </div>
         </div>

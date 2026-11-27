@@ -1,4 +1,5 @@
 import { useModal } from "@/context/ModalContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Loader2, User, Mail, Phone, Camera } from "lucide-react";
 
 interface ExtractingIdentityModalProps {
@@ -11,6 +12,7 @@ export default function ExtractingIdentityModal({
   onClose,
 }: ExtractingIdentityModalProps) {
   const { setModalOpen } = useModal();
+  const { l } = useLanguage();
 
   const handleClose = () => {
     setModalOpen(false);
@@ -30,10 +32,10 @@ export default function ExtractingIdentityModal({
           </div>
           <div>
             <h2 className="text-lg text-left font-bold text-gray-900">
-              Extraction de l&apos;identité
+              {l("Extraction de l'identité", "Extracting identity")}
             </h2>
             <p className="text-left text-sm font-medium text-gray-600">
-              Analyse du CV en cours... Veuillez patienter.
+              {l("Analyse du CV en cours... Veuillez patienter.", "Analyzing resume... Please wait.")}
             </p>
           </div>
         </div>
@@ -42,7 +44,9 @@ export default function ExtractingIdentityModal({
         <div className="p-6 space-y-6">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-            <h3 className="text-sm font-semibold text-gray-800">Informations Personnelles</h3>
+            <h3 className="text-sm font-semibold text-gray-800">
+              {l("Informations Personnelles", "Personal Information")}
+            </h3>
           </div>
 
           <div className="space-y-4 pl-4 border-l-2 border-gray-100">

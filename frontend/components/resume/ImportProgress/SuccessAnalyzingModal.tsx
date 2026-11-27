@@ -1,4 +1,5 @@
 import { CheckCircle2, Code2, Layers, User } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import type {
   ResumeFullAnalysisResult,
   ResumeIdentityResult,
@@ -13,14 +14,15 @@ export default function SuccessAnalyzingModal({
   identityData,
   analysisData,
 }: SuccessAnalyzingModalProps) {
-  const fullName = identityData?.name?.full_name || "Non spécifié";
+  const { l } = useLanguage();
+  const fullName = identityData?.name?.full_name || l("Non spécifié", "Not specified");
   const skills = analysisData?.analysis?.flattened_skills ?? [];
   const technologies = analysisData?.analysis?.technologies ?? [];
   const competencies = analysisData?.analysis?.competencies ?? [];
   const previewSkills = skills.slice(0, 8);
 
   return (
-    <div className="fixed overflow-hidden inset-0 z-50 flex items-center justify-center p-4   transition-all duration-300">
+    <div className="fixed overflow-hidden inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300">
       <div className="w-full max-w-xl bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         
         <div className="flex items-center p-6 border-b border-gray-100 space-x-4">
@@ -29,10 +31,10 @@ export default function SuccessAnalyzingModal({
           </div>
           <div>
             <h2 className="text-lg text-left font-bold text-gray-900">
-              Analyse terminée
+              {l("Analyse terminée", "Analysis complete")}
             </h2>
             <p className="text-sm text-left font-medium text-gray-600">
-              L&apos;identité et les compétences ont été extraites avec succès.
+              {l("L'identité et les compétences ont été extraites avec succès.", "Identity and skills were extracted successfully.")}
             </p>
           </div>
         </div>
@@ -44,15 +46,15 @@ export default function SuccessAnalyzingModal({
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Candidat</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Candidat", "Candidate")}</h3>
             </div>
             <div className="pl-4 border-l-2 border-gray-100">
               <div className="flex items-center gap-4">
-                <div className="flex items-center justify-center text-left w-8 h-8 bg-gray-50  border border-gray-200 text-gray-500">
+                <div className="flex items-center justify-center text-left w-8 h-8 bg-gray-50 border border-gray-200 text-gray-500">
                   <User className="w-4 h-4" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-[11px] font-medium text-left text-gray-500 uppercase tracking-wider mb-0.5">Nom complet</p>
+                  <p className="text-[11px] font-medium text-left text-gray-500 uppercase tracking-wider mb-0.5">{l("Nom complet", "Full name")}</p>
                   <p className="text-sm font-semibold text-left text-gray-900">{fullName}</p>
                 </div>
               </div>
@@ -63,7 +65,7 @@ export default function SuccessAnalyzingModal({
           <div className="space-y-3">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-              <h3 className="text-sm font-semibold text-gray-800">Vue d&apos;ensemble</h3>
+              <h3 className="text-sm font-semibold text-gray-800">{l("Vue d'ensemble", "Overview")}</h3>
             </div>
             <div className="pl-4 border-l-2 border-gray-100">
               <div className="grid grid-cols-2 gap-4">
@@ -71,7 +73,7 @@ export default function SuccessAnalyzingModal({
                 <div className="mrc bg-gray-50 border border-gray-100 p-4">
                   <div className="flex items-center gap-2 text-gray-500 mb-2">
                     <Code2 className="w-4 h-4" />
-                    <p className="text-xs font-semibold uppercase tracking-wider">Technologies</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider">{l("Technologies", "Technologies")}</p>
                   </div>
                   <p className="mt-1 text-2xl font-bold text-gray-900">
                     {technologies.length}
@@ -81,7 +83,7 @@ export default function SuccessAnalyzingModal({
                 <div className="mrc bg-gray-50 border border-gray-100 p-4">
                   <div className="flex items-center gap-2 text-gray-500 mb-2">
                     <Layers className="w-4 h-4" />
-                    <p className="text-xs font-semibold uppercase tracking-wider">Compétences</p>
+                    <p className="text-xs font-semibold uppercase tracking-wider">{l("Compétences", "Skills")}</p>
                   </div>
                   <p className="mt-1 text-2xl font-bold text-gray-900">
                     {competencies.length}
@@ -96,7 +98,7 @@ export default function SuccessAnalyzingModal({
             <div className="space-y-3">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                <h3 className="text-sm font-semibold text-gray-800">Aperçu des compétences</h3>
+                <h3 className="text-sm font-semibold text-gray-800">{l("Aperçu des compétences", "Skills preview")}</h3>
               </div>
               <div className="flex flex-wrap gap-2 pl-4">
                 {previewSkills.map((skill) => (

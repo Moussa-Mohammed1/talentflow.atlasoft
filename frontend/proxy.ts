@@ -1,19 +1,24 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { isPublicPath } from "@/lib/auth-routes";
 
-export function proxy(
-  request: NextRequest
-) {
-  const token = request.cookies.get("access_token");
-  
-  const protectedPaths = ["/dashboard", "/profile", "/documents", "/recruitments"];
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  );
+export function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
-  if (!token && isProtectedPath) {
+  // Skip static asset files safely
+  if (pathname.includes(".")) {
+    return NextResponse.next();
+  }
+
+  const token = request.cookies.get("access_token")?.value;
+
+  if (pathname === "/") {
+    const target = token ? "/dashboard" : "/login";
+    return NextResponse.redirect(new URL(target, request.url));
+  }
+
+  if (!token && !isPublicPath(pathname)) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("expired", "true");
     return NextResponse.redirect(loginUrl);
   }
 
@@ -21,5 +26,7 @@ export function proxy(
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/profile/:path*", "/documents/:path*", "/recruitments/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|images/|static/|fonts/).*)",
+  ],
 };

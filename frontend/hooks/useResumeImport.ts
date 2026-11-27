@@ -1,6 +1,7 @@
 import { useState } from "react";
 import api from "@/lib/axios";
 import { useToast } from "./useToast";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type ImportStatus =
   | "idle"
@@ -70,9 +71,10 @@ export function useResumeImport() {
   const [loading, setLoading] = useState(false);
   const [identityResult, setIdentityResult] = useState<ResumeIdentityResult | null>(null);
   const [analysisResult, setAnalysisResult] = useState<ResumeFullAnalysisResult | null>(null);
-  const [error, setError] = useState<any | null>(null);
+  const [error, setError] = useState<Error | null>(null);
   const [status, setStatus] = useState<ImportStatus>("idle");
   const toast = useToast();
+  const { l } = useLanguage();
 
   const importResume = async ({
     file,
@@ -114,14 +116,19 @@ export function useResumeImport() {
         setTimeout(resolve, 2000)
       );
       setStatus("analyzing");
-      toast.success("L'analyse commencé")
+      toast.success(l("L'analyse a commencé", "Analysis started"));
       const analyzeResponse = await api.post<ResumeFullAnalysisResult>(
         "/resumes/analyze",
         {
           path: uploadResponse.data.path,
         }
       );
-      toast.success("L'analyse complète du CV importé est terminée")
+      toast.success(
+        l(
+          "L'analyse complète du CV importé est terminée",
+          "Full analysis of the uploaded resume is complete"
+        )
+      );
       setAnalysisResult(analyzeResponse.data);
       setStatus("success");
       return {
@@ -130,7 +137,12 @@ export function useResumeImport() {
       };
     } catch (err) {
       setStatus("error");
-      toast.error("Une erreur est survenue lors de l'extraction du CV");
+      toast.error(
+        l(
+          "Une erreur est survenue lors de l'extraction du CV",
+          "An error occurred while extracting the resume"
+        )
+      );
       setError(err as Error);
       throw err;
     } finally {

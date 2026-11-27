@@ -1,21 +1,38 @@
 import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 
-export async function restoreSession() {
-  const token =
-    localStorage.getItem("access_token");
+export { PUBLIC_PATHS, isPublicPath } from "@/lib/auth-routes";
 
-  if (!token) return;
+export function clearAuthSession() {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("access_token");
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+  }
+  useAuthStore.getState().logout();
+}
+
+export async function restoreSession(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    clearAuthSession();
+    return false;
+  }
 
   try {
-    const user =
-      await AuthService.me();
+    const data = await AuthService.me();
+    if (!data?.user) {
+      clearAuthSession();
+      return false;
+    }
 
-    useAuthStore.getState().setUser(user.user);
+    document.cookie = `access_token=${token}; path=/; max-age=86400; SameSite=Lax`;
+    useAuthStore.getState().setUser(data.user);
     useAuthStore.getState().setToken(token);
+    return true;
   } catch {
-    localStorage.removeItem(
-      "access_token"
-    );
+    clearAuthSession();
+    return false;
   }
 }

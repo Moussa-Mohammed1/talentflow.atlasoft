@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { notificationService } from "@/services/notification.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useNotificationStore } from "@/stores/notification.store";
+import { useLanguage } from "@/context/LanguageContext";
 import type { Notification, NotificationSocketMessage } from "@/types/notification";
 
 function userIdFromToken(token: string | null): number | null {
@@ -21,6 +22,7 @@ function userIdFromToken(token: string | null): number | null {
 }
 
 export function useNotifications() {
+  const { l } = useLanguage();
   const authUser = useAuthStore((state) => state.user);
   const authToken = useAuthStore((state) => state.token);
   const notifications = useNotificationStore((state) => state.notifications);
@@ -51,13 +53,13 @@ export function useNotifications() {
         if (!cancelled) hydrate(response.items, response.unread_count);
       })
       .catch(() => {
-        if (!cancelled) setError("Impossible de charger les notifications.");
+        if (!cancelled) setError(l("Impossible de charger les notifications.", "Failed to load notifications."));
       });
 
     return () => {
       cancelled = true;
     };
-  }, [hydrate, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading, token]);
 
   useEffect(() => {
     if (!token || !recruiterId) return;
@@ -128,9 +130,9 @@ export function useNotifications() {
       await notificationService.deleteAll();
       hydrate([], 0);
     } catch {
-      setError("Impossible de supprimer toutes les notifications.");
+      setError(l("Impossible de supprimer toutes les notifications.", "Failed to clear all notifications."));
     }
-  }, [hydrate, recruiterId, setError, token]);
+  }, [hydrate, l, recruiterId, setError, token]);
 
   const markAllAsRead = useCallback(async () => {
     markAllRead();

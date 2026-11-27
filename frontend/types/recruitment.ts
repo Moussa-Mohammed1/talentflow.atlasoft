@@ -177,16 +177,16 @@ export const statusLabels: Record<RecruitmentStatus, string> = {
 };
 
 export const statusColors: Record<RecruitmentStatus, string> = {
-  pending: "bg-slate-100 text-slate-600",
-  interview_invitation_sent: "bg-blue-50 text-blue-600",
-  interview_confirmed: "bg-indigo-50 text-indigo-600",
-  interview_completed: "bg-purple-50 text-purple-600",
-  offer_sent: "bg-amber-50 text-amber-600",
-  offer_accepted: "bg-emerald-50 text-emerald-600",
-  offer_rejected: "bg-red-50 text-red-600",
-  candidate_declined: "bg-red-50 text-red-600",
-  hired: "bg-green-50 text-green-700",
-  cancelled: "bg-gray-100 text-gray-500",
+  pending: "bg-slate-100 text-slate-600 dark:bg-[#323130] dark:text-[#c8c6c4]",
+  interview_invitation_sent: "bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-300",
+  interview_confirmed: "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-300",
+  interview_completed: "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-300",
+  offer_sent: "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300",
+  offer_accepted: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-300",
+  offer_rejected: "bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300",
+  candidate_declined: "bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300",
+  hired: "bg-green-50 text-green-700 dark:bg-emerald-950/60 dark:text-emerald-300",
+  cancelled: "bg-gray-100 text-gray-500 dark:bg-[#323130] dark:text-[#a19f9d]",
 };
 
 export const priorityLabels: Record<RecruitmentPriority, string> = {
@@ -196,7 +196,7 @@ export const priorityLabels: Record<RecruitmentPriority, string> = {
 };
 
 export const priorityColors: Record<RecruitmentPriority, string> = {
-  low: "bg-slate-100 text-slate-500",
-  medium: "bg-amber-50 text-amber-600",
-  high: "bg-red-50 text-red-600",
+  low: "bg-slate-100 text-slate-500 dark:bg-[#323130] dark:text-[#a19f9d]",
+  medium: "bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-300",
+  high: "bg-red-50 text-red-600 dark:bg-red-950/60 dark:text-red-300",
 };

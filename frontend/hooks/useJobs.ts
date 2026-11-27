@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { jobService } from "@/services/job.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useJobStore } from "@/stores/job.store";
+import { useLanguage } from "@/context/LanguageContext";
 import type { JobListResponse } from "@/types/job";
 
 function userIdFromToken(token: string | null): number | null {
@@ -21,6 +22,7 @@ function userIdFromToken(token: string | null): number | null {
 }
 
 export function useJobs() {
+  const { l } = useLanguage();
   const authUser = useAuthStore((state) => state.user);
   const authToken = useAuthStore((state) => state.token);
   const jobs = useJobStore((state) => state.jobs);
@@ -48,13 +50,13 @@ export function useJobs() {
         if (!cancelled) hydrate(response.items, response.running_count);
       })
       .catch(() => {
-        if (!cancelled) setError("Impossible de charger les tâches de fond.");
+        if (!cancelled) setError(l("Impossible de charger les tâches de fond.", "Failed to load background tasks."));
       });
 
     return () => {
       cancelled = true;
     };
-  }, [hydrate, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading, token]);
 
   const deleteAll = useCallback(async () => {
     if (!token || !recruiterId) return;
@@ -62,9 +64,9 @@ export function useJobs() {
       await jobService.deleteAll();
       hydrate([], 0);
     } catch {
-      setError("Impossible de supprimer toutes les tâches.");
+      setError(l("Impossible de supprimer toutes les tâches.", "Failed to delete all tasks."));
     }
-  }, [hydrate, recruiterId, setError, token]);
+  }, [hydrate, l, recruiterId, setError, token]);
 
   const refresh = useCallback(async () => {
     if (!token || !recruiterId) return;
@@ -73,9 +75,9 @@ export function useJobs() {
       const response = await jobService.list();
       hydrate(response.items, response.running_count);
     } catch {
-      setError("Impossible d'actualiser les tâches.");
+      setError(l("Impossible d'actualiser les tâches.", "Failed to refresh tasks."));
     }
-  }, [hydrate, recruiterId, setError, setLoading, token]);
+  }, [hydrate, l, recruiterId, setError, setLoading, token]);
 
   return { jobs, runningCount, isLoading, error, refresh, deleteAll };
 }

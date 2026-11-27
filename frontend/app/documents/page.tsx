@@ -15,6 +15,7 @@ import {
   getResumeDetails,
   revokeResumeDocumentPreviews,
 } from "@/services/resume.service";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ImportResumeButton = dynamic(
   () => import("@/components/resume/ImportResumeButton"),
@@ -22,6 +23,7 @@ const ImportResumeButton = dynamic(
 );
 
 export default function DocumentsPage() {
+  const { t, l } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,11 +65,11 @@ export default function DocumentsPage() {
       setDocuments(resumeDocuments);
       return resumeDocuments;
     } catch {
-      setError("Impossible de charger les documents pour le moment.");
+      setError(l("Impossible de charger les documents pour le moment.", "Unable to load documents right now."));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [l]);
 
   useEffect(() => {
     let loadedDocuments: DocumentListItem[] = [];
@@ -126,9 +128,9 @@ export default function DocumentsPage() {
 
   return (
     <AppShell
-      title="Documents"
+      title={t.nav.documents}
       icon={<AtlasoftDocumentsIcon size={22} />}
-      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Documents" }]}
+      breadcrumbs={[{ label: t.nav.home, href: "/dashboard" }, { label: t.nav.documents }]}
       backgroundClassName="bg-[#f3f2f1]"
       headerCenter={
         <div className="relative hidden md:block">
@@ -138,10 +140,13 @@ export default function DocumentsPage() {
           />
           <input
             type="text"
-            placeholder="Rechercher un candidat, un fichier, une catégorie ou un rôle..."
+            placeholder={l(
+              "Rechercher un candidat, un fichier, une catégorie ou un rôle...",
+              "Search a candidate, file, category, or role..."
+            )}
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="w-full rounded-[2px] border border-[#8a8886] bg-white py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] outline-none transition-colors focus:border-[#0078d4]"
+            className="w-full rounded-[2px] border border-[#8a8886] dark:border-[#3b3a39] bg-white dark:bg-[#252423] py-1.5 pl-9 pr-3 text-[12.5px] text-[#323130] dark:text-[#f3f2f1] placeholder:text-[#605e5c] dark:placeholder:text-[#a19f9d] outline-none transition-colors focus:border-[#0078d4]"
           />
         </div>
       }
@@ -149,8 +154,13 @@ export default function DocumentsPage() {
     >
         <main className="flex-1 flex flex-col min-h-0 p-4 pb-0 max-w-7xl mx-auto w-full">
           <div className="flex-1 overflow-y-auto space-y-6 relative">
-            <p className="text-sm text-slate-600 hidden lg:block">Importez et gérez les CV des candidats. Utilisez la <strong>barre de recherche</strong> pour filtrer, cliquez sur une carte pour voir les <strong>détails extraits</strong> (identité, compétences, expériences, formations). Lancez une <strong>ré-analyse</strong> ou <strong>extraction</strong> depuis le panneau de détails.</p>
-            <div className="bg-white border rounded-full border-slate-100 shadow-sm md:hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <p className="text-sm text-slate-600 dark:text-[#c8c6c4] hidden lg:block">
+              {l(
+                "Importez et gérez les CV des candidats. Utilisez la barre de recherche pour filtrer, cliquez sur une carte pour voir les détails extraits (identité, compétences, expériences, formations) et lancez une ré-analyse ou évaluation.",
+                "Import and manage candidate resumes. Use the search bar to filter, click any card to inspect extracted details (identity, skills, experience, education), and trigger re-analysis or evaluation."
+              )}
+            </p>
+            <div className="bg-white dark:bg-[#252423] border rounded-full border-slate-100 dark:border-[#3b3a39] shadow-sm md:hidden flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="relative flex-1">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -158,10 +168,13 @@ export default function DocumentsPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Rechercher un candidat, un fichier, une catégorie ou un rôle..."
+                  placeholder={l(
+                    "Rechercher un candidat, un fichier, une catégorie ou un rôle...",
+                    "Search a candidate, file, category, or role..."
+                  )}
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
-                  className="w-full pl-10 bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200/80 px-7 py-5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                  className="w-full pl-10 bg-slate-50 dark:bg-[#1b1a19] hover:bg-slate-100/50 dark:hover:bg-[#252423] focus:bg-white dark:focus:bg-[#252423] border border-slate-200/80 dark:border-[#3b3a39] text-slate-900 dark:text-[#f3f2f1] px-7 py-5 rounded-full text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all"
                 />
               </div>
             </div>
@@ -171,16 +184,16 @@ export default function DocumentsPage() {
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div
                     key={index}
-                    className="bg-white border border-slate-100 mm p-2 shadow-sm animate-pulse"
+                    className="bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] mm p-2 shadow-sm animate-pulse"
                   >
-                    <div className="w-full aspect-[3/4] bg-slate-100 rounded mb-4" />
-                    <div className="h-3 bg-slate-100 rounded w-3/4 mb-2" />
-                    <div className="h-2 bg-slate-100 rounded w-1/2" />
+                    <div className="w-full aspect-[3/4] bg-slate-100 dark:bg-[#323130] rounded mb-4" />
+                    <div className="h-3 bg-slate-100 dark:bg-[#323130] rounded w-3/4 mb-2" />
+                    <div className="h-2 bg-slate-100 dark:bg-[#323130] rounded w-1/2" />
                   </div>
                 ))}
               </div>
             ) : error ? (
-              <EmptyState title="Chargement impossible" message={error} />
+              <EmptyState title={l("Chargement impossible", "Failed to load")} message={error} />
             ) : filteredDocuments.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {paginatedDocuments.map((document) => (
@@ -193,18 +206,21 @@ export default function DocumentsPage() {
               </div>
             ) : (
               <EmptyState
-                title="Aucun document trouvé"
-                message="Aucun résultat ne correspond à votre recherche. Modifiez vos critères ou importez un nouveau document."
+                title={l("Aucun document trouvé", "No documents found")}
+                message={l(
+                  "Aucun résultat ne correspond à votre recherche. Modifiez vos critères ou importez un nouveau document.",
+                  "No results match your search. Adjust your query or import a new document."
+                )}
               />
             )}
           </div>
 
           {totalPages > 1 && (
-            <div className="sticky bottom-0 flex items-center justify-center gap-2 py-3 bg-white/90 backdrop-blur-sm border-t border-slate-100">
+            <div className="sticky bottom-0 flex items-center justify-center gap-2 py-3 bg-white/90 dark:bg-[#1b1a19]/90 backdrop-blur-sm border-t border-slate-100 dark:border-[#3b3a39]">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="p-2  border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="p-2 border border-slate-200 dark:border-[#3b3a39] text-slate-500 dark:text-[#a19f9d] hover:bg-slate-100 dark:hover:bg-[#323130] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -212,10 +228,10 @@ export default function DocumentsPage() {
                 <button
                   key={page}
                   onClick={() => setCurrentPage(page)}
-                  className={`min-w-[36px] h-9  text-xs font-bold transition-colors cursor-pointer ${
+                  className={`min-w-[36px] h-9 text-xs font-bold transition-colors cursor-pointer ${
                     page === currentPage
-                      ? "border border-black text-black"
-                      : " bg-white text-black border hover:bg-slate-100 border-slate-200"
+                      ? "border border-black dark:border-[#2899f5] text-black dark:text-[#4ea8ff]"
+                      : "bg-white dark:bg-[#252423] text-black dark:text-[#f3f2f1] border hover:bg-slate-100 dark:hover:bg-[#323130] border-slate-200 dark:border-[#3b3a39]"
                   }`}
                 >
                   {page}
@@ -224,7 +240,7 @@ export default function DocumentsPage() {
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="p-2  border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                className="p-2 border border-slate-200 dark:border-[#3b3a39] text-slate-500 dark:text-[#a19f9d] hover:bg-slate-100 dark:hover:bg-[#323130] disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>
@@ -248,10 +264,12 @@ export default function DocumentsPage() {
       )}
 
       {modalOpen && detailsLoading && (
-        <div className="fixed inset-0 bg-white/50 backdrop-blur-xl flex items-center justify-center p-4 z-50">
-          <div className="bg-white  shadow-xl p-8">
-            <div className="animate-spin w-8 h-8 border-2 border-slate-300 border-t-indigo-600 rounded-full mx-auto" />
-            <p className="text-sm text-slate-500 mt-4">Chargement des données...</p>
+        <div className="fixed inset-0 bg-white/50 dark:bg-black/60 backdrop-blur-xl flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-[#252423] border border-transparent dark:border-[#3b3a39] shadow-xl p-8">
+            <div className="animate-spin w-8 h-8 border-2 border-slate-300 dark:border-[#3b3a39] border-t-indigo-600 dark:border-t-[#2899f5] rounded-full mx-auto" />
+            <p className="text-sm text-slate-500 dark:text-[#a19f9d] mt-4">
+              {l("Chargement des données...", "Loading details...")}
+            </p>
           </div>
         </div>
       )}
@@ -261,12 +279,12 @@ export default function DocumentsPage() {
 
 function EmptyState({ title, message }: { title: string; message: string }) {
   return (
-    <div className="bg-white border border-slate-100 mrc p-12 text-center max-w-md mx-auto space-y-3">
-      <div className="w-12 h-12 flex items-center justify-center text-slate-800 mx-auto">
+    <div className="bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] mrc p-12 text-center max-w-md mx-auto space-y-3">
+      <div className="w-12 h-12 flex items-center justify-center text-slate-800 dark:text-[#f3f2f1] mx-auto">
         <FileQuestionMark size={40} />
       </div>
-      <h3 className="font-bold text-slate-800 text-sm">{title}</h3>
-      <p className="text-xs text-slate-500 leading-relaxed">{message}</p>
+      <h3 className="font-bold text-slate-800 dark:text-[#f3f2f1] text-sm">{title}</h3>
+      <p className="text-xs text-slate-500 dark:text-[#a19f9d] leading-relaxed">{message}</p>
     </div>
   );
 }

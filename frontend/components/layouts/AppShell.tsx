@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import Upperbar from "./Upperbar";
 import Sidebar from "./Sidebar";
+import { useLanguage } from "@/context/LanguageContext";
 
 export interface BreadcrumbItem {
   label: string;
@@ -54,6 +55,7 @@ export default function AppShell({
   backgroundClassName = "bg-[#f3f2f1]",
   children,
 }: AppShellProps) {
+  const { l } = useLanguage();
   const collapsed = useSyncExternalStore(subscribeSidebar, getSidebarSnapshot, () => false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -76,7 +78,7 @@ export default function AppShell({
   }, []);
 
   return (
-    <div className={`flex min-h-screen flex-col ${backgroundClassName} text-[#323130] font-sans selection:bg-[#cce8ff]`}>
+    <div className={`flex min-h-screen flex-col ${backgroundClassName} dark:bg-[#141414] text-[#323130] dark:text-[#f3f2f1] font-sans selection:bg-[#cce8ff] dark:selection:bg-[#0078d4]/40`}>
       <Upperbar onToggleSidebar={handleToggleSidebar} sidebarOpen={!collapsed} />
 
       <div className="flex flex-1 min-h-0">
@@ -88,18 +90,18 @@ export default function AppShell({
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Blade Header */}
-          <div className="border-b border-[#edebe9] bg-white px-6 py-3 font-atlasoft">
+          <div className="border-b border-[#edebe9] dark:border-[#323130] bg-white dark:bg-[#1b1a19] px-6 py-3 font-atlasoft">
             {breadcrumbs && breadcrumbs.length > 0 && (
-              <nav aria-label="Fil d'Ariane" className="mb-1.5 flex items-center gap-1 text-[12px] text-[#605e5c]">
+              <nav aria-label={l("Fil d'Ariane", "Breadcrumb")} className="mb-1.5 flex items-center gap-1 text-[12px] text-[#605e5c] dark:text-[#a19f9d]">
                 {breadcrumbs.map((crumb, index) => (
                   <React.Fragment key={`${crumb.label}-${index}`}>
                     {index > 0 && <ChevronRight size={12} className="text-[#8a8886]" />}
                     {crumb.href ? (
-                      <Link href={crumb.href} className="text-[#0078d4] hover:underline">
+                      <Link href={crumb.href} className="text-[#0078d4] dark:text-[#4ea8ff] hover:underline">
                         {crumb.label}
                       </Link>
                     ) : (
-                      <span className="text-[#323130]">{crumb.label}</span>
+                      <span className="text-[#323130] dark:text-[#f3f2f1]">{crumb.label}</span>
                     )}
                   </React.Fragment>
                 ))}
@@ -111,11 +113,11 @@ export default function AppShell({
                 {headerLeftExtra}
                 {icon && <span className="shrink-0">{icon}</span>}
                 <div className="min-w-0">
-                  <h1 className="truncate text-[18px] font-semibold leading-tight text-[#323130]">
+                  <h1 className="truncate text-[18px] font-semibold leading-tight text-[#323130] dark:text-[#f3f2f1]">
                     {title}
                   </h1>
                   {subtitle && (
-                    <div className="mt-0.5 text-[12px] text-[#605e5c]">{subtitle}</div>
+                    <div className="mt-0.5 text-[12px] text-[#605e5c] dark:text-[#a19f9d]">{subtitle}</div>
                   )}
                 </div>
               </div>

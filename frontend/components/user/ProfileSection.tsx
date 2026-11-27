@@ -5,6 +5,7 @@ import { User, Settings, LogOut, Loader2 } from "lucide-react";
 import { AuthService } from "@/services/auth.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ProfileSectionProps {
   collapsed?: boolean;
@@ -29,6 +30,7 @@ export default function ProfileSection({
   const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const { t, l } = useLanguage();
 
   const initials = useMemo(() => getInitials(user?.fullname ?? ""), [user?.fullname]);
 
@@ -58,17 +60,17 @@ export default function ProfileSection({
     return (
       <div className="relative w-full font-atlasoft" ref={containerRef}>
         {isOpen && (
-          <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-[2px] border border-[#3b3a39] bg-[#252423] p-1 text-[#f3f2f1] shadow-xl">
+          <div className="absolute bottom-full left-0 z-50 mb-1 w-52 rounded-[2px] border border-[#edebe9] dark:border-[#3b3a39] bg-white dark:bg-[#252423] p-1 text-[#323130] dark:text-[#f3f2f1] shadow-xl">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
                 router.push("/profile");
               }}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#f3f2f1] hover:bg-[#323130]"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#323130] dark:text-[#f3f2f1] hover:bg-[#edebe9] dark:hover:bg-[#323130]"
             >
-              <User size={14} className="text-[#50e6ff]" />
-              <span>Mon Profil</span>
+              <User size={14} className="text-[#484644] dark:text-white" />
+              <span>{t.nav.profile}</span>
             </button>
             <button
               type="button"
@@ -76,20 +78,20 @@ export default function ProfileSection({
                 setIsOpen(false);
                 router.push("/settings");
               }}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#f3f2f1] hover:bg-[#323130]"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#323130] dark:text-[#f3f2f1] hover:bg-[#edebe9] dark:hover:bg-[#323130]"
             >
-              <Settings size={14} className="text-[#50e6ff]" />
-              <span>Paramètres</span>
+              <Settings size={14} className="text-[#484644] dark:text-white" />
+              <span>{t.nav.settings}</span>
             </button>
-            <div className="my-1 h-px bg-[#3b3a39]" />
+            <div className="my-1 h-px bg-[#edebe9] dark:bg-[#3b3a39]" />
             <button
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#f1707b] hover:bg-[#323130] disabled:opacity-60"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[12px] text-[#a80000] dark:text-[#f1707b] hover:bg-[#edebe9] dark:hover:bg-[#323130] disabled:opacity-60"
             >
               <LogOut size={14} />
-              <span>Déconnexion</span>
+              <span>{l("Déconnexion", "Log out")}</span>
               {isLoggingOut && <Loader2 size={12} className="animate-spin" />}
             </button>
           </div>
@@ -98,7 +100,7 @@ export default function ProfileSection({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`flex w-full items-center gap-2.5 px-3 py-2 text-[12px] text-[#f3f2f1] transition-colors hover:bg-[#323130] ${
+          className={`flex w-full items-center gap-2.5 px-3 py-2 text-[12px] text-[#323130] dark:text-[#f3f2f1] transition-colors hover:bg-[#dcdad8] dark:hover:bg-[#323130] ${
             collapsed ? "justify-center px-0" : ""
           }`}
         >
@@ -115,7 +117,7 @@ export default function ProfileSection({
           )}
           {!collapsed && (
             <span className="truncate text-left font-medium">
-              {user?.fullname || "Compte"}
+              {user?.fullname || l("Compte", "Account")}
             </span>
           )}
         </button>
@@ -161,24 +163,24 @@ export default function ProfileSection({
       {isOpen && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-50 w-72 rounded-[2px] border border-[#edebe9] bg-white text-[#323130] shadow-xl"
+          className="absolute right-0 top-full z-50 w-72 rounded-[2px] border border-[#edebe9] dark:border-[#3b3a39] bg-white dark:bg-[#252423] text-[#323130] dark:text-[#f3f2f1] shadow-xl"
         >
-          <div className="flex items-center justify-between border-b border-[#edebe9] bg-[#faf9f8] px-4 py-2.5">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#605e5c]">
+          <div className="flex items-center justify-between border-b border-[#edebe9] dark:border-[#3b3a39] bg-[#faf9f8] dark:bg-[#1b1a19] px-4 py-2.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-[#605e5c] dark:text-[#a19f9d]">
               {secondaryLabel}
             </span>
             <button
               type="button"
               onClick={handleLogout}
               disabled={isLoggingOut}
-              className="flex items-center gap-1.5 text-[12px] font-medium text-[#0078d4] hover:underline disabled:opacity-60"
+              className="flex items-center gap-1.5 text-[12px] font-medium text-[#0078d4] dark:text-[#4ea8ff] hover:underline disabled:opacity-60"
             >
               {isLoggingOut ? (
                 <Loader2 size={12} className="animate-spin" />
               ) : (
                 <LogOut size={12} />
               )}
-              Se déconnecter
+              {l("Se déconnecter", "Sign out")}
             </button>
           </div>
 
@@ -187,7 +189,7 @@ export default function ProfileSection({
               <img
                 src={user.avatar}
                 alt={user.fullname || ""}
-                className="h-12 w-12 shrink-0 rounded-full border border-[#edebe9] object-cover"
+                className="h-12 w-12 shrink-0 rounded-full border border-[#edebe9] dark:border-[#3b3a39] object-cover"
               />
             ) : (
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0078d4] text-[15px] font-semibold text-white">
@@ -195,26 +197,26 @@ export default function ProfileSection({
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[14px] font-semibold text-[#323130]">
-                {user?.fullname || "Utilisateur"}
+              <p className="truncate text-[14px] font-semibold text-[#323130] dark:text-[#f3f2f1]">
+                {user?.fullname || l("Utilisateur", "User")}
               </p>
-              <p className="truncate text-[12px] text-[#605e5c]">
+              <p className="truncate text-[12px] text-[#605e5c] dark:text-[#a19f9d]">
                 {user?.email || ""}
               </p>
             </div>
           </div>
 
-          <div className="border-t border-[#edebe9] py-1">
+          <div className="border-t border-[#edebe9] dark:border-[#3b3a39] py-1">
             <button
               type="button"
               onClick={() => {
                 setIsOpen(false);
                 router.push("/profile");
               }}
-              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-[#323130] transition-colors hover:bg-[#f3f2f1]"
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-[#323130] dark:text-[#f3f2f1] transition-colors hover:bg-[#f3f2f1] dark:hover:bg-[#323130]"
             >
-              <User size={15} className="text-[#0078d4]" />
-              <span>Mon Profil</span>
+              <User size={15} className="text-[#0078d4] dark:text-[#4ea8ff]" />
+              <span>{t.nav.profile}</span>
             </button>
             <button
               type="button"
@@ -222,10 +224,10 @@ export default function ProfileSection({
                 setIsOpen(false);
                 router.push("/settings");
               }}
-              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-[#323130] transition-colors hover:bg-[#f3f2f1]"
+              className="flex w-full items-center gap-2.5 px-4 py-2 text-left text-[13px] text-[#323130] dark:text-[#f3f2f1] transition-colors hover:bg-[#f3f2f1] dark:hover:bg-[#323130]"
             >
-              <Settings size={15} className="text-[#0078d4]" />
-              <span>Paramètres</span>
+              <Settings size={15} className="text-[#0078d4] dark:text-[#4ea8ff]" />
+              <span>{t.nav.settings}</span>
             </button>
           </div>
         </div>

@@ -9,6 +9,7 @@ import SystemJobs from "@/components/ui/SystemJobs";
 import ProfileSection from "@/components/user/ProfileSection";
 import { useAuthStore } from "@/stores/auth.store";
 import { useModal } from "@/context/ModalContext";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   AtlasoftAdminUsersIcon,
   AtlasoftBrandMark,
@@ -35,102 +36,6 @@ interface QuickNavItem {
   icon: React.ReactNode;
 }
 
-const QUICK_NAV_ITEMS: QuickNavItem[] = [
-  {
-    label: "Accueil",
-    category: "Services",
-    href: "/dashboard",
-    keywords: "dashboard home tableau de bord",
-    icon: <AtlasoftHomeIcon size={16} />,
-  },
-  {
-    label: "Resources",
-    category: "Services",
-    href: "/resources",
-    keywords: "ressources configuration",
-    icon: <AtlasoftResourcesIcon size={16} />,
-  },
-  {
-    label: "Départements",
-    category: "Resources",
-    href: "/resources/departements",
-    keywords: "departements equipes competences",
-    icon: <AtlasoftDepartmentsIcon size={16} />,
-  },
-  {
-    label: "Documents",
-    category: "Services",
-    href: "/documents",
-    keywords: "cv resume fichiers importer",
-    icon: <AtlasoftDocumentsIcon size={16} />,
-  },
-  {
-    label: "Évaluations",
-    category: "Services",
-    href: "/evaluations",
-    keywords: "scores candidats analyse ia",
-    icon: <AtlasoftEvaluationsIcon size={16} />,
-  },
-  {
-    label: "Offres d'emploi",
-    category: "Services",
-    href: "/jobs",
-    keywords: "postes jobs recrutement offres",
-    icon: <AtlasoftJobsIcon size={16} />,
-  },
-  {
-    label: "Talents",
-    category: "Services",
-    href: "/talents",
-    keywords: "candidats profils favoris",
-    icon: <AtlasoftTalentsIcon size={16} />,
-  },
-  {
-    label: "Recrutements",
-    category: "Services",
-    href: "/recruitments",
-    keywords: "recruter entretiens emails",
-    icon: <AtlasoftRecruitIcon size={16} />,
-  },
-  {
-    label: "Utilisateurs",
-    category: "Administration",
-    href: "/admin",
-    keywords: "admin roles permissions",
-    adminOnly: true,
-    icon: <AtlasoftAdminUsersIcon size={16} />,
-  },
-  {
-    label: "Invitations",
-    category: "Administration",
-    href: "/invitations",
-    keywords: "inviter recruteurs liens",
-    adminOnly: true,
-    icon: <AtlasoftInviteIcon size={16} />,
-  },
-  {
-    label: "Mon Profil",
-    category: "Compte",
-    href: "/profile",
-    keywords: "profil avatar mot de passe",
-    icon: <AtlasoftProfileIcon size={16} />,
-  },
-  {
-    label: "Paramètres",
-    category: "Compte",
-    href: "/settings",
-    keywords: "settings preferences notifications securite",
-    icon: <AtlasoftSettingsIcon size={16} />,
-  },
-  {
-    label: "Guide d'utilisation",
-    category: "Aide",
-    href: "/help",
-    keywords: "help documentation support",
-    icon: <AtlasoftHelpIcon size={16} />,
-  },
-];
-
 interface UpperbarProps {
   onToggleSidebar: () => void;
   sidebarOpen?: boolean;
@@ -140,6 +45,7 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
   const router = useRouter();
   const currentUserRole = useAuthStore((s) => s.user?.role);
   const { isModalOpen } = useModal();
+  const { t, l } = useLanguage();
   const isAdmin = currentUserRole?.toLowerCase() === "admin";
 
   const [query, setQuery] = useState("");
@@ -148,8 +54,107 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const quickNavItems = useMemo<QuickNavItem[]>(
+    () => [
+      {
+        label: t.nav.home,
+        category: t.categories.services,
+        href: "/dashboard",
+        keywords: "dashboard home tableau de bord accueil",
+        icon: <AtlasoftHomeIcon size={16} />,
+      },
+      {
+        label: t.nav.resources,
+        category: t.categories.services,
+        href: "/resources",
+        keywords: "resources ressources configuration",
+        icon: <AtlasoftResourcesIcon size={16} />,
+      },
+      {
+        label: t.nav.departments,
+        category: t.categories.resources,
+        href: "/resources/departements",
+        keywords: "departments departements teams equipes skills competences",
+        icon: <AtlasoftDepartmentsIcon size={16} />,
+      },
+      {
+        label: t.nav.documents,
+        category: t.categories.services,
+        href: "/documents",
+        keywords: "cv resume files fichiers import importer",
+        icon: <AtlasoftDocumentsIcon size={16} />,
+      },
+      {
+        label: t.nav.evaluations,
+        category: t.categories.services,
+        href: "/evaluations",
+        keywords: "scores candidates candidats ai ia analysis evaluations",
+        icon: <AtlasoftEvaluationsIcon size={16} />,
+      },
+      {
+        label: t.nav.jobOffersPlural,
+        category: t.categories.services,
+        href: "/jobs",
+        keywords: "positions postes jobs recruitment offres emploi",
+        icon: <AtlasoftJobsIcon size={16} />,
+      },
+      {
+        label: t.nav.talents,
+        category: t.categories.services,
+        href: "/talents",
+        keywords: "candidates candidats profiles profils favorites favoris talents",
+        icon: <AtlasoftTalentsIcon size={16} />,
+      },
+      {
+        label: t.nav.recruitments,
+        category: t.categories.services,
+        href: "/recruitments",
+        keywords: "recruit recruter interviews entretiens emails",
+        icon: <AtlasoftRecruitIcon size={16} />,
+      },
+      {
+        label: t.nav.users,
+        category: t.categories.admin,
+        href: "/admin",
+        keywords: "admin roles permissions users utilisateurs",
+        adminOnly: true,
+        icon: <AtlasoftAdminUsersIcon size={16} />,
+      },
+      {
+        label: t.nav.invitations,
+        category: t.categories.admin,
+        href: "/invitations",
+        keywords: "invite inviter recruiters recruteurs links liens invitations",
+        adminOnly: true,
+        icon: <AtlasoftInviteIcon size={16} />,
+      },
+      {
+        label: t.nav.profile,
+        category: t.categories.account,
+        href: "/profile",
+        keywords: "profile profil avatar password mot de passe",
+        icon: <AtlasoftProfileIcon size={16} />,
+      },
+      {
+        label: t.nav.settings,
+        category: t.categories.account,
+        href: "/settings",
+        keywords: "settings parametres preferences notifications security language theme",
+        icon: <AtlasoftSettingsIcon size={16} />,
+      },
+      {
+        label: t.nav.helpGuide,
+        category: t.categories.help,
+        href: "/help",
+        keywords: "help aide documentation support guide",
+        icon: <AtlasoftHelpIcon size={16} />,
+      },
+    ],
+    [t]
+  );
+
   const visibleItems = useMemo(() => {
-    const allowed = QUICK_NAV_ITEMS.filter((item) => !item.adminOnly || isAdmin);
+    const allowed = quickNavItems.filter((item) => !item.adminOnly || isAdmin);
     const q = query.trim().toLowerCase();
     if (!q) return allowed;
     return allowed.filter(
@@ -158,7 +163,7 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
         item.category.toLowerCase().includes(q) ||
         item.keywords.toLowerCase().includes(q)
     );
-  }, [isAdmin, query]);
+  }, [quickNavItems, isAdmin, query]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -217,8 +222,12 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
         <button
           type="button"
           onClick={onToggleSidebar}
-          aria-label={sidebarOpen ? "Réduire le menu" : "Développer le menu"}
-          title="Menu de navigation"
+          aria-label={
+            sidebarOpen
+              ? l("Réduire le menu", "Collapse menu")
+              : l("Développer le menu", "Expand menu")
+          }
+          title={l("Menu de navigation", "Navigation menu")}
           className="flex h-10 w-12 items-center justify-center text-white transition-colors hover:bg-[#323130] focus:outline-none"
         >
           <Menu size={17} strokeWidth={1.75} />
@@ -238,13 +247,15 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
         <div
           className={`flex h-[28px] w-full items-center rounded-[2px] border transition-colors ${
             searchFocused
-              ? "border-[#0078d4] bg-white"
-              : "border-transparent bg-[#f3f2f1] hover:bg-white"
+              ? "border-[#0078d4] bg-white dark:bg-[#323130]"
+              : "border-transparent bg-[#f3f2f1] hover:bg-white dark:bg-[#292827] dark:border-[#3b3a39] dark:hover:bg-[#323130]"
           }`}
         >
           <Search
             size={14}
-            className={`ml-2.5 shrink-0 ${searchFocused ? "text-[#0078d4]" : "text-[#605e5c]"}`}
+            className={`ml-2.5 shrink-0 ${
+              searchFocused ? "text-[#0078d4] dark:text-[#4ea8ff]" : "text-[#605e5c] dark:text-[#a19f9d]"
+            }`}
           />
           <input
             ref={inputRef}
@@ -257,16 +268,22 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
               setSearchFocused(true);
             }}
             onKeyDown={handleSearchKeyDown}
-            placeholder="Rechercher des ressources, services et docs (Ctrl+/)"
-            aria-label="Rechercher des ressources, services et docs"
-            className="h-full w-full bg-transparent px-2.5 text-[12.5px] text-[#323130] placeholder:text-[#605e5c] focus:outline-none"
+            placeholder={l(
+              "Rechercher des ressources, services et docs (Ctrl+/)",
+              "Search resources, services, and docs (Ctrl+/)"
+            )}
+            aria-label={l(
+              "Rechercher des ressources, services et docs",
+              "Search resources, services, and docs"
+            )}
+            className="h-full w-full bg-transparent px-2.5 text-[12.5px] text-[#323130] dark:text-[#f3f2f1] placeholder:text-[#605e5c] dark:placeholder:text-[#a19f9d] focus:outline-none"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery("")}
-              aria-label="Effacer la recherche"
-              className="mr-1.5 flex h-5 w-5 items-center justify-center rounded-[2px] text-[#605e5c] hover:bg-[#edebe9] hover:text-[#323130]"
+              aria-label={l("Effacer la recherche", "Clear search")}
+              className="mr-1.5 flex h-5 w-5 items-center justify-center rounded-[2px] text-[#605e5c] dark:text-[#a19f9d] hover:bg-[#edebe9] dark:hover:bg-[#3b3a39] hover:text-[#323130] dark:hover:text-white"
             >
               <X size={12} />
             </button>
@@ -274,13 +291,16 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
         </div>
 
         {searchFocused && (
-          <div className="absolute left-0 right-0 top-full z-50 mt-0.5 max-h-80 overflow-y-auto rounded-[2px] border border-[#edebe9] bg-white py-1 text-[#323130] shadow-xl">
-            <div className="border-b border-[#edebe9] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#605e5c]">
-              {query.trim() ? "Résultats" : "Services et ressources"}
+          <div className="absolute left-0 right-0 top-full z-50 mt-0.5 max-h-80 overflow-y-auto rounded-[2px] border border-[#edebe9] dark:border-[#3b3a39] bg-white dark:bg-[#252423] py-1 text-[#323130] dark:text-[#f3f2f1] shadow-xl">
+            <div className="border-b border-[#edebe9] dark:border-[#3b3a39] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[#605e5c] dark:text-[#a19f9d]">
+              {query.trim() ? l("Résultats", "Results") : l("Services et ressources", "Services and resources")}
             </div>
             {visibleItems.length === 0 ? (
-              <p className="px-3 py-4 text-center text-[12px] text-[#605e5c]">
-                Aucun service correspondant à « {query} ».
+              <p className="px-3 py-4 text-center text-[12px] text-[#605e5c] dark:text-[#a19f9d]">
+                {l(
+                  `Aucun service correspondant à « ${query} ».`,
+                  `No service matching "${query}".`
+                )}
               </p>
             ) : (
               visibleItems.map((item, idx) => (
@@ -290,14 +310,16 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
                   onMouseEnter={() => setSelectedIndex(idx)}
                   onClick={() => handleSelectItem(item.href)}
                   className={`flex w-full items-center justify-between px-3 py-2 text-left text-[12.5px] transition-colors ${
-                    idx === selectedIndex ? "bg-[#eff6fc] text-[#323130]" : "hover:bg-[#f3f2f1]"
+                    idx === selectedIndex
+                      ? "bg-[#eff6fc] dark:bg-[#0078d4]/25 text-[#323130] dark:text-white"
+                      : "hover:bg-[#f3f2f1] dark:hover:bg-[#323130]"
                   }`}
                 >
                   <span className="flex items-center gap-2.5 font-medium">
                     {item.icon}
                     <span>{item.label}</span>
                   </span>
-                  <span className="text-[11px] text-[#605e5c]">{item.category}</span>
+                  <span className="text-[11px] text-[#605e5c] dark:text-[#a19f9d]">{item.category}</span>
                 </button>
               ))
             )}
@@ -311,16 +333,16 @@ export default function Upperbar({ onToggleSidebar, sidebarOpen = true }: Upperb
         <NotificationButton />
         <Link
           href="/settings"
-          title="Paramètres"
-          aria-label="Paramètres"
+          title={t.nav.settings}
+          aria-label={t.nav.settings}
           className="flex h-10 w-10 items-center justify-center text-white transition-colors hover:bg-[#323130]"
         >
           <Settings size={16} strokeWidth={1.75} />
         </Link>
         <Link
           href="/help"
-          title="Aide"
-          aria-label="Aide"
+          title={t.nav.help}
+          aria-label={t.nav.help}
           className="hidden h-10 w-10 items-center justify-center text-white transition-colors hover:bg-[#323130] sm:flex"
         >
           <HelpCircle size={16} strokeWidth={1.75} />

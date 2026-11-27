@@ -1,51 +1,44 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import {
   AlertCircle,
   Briefcase,
   CalendarDays,
-  Clock,
-  ExternalLink,
   Loader2,
   Mail,
   MapPin,
   Phone,
   Send,
   User,
-  Video,
   X,
 } from "lucide-react";
-import type {
-  RecruitmentDetail,
-  Interview,
-  RecruitmentEmail,
-  EmailPreviewResponse,
-} from "@/types/recruitment";
-import {
-  statusLabels,
-  statusColors,
-  priorityLabels,
-  priorityColors,
-} from "@/types/recruitment";
+import type { RecruitmentDetail } from "@/types/recruitment";
+import { statusColors } from "@/types/recruitment";
 import { recruitmentService } from "@/services/recruitment.service";
 import { useToast } from "@/hooks/useToast";
 import { useAuthStore } from "@/stores/auth.store";
+import { useLanguage } from "@/context/LanguageContext";
 
 const storage_url = process.env.NEXT_PUBLIC_STORAGE_URL;
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("fr-FR", {
-    day: "numeric", month: "short", year: "numeric",
+function formatDate(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("fr-FR", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
+function formatDateTime(dateStr: string, locale: string): string {
+  return new Date(dateStr).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
-
-
 
 export function RecruitmentDetailModal({
   recruitmentId,
@@ -56,6 +49,7 @@ export function RecruitmentDetailModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const { language, locale, t, l } = useLanguage();
   const [detail, setDetail] = useState<RecruitmentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -63,8 +57,9 @@ export function RecruitmentDetailModal({
   const toast = useToast();
   const user = useAuthStore((s) => s.user);
 
-  // Interview form state
-  const [interviewTitle, setInterviewTitle] = useState("Entretien de recrutement");
+  const [interviewTitle, setInterviewTitle] = useState(
+    language === "en" ? "Recruitment Interview" : "Entretien de recrutement"
+  );
   const [interviewDate, setInterviewDate] = useState("");
   const [interviewTime, setInterviewTime] = useState("");
   const [interviewDuration, setInterviewDuration] = useState(60);
@@ -72,7 +67,6 @@ export function RecruitmentDetailModal({
   const [interviewInterviewer, setInterviewInterviewer] = useState(user?.fullname || "");
   const [savingInterview, setSavingInterview] = useState(false);
 
-  // Notes state
   const [editingNotes, setEditingNotes] = useState(false);
   const [editNotesText, setEditNotesText] = useState("");
   const [savingNotes, setSavingNotes] = useState(false);
@@ -81,14 +75,15 @@ export function RecruitmentDetailModal({
   const [deleting, setDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // Email state
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [emailGenerated, setEmailGenerated] = useState(false);
   const [generatingEmail, setGeneratingEmail] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [companyName, setCompanyName] = useState("Notre Société");
-  const [emailLanguage, setEmailLanguage] = useState("french");
+  const [companyName, setCompanyName] = useState(
+    language === "en" ? "Our Company" : "Notre Société"
+  );
+  const [emailLanguage, setEmailLanguage] = useState(language === "en" ? "english" : "french");
   const [selectedInterviewId, setSelectedInterviewId] = useState("");
 
   const handleSelectInterview = (interviewId: string) => {
@@ -123,7 +118,7 @@ export function RecruitmentDetailModal({
 
   const handleSaveInterview = async () => {
     if (!interviewDate || !interviewTime) {
-      toast.error("Veuillez sélectionner une date et une heure");
+      toast.error(l("Veuillez sélectionner une date et une heure", "Please select a date and time"));
       return;
     }
     setSavingInterview(true);
@@ -137,10 +132,10 @@ export function RecruitmentDetailModal({
         location: interviewLocation || null,
         interviewer_name: interviewInterviewer || null,
       });
-      toast.success("Entretien planifié avec succès");
+      toast.success(l("Entretien planifié avec succès", "Interview scheduled successfully"));
       await fetchDetail();
     } catch {
-      toast.error("Erreur lors de la planification");
+      toast.error(l("Erreur lors de la planification", "Failed to schedule interview"));
     } finally {
       setSavingInterview(false);
     }
@@ -148,7 +143,12 @@ export function RecruitmentDetailModal({
 
   const handleGenerateEmail = async () => {
     if (!interviewDate || !interviewTime) {
-      toast.error("Veuillez d'abord définir la date et l'heure de l'entretien");
+      toast.error(
+        l(
+          "Veuillez d'abord définir la date et l'heure de l'entretien",
+          "Please set the interview date and time first"
+        )
+      );
       setActiveTab("interview");
       return;
     }
@@ -160,16 +160,16 @@ export function RecruitmentDetailModal({
         interview_time: interviewTime,
         duration_minutes: interviewDuration,
         location: interviewLocation || null,
-        recruiter_name: interviewInterviewer || user?.fullname || "Recruteur",
+        recruiter_name: interviewInterviewer || user?.fullname || l("Recruteur", "Recruiter"),
         company_name: companyName,
         language: emailLanguage,
       });
       setEmailSubject(result.subject);
       setEmailBody(result.body);
       setEmailGenerated(true);
-      toast.success("Email généré avec succès");
+      toast.success(l("Email généré avec succès", "Email draft generated successfully"));
     } catch {
-      toast.error("Erreur lors de la génération de l'email");
+      toast.error(l("Erreur lors de la génération de l'email", "Failed to generate email"));
     } finally {
       setGeneratingEmail(false);
     }
@@ -177,7 +177,7 @@ export function RecruitmentDetailModal({
 
   const handleSendEmail = async () => {
     if (!emailSubject || !emailBody) {
-      toast.error("Veuillez d'abord générer l'email");
+      toast.error(l("Veuillez d'abord générer l'email", "Please generate the email first"));
       return;
     }
     setSendingEmail(true);
@@ -186,14 +186,14 @@ export function RecruitmentDetailModal({
         subject: emailSubject,
         body: emailBody,
       });
-      toast.success("Email envoyé avec succès");
+      toast.success(l("Email envoyé avec succès", "Email sent successfully"));
       setEmailGenerated(false);
       setEmailSubject("");
       setEmailBody("");
       await fetchDetail();
       onUpdated();
     } catch {
-      toast.error("Erreur lors de l'envoi de l'email");
+      toast.error(l("Erreur lors de l'envoi de l'email", "Failed to send email"));
     } finally {
       setSendingEmail(false);
     }
@@ -203,12 +203,12 @@ export function RecruitmentDetailModal({
     setSavingNotes(true);
     try {
       await recruitmentService.update(recruitmentId, { notes: editNotesText });
-      toast.success("Notes mises à jour");
+      toast.success(l("Notes mises à jour", "Notes updated"));
       setEditingNotes(false);
       await fetchDetail();
       onUpdated();
     } catch {
-      toast.error("Erreur lors de la mise à jour des notes");
+      toast.error(l("Erreur lors de la mise à jour des notes", "Failed to update notes"));
     } finally {
       setSavingNotes(false);
     }
@@ -218,12 +218,12 @@ export function RecruitmentDetailModal({
     setCancelling(true);
     try {
       await recruitmentService.cancel(recruitmentId);
-      toast.success("Recrutement annulé");
+      toast.success(l("Recrutement annulé", "Recruitment cancelled"));
       setShowCancelModal(false);
       await fetchDetail();
       onUpdated();
     } catch {
-      toast.error("Erreur lors de l'annulation");
+      toast.error(l("Erreur lors de l'annulation", "Failed to cancel recruitment"));
     } finally {
       setCancelling(false);
     }
@@ -233,12 +233,12 @@ export function RecruitmentDetailModal({
     setDeleting(true);
     try {
       await recruitmentService.delete(recruitmentId);
-      toast.success("Recrutement supprimé");
+      toast.success(l("Recrutement supprimé", "Recruitment deleted"));
       setShowDeleteModal(false);
       onClose();
       onUpdated();
     } catch {
-      toast.error("Erreur lors de la suppression");
+      toast.error(l("Erreur lors de la suppression", "Failed to delete recruitment"));
     } finally {
       setDeleting(false);
     }
@@ -246,8 +246,8 @@ export function RecruitmentDetailModal({
 
   if (loading) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-        <div className="w-full max-w-3xl overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl p-12 flex items-center justify-center">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 dark:bg-black/60 backdrop-blur-xs">
+        <div className="w-full max-w-3xl overflow-hidden mrc border border-gray-200/80 dark:border-[#3b3a39] bg-white dark:bg-[#252423] shadow-xl p-12 flex items-center justify-center">
           <Loader2 size={28} className="animate-spin text-slate-400" />
         </div>
       </div>
@@ -256,12 +256,12 @@ export function RecruitmentDetailModal({
 
   if (error || !detail) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-        <div className="w-full max-w-3xl overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl p-12 flex flex-col items-center justify-center text-slate-400">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 dark:bg-black/60 backdrop-blur-xs">
+        <div className="w-full max-w-3xl overflow-hidden mrc border border-gray-200/80 dark:border-[#3b3a39] bg-white dark:bg-[#252423] shadow-xl p-12 flex flex-col items-center justify-center text-slate-400">
           <AlertCircle size={32} className="mb-2" />
-          <span className="text-sm">Impossible de charger les détails</span>
-          <button onClick={onClose} className="mt-4 border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            Fermer
+          <span className="text-sm">{l("Impossible de charger les détails", "Unable to load details")}</span>
+          <button onClick={onClose} className="mt-4 border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#d2d0ce] hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors">
+            {t.common.close}
           </button>
         </div>
       </div>
@@ -271,37 +271,55 @@ export function RecruitmentDetailModal({
   const { recruitment, candidate, job_offer, interviews, emails } = detail;
 
   const tabs = [
-    { key: "info" as const, label: "Informations" },
-    { key: "interview" as const, label: "Entretien" },
+    { key: "info" as const, label: l("Informations", "Information") },
+    { key: "interview" as const, label: l("Entretien", "Interview") },
     { key: "email" as const, label: "Email" },
   ];
 
+  const interviewStatusLabel = (s: string) => {
+    if (s === "scheduled") return l("Planifié", "Scheduled");
+    if (s === "completed") return l("Terminé", "Completed");
+    if (s === "cancelled") return l("Annulé", "Cancelled");
+    if (s === "rescheduled") return l("Replanifié", "Rescheduled");
+    return s;
+  };
+
+  const emailStatusLabel = (s: string) => {
+    if (s === "sent") return l("Envoyé", "Sent");
+    if (s === "failed") return l("Échoué", "Failed");
+    if (s === "queued") return l("En file", "Queued");
+    if (s === "draft") return l("Brouillon", "Draft");
+    return s;
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs">
-      <div className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden mrc border border-gray-200/80 bg-white shadow-xl">
-        <div className="border-b border-gray-100 px-6 py-4 flex items-center justify-between shrink-0">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/30 dark:bg-black/60 backdrop-blur-xs">
+      <div className="w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden mrc border border-gray-200/80 dark:border-[#3b3a39] bg-white dark:bg-[#252423] shadow-xl">
+        <div className="border-b border-gray-100 dark:border-[#3b3a39] px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">Détails du recrutement</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-[#f3f2f1]">
+              {l("Détails du recrutement", "Recruitment details")}
+            </h3>
             <span className={`inline-flex items-center gap-1 mm px-2 py-0.5 text-[10px] font-medium ${statusColors[recruitment.status]}`}>
-              {statusLabels[recruitment.status]}
+              {t.recruitmentStatus[recruitment.status]}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-50 transition-colors cursor-pointer">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-[#f3f2f1] p-1 hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors cursor-pointer">
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <div className="border-b border-gray-100 px-6 py-2 flex gap-1 shrink-0">
+        <div className="border-b border-gray-100 dark:border-[#3b3a39] px-6 py-2 flex gap-1 shrink-0">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-3 py-1.5 text-xs font-medium rounded transition-colors cursor-pointer ${
                 activeTab === tab.key
-                  ? "bg-slate-100 text-slate-900"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+                  ? "bg-slate-100 dark:bg-[#323130] text-slate-900 dark:text-white"
+                  : "text-slate-500 dark:text-[#a19f9d] hover:text-slate-700 dark:hover:text-[#f3f2f1] hover:bg-slate-50 dark:hover:bg-[#323130]/60"
               }`}
             >
               {tab.label}
@@ -312,24 +330,24 @@ export function RecruitmentDetailModal({
         <div className="flex-1 overflow-y-auto p-6 [scrollbar-width:none]">
           {activeTab === "info" && (
             <div className="space-y-6">
-              <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-4 pb-4 border-b border-slate-100 dark:border-[#3b3a39]">
                 {candidate?.photo ? (
-                  <img src={`${storage_url}${candidate.photo}`} alt={candidate.fullname} className="w-16 h-16 rounded-full object-cover object-top bg-slate-100" />
+                  <img src={`${storage_url}${candidate.photo}`} alt={candidate.fullname} className="w-16 h-16 rounded-full object-cover object-top bg-slate-100 dark:bg-[#1b1a19]" />
                 ) : (
-                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-400">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-indigo-50 dark:bg-[#0078d4]/20 text-indigo-400 dark:text-[#4ea8ff]">
                     <User size={28} />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h4 className="text-base font-bold text-slate-900">{candidate?.fullname || "Unknown"}</h4>
+                  <h4 className="text-base font-bold text-slate-900 dark:text-[#f3f2f1]">{candidate?.fullname || l("Inconnu", "Unknown")}</h4>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                     {candidate?.email && (
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <p className="text-xs text-slate-500 dark:text-[#a19f9d] flex items-center gap-1">
                         <Mail size={11} /> {candidate.email}
                       </p>
                     )}
                     {candidate?.phone && (
-                      <p className="text-xs text-slate-500 flex items-center gap-1">
+                      <p className="text-xs text-slate-500 dark:text-[#a19f9d] flex items-center gap-1">
                         <Phone size={11} /> {candidate.phone}
                       </p>
                     )}
@@ -338,8 +356,8 @@ export function RecruitmentDetailModal({
                 <div className="ml-auto text-right shrink-0">
                   {job_offer?.department_name && (
                     <>
-                      <p className="text-xs text-slate-500 mt-2">Score {job_offer.department_name}</p>
-                      <p className="text-lg font-bold text-indigo-700">
+                      <p className="text-xs text-slate-500 dark:text-[#a19f9d] mt-2">Score {job_offer.department_name}</p>
+                      <p className="text-lg font-bold text-indigo-700 dark:text-[#4ea8ff]">
                         {job_offer.department_score != null
                           ? (job_offer.department_score).toFixed(0) + "%"
                           : "-"}
@@ -350,35 +368,36 @@ export function RecruitmentDetailModal({
               </div>
 
               {job_offer && (
-                <div className="border border-slate-100 rounded-lg p-4">
+                <div className="border border-slate-100 dark:border-[#3b3a39] rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Briefcase size={14} className="text-slate-400" />
-                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Poste</span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-[#a19f9d] uppercase tracking-wide">
+                      {l("Poste", "Position")}
+                    </span>
                   </div>
-                  <p className="text-sm font-bold text-slate-900">{job_offer.title}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-[#f3f2f1]">{job_offer.title}</p>
                   {job_offer.description && (
-                    <p className="text-xs text-slate-500 mt-1">{job_offer.description}</p>
+                    <p className="text-xs text-slate-500 dark:text-[#a19f9d] mt-1">{job_offer.description}</p>
                   )}
                   <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400">
                     <span className="flex items-center gap-1">
                       <MapPin size={11} />
-                      {recruitingPriorityLabel(recruitment.priority)}
+                      {t.recruitmentPriority[recruitment.priority]}
                     </span>
                   </div>
-
                 </div>
               )}
 
-              <div className="border border-slate-100 rounded-lg p-4">
+              <div className="border border-slate-100 dark:border-[#3b3a39] rounded-lg p-4">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Notes</span>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-[#a19f9d] uppercase tracking-wide">Notes</span>
                   {!editingNotes && (
                     <button
                       type="button"
                       onClick={() => { setEditNotesText(recruitment.notes || ""); setEditingNotes(true); }}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 cursor-pointer"
+                      className="text-xs text-indigo-600 dark:text-[#4ea8ff] hover:text-indigo-800 cursor-pointer"
                     >
-                      {recruitment.notes ? "Modifier" : "Ajouter"}
+                      {recruitment.notes ? t.common.edit : l("Ajouter", "Add")}
                     </button>
                   )}
                 </div>
@@ -388,35 +407,37 @@ export function RecruitmentDetailModal({
                       rows={3}
                       value={editNotesText}
                       onChange={(e) => setEditNotesText(e.target.value)}
-                      className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
-                      placeholder="Ajouter une note..."
+                      className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none"
+                      placeholder={l("Ajouter une note...", "Add a note...")}
                     />
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={handleSaveNotes}
                         disabled={savingNotes}
-                        className="inline-flex items-center gap-1 bg-black text-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-gray-800 transition-colors disabled:opacity-50 cursor-pointer"
+                        className="inline-flex items-center gap-1 bg-black dark:bg-[#0078d4] text-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-gray-800 dark:hover:bg-[#106ebe] transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {savingNotes ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                        Enregistrer
+                        {t.common.save}
                       </button>
                       <button
                         type="button"
                         onClick={() => setEditingNotes(false)}
-                        className="text-xs text-slate-500 hover:text-slate-700 cursor-pointer"
+                        className="text-xs text-slate-500 dark:text-[#a19f9d] hover:text-slate-700 dark:hover:text-[#f3f2f1] cursor-pointer"
                       >
-                        Annuler
+                        {t.common.cancel}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-700 mt-1">{recruitment.notes || "Aucune note"}</p>
+                  <p className="text-sm text-slate-700 dark:text-[#d2d0ce] mt-1">
+                    {recruitment.notes || l("Aucune note", "No notes")}
+                  </p>
                 )}
               </div>
 
               <div className="text-[11px] text-slate-400">
-                Créé le {formatDate(recruitment.created_at)}
+                {l("Créé le", "Created on")} {formatDate(recruitment.created_at, locale)}
               </div>
             </div>
           )}
@@ -425,60 +446,68 @@ export function RecruitmentDetailModal({
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Titre</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Titre", "Title")}
+                  </label>
                   <input
                     type="text"
                     value={interviewTitle}
                     onChange={(e) => setInterviewTitle(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Durée (minutes)</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Durée (minutes)", "Duration (minutes)")}
+                  </label>
                   <input
                     type="number"
                     min={15}
                     max={480}
                     value={interviewDuration}
                     onChange={(e) => setInterviewDuration(parseInt(e.target.value) || 60)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Date</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">Date</label>
                   <input
                     type="date"
                     value={interviewDate}
                     onChange={(e) => setInterviewDate(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Heure</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Heure", "Time")}
+                  </label>
                   <input
                     type="time"
                     value={interviewTime}
                     onChange={(e) => setInterviewTime(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Lieu</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Lieu", "Location")}
+                  </label>
                   <input
                     type="text"
                     value={interviewLocation}
                     onChange={(e) => setInterviewLocation(e.target.value)}
-                    placeholder="Ex: Bureau principal"
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    placeholder={l("Ex: Bureau principal", "e.g. Main office or video link")}
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] placeholder:text-gray-400 dark:placeholder:text-[#8a8886] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Interviewer</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">Interviewer</label>
                   <input
                     type="text"
                     value={interviewInterviewer}
                     onChange={(e) => setInterviewInterviewer(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
               </div>
@@ -487,30 +516,32 @@ export function RecruitmentDetailModal({
                 type="button"
                 onClick={handleSaveInterview}
                 disabled={savingInterview}
-                className="inline-flex items-center gap-2 bg-black text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="inline-flex items-center gap-2 bg-black dark:bg-[#0078d4] text-white px-4 py-2 text-sm font-medium shadow-xs hover:bg-gray-800 dark:hover:bg-[#106ebe] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {savingInterview ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarDays className="h-4 w-4" />}
-                Planifier l'entretien
+                {l("Planifier l'entretien", "Schedule interview")}
               </button>
 
               {interviews.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Entretiens planifiés</h4>
+                  <h4 className="text-xs font-semibold text-slate-500 dark:text-[#a19f9d] uppercase tracking-wide">
+                    {l("Entretiens planifiés", "Scheduled interviews")}
+                  </h4>
                   {interviews.map((interview) => (
-                    <div key={interview.id} className="border border-slate-100 rounded-lg p-3 flex items-center justify-between">
+                    <div key={interview.id} className="border border-slate-100 dark:border-[#3b3a39] rounded-lg p-3 flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{interview.title}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {formatDateTime(interview.scheduled_at)} - {interview.duration_minutes}min
+                        <p className="text-sm font-medium text-slate-900 dark:text-[#f3f2f1]">{interview.title}</p>
+                        <p className="text-xs text-slate-500 dark:text-[#a19f9d] mt-0.5">
+                          {formatDateTime(interview.scheduled_at, locale)} - {interview.duration_minutes}min
                         </p>
                       </div>
                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-                        interview.status === "scheduled" ? "bg-blue-50 text-blue-600" :
-                        interview.status === "completed" ? "bg-emerald-50 text-emerald-600" :
-                        interview.status === "cancelled" ? "bg-red-50 text-red-600" :
-                        "bg-amber-50 text-amber-600"
+                        interview.status === "scheduled" ? "bg-blue-50 dark:bg-[#0078d4]/20 text-blue-600 dark:text-[#4ea8ff]" :
+                        interview.status === "completed" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" :
+                        interview.status === "cancelled" ? "bg-red-50 dark:bg-rose-950/40 text-red-600 dark:text-rose-400" :
+                        "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-300"
                       }`}>
-                        {interview.status}
+                        {interviewStatusLabel(interview.status)}
                       </span>
                     </div>
                   ))}
@@ -523,20 +554,24 @@ export function RecruitmentDetailModal({
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Nom de l'entreprise</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Nom de l'entreprise", "Company name")}
+                  </label>
                   <input
                     type="text"
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">Langue de l'email</label>
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Langue de l'email", "Email language")}
+                  </label>
                   <select
                     value={emailLanguage}
                     onChange={(e) => setEmailLanguage(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   >
                     <option value="french">Français</option>
                     <option value="english">English</option>
@@ -549,18 +584,18 @@ export function RecruitmentDetailModal({
 
               {interviews.length > 0 && (
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1">
-                    Entretien planifié
+                  <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                    {l("Entretien planifié", "Scheduled interview")}
                   </label>
                   <select
                     value={selectedInterviewId}
                     onChange={(e) => handleSelectInterview(e.target.value)}
-                    className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                   >
-                    <option value="">Sélectionner un entretien...</option>
+                    <option value="">{l("Sélectionner un entretien...", "Select an interview...")}</option>
                     {interviews.map((interview) => (
                       <option key={interview.id} value={interview.id}>
-                        {interview.title} - {formatDateTime(interview.scheduled_at)}
+                        {interview.title} - {formatDateTime(interview.scheduled_at, locale)}
                       </option>
                     ))}
                   </select>
@@ -572,48 +607,54 @@ export function RecruitmentDetailModal({
                   type="button"
                   onClick={handleGenerateEmail}
                   disabled={generatingEmail}
-                  className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="inline-flex items-center gap-2 border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#d2d0ce] shadow-xs hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {generatingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4" />}
-                  Générer l'email
+                  {l("Générer l'email", "Generate email")}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setEmailSubject(""); setEmailBody(""); setEmailGenerated(true); }}
-                  className="inline-flex items-center gap-2 border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#d2d0ce] shadow-xs hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors cursor-pointer"
                 >
                   <Mail className="h-4 w-4" />
-                  Rédiger manuellement
+                  {l("Rédiger manuellement", "Write manually")}
                 </button>
               </div>
 
               {emailGenerated && (
-                <div className="space-y-4 border border-slate-100 rounded-lg p-4">
+                <div className="space-y-4 border border-slate-100 dark:border-[#3b3a39] rounded-lg p-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Sujet</label>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                      {l("Sujet", "Subject")}
+                    </label>
                     <input
                       type="text"
                       value={emailSubject}
                       onChange={(e) => setEmailSubject(e.target.value)}
-                      className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                      className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Aperçu</label>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                      {l("Aperçu", "Preview")}
+                    </label>
                     <div
-                      className="w-full border border-gray-200 px-4 py-3 text-sm text-gray-900 bg-white min-h-[200px] prose prose-sm max-w-none"
+                      className="w-full border border-gray-200 dark:border-[#3b3a39] px-4 py-3 text-sm text-gray-900 dark:text-[#f3f2f1] bg-white dark:bg-[#1b1a19] min-h-[200px] prose prose-sm dark:prose-invert max-w-none"
                       dangerouslySetInnerHTML={{ __html: emailBody }}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Corps de l'email (HTML)</label>
+                    <label className="block text-xs font-semibold text-gray-700 dark:text-[#d2d0ce] mb-1">
+                      {l("Corps de l'email (HTML)", "Email body (HTML)")}
+                    </label>
                     <textarea
                       rows={8}
                       value={emailBody}
                       onChange={(e) => setEmailBody(e.target.value)}
-                      className="w-full border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none font-mono"
+                      className="w-full border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-3 py-2 text-sm text-gray-900 dark:text-[#f3f2f1] focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors resize-none font-mono"
                     />
                   </div>
                   <div className="flex items-center justify-end">
@@ -621,10 +662,10 @@ export function RecruitmentDetailModal({
                       type="button"
                       onClick={handleSendEmail}
                       disabled={sendingEmail}
-                      className="inline-flex items-center gap-2 bg-black text-white px-5 py-2 text-sm font-medium shadow-xs hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      className="inline-flex items-center gap-2 bg-black dark:bg-[#0078d4] text-white px-5 py-2 text-sm font-medium shadow-xs hover:bg-gray-800 dark:hover:bg-[#106ebe] transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                       {sendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      Envoyer l'email
+                      {l("Envoyer l'email", "Send email")}
                     </button>
                   </div>
                 </div>
@@ -632,22 +673,24 @@ export function RecruitmentDetailModal({
 
               {emails.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Historique des emails</h4>
+                  <h4 className="text-xs font-semibold text-slate-500 dark:text-[#a19f9d] uppercase tracking-wide">
+                    {l("Historique des emails", "Email history")}
+                  </h4>
                   {emails.map((email) => (
-                    <div key={email.id} className="border border-slate-100 rounded-lg p-3">
+                    <div key={email.id} className="border border-slate-100 dark:border-[#3b3a39] rounded-lg p-3">
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium text-slate-900 truncate">{email.subject}</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-[#f3f2f1] truncate">{email.subject}</p>
                         <span className={`text-[10px] font-medium px-2 py-0.5 rounded ${
-                          email.status === "sent" ? "bg-emerald-50 text-emerald-600" :
-                          email.status === "failed" ? "bg-red-50 text-red-600" :
-                          "bg-slate-100 text-slate-500"
+                          email.status === "sent" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" :
+                          email.status === "failed" ? "bg-red-50 dark:bg-rose-950/40 text-red-600 dark:text-rose-400" :
+                          "bg-slate-100 dark:bg-[#323130] text-slate-500 dark:text-[#a19f9d]"
                         }`}>
-                          {email.status}
+                          {emailStatusLabel(email.status)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500">
-                        À: {email.recipient_email}
-                        {email.sent_at && ` - ${formatDateTime(email.sent_at)}`}
+                      <p className="text-xs text-slate-500 dark:text-[#a19f9d]">
+                        {l("À:", "To:")} {email.recipient_email}
+                        {email.sent_at && ` - ${formatDateTime(email.sent_at, locale)}`}
                       </p>
                     </div>
                   ))}
@@ -655,57 +698,61 @@ export function RecruitmentDetailModal({
               )}
             </div>
           )}
-
-
         </div>
 
-        <div className="border-t border-gray-100 bg-gray-50/70 px-6 py-4 flex items-center justify-between shrink-0">
+        <div className="border-t border-gray-100 dark:border-[#3b3a39] bg-gray-50/70 dark:bg-[#1b1a19] px-6 py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             {recruitment.status === "pending" && (
               <button
                 type="button"
                 onClick={() => setShowCancelModal(true)}
                 disabled={cancelling}
-                className="inline-flex items-center gap-1 border border-red-200 text-red-600 bg-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1 border border-red-200 dark:border-rose-800 text-red-600 dark:text-rose-400 bg-white dark:bg-[#252423] px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {cancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                Annuler le recrutement
+                {l("Annuler le recrutement", "Cancel recruitment")}
               </button>
             )}
             <button
               type="button"
               onClick={() => setShowDeleteModal(true)}
               disabled={deleting}
-              className="inline-flex items-center gap-1 border border-red-300 text-red-500 bg-white px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 transition-colors disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-1 border border-red-300 dark:border-rose-800 text-red-500 dark:text-rose-400 bg-white dark:bg-[#252423] px-3 py-1.5 text-xs font-medium shadow-xs hover:bg-red-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-Supprimer ce recrutement            </button>
+              {l("Supprimer ce recrutement", "Delete recruitment")}
+            </button>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer"
+            className="border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#252423] px-4 py-2 text-sm font-medium text-gray-700 dark:text-[#d2d0ce] shadow-xs hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors cursor-pointer"
           >
-            Fermer
+            {t.common.close}
           </button>
         </div>
       </div>
 
       {showCancelModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs" onClick={() => setShowCancelModal(false)}>
-          <div className="w-full max-w-sm mrc border border-gray-200/80 bg-white shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Annuler le recrutement</h4>
-            <p className="text-sm text-slate-600 mb-6">
-              Voulez-vous vraiment annuler ce recrutement ? Les entretiens et emails associés seront supprimés.
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 dark:bg-black/60 backdrop-blur-xs" onClick={() => setShowCancelModal(false)}>
+          <div className="w-full max-w-sm mrc border border-gray-200/80 dark:border-[#3b3a39] bg-white dark:bg-[#252423] shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-[#f3f2f1] mb-2">
+              {l("Annuler le recrutement", "Cancel recruitment")}
+            </h4>
+            <p className="text-sm text-slate-600 dark:text-[#c8c6c4] mb-6">
+              {l(
+                "Voulez-vous vraiment annuler ce recrutement ? Les entretiens et emails associés seront supprimés.",
+                "Are you sure you want to cancel this recruitment? Associated interviews and emails will be removed."
+              )}
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowCancelModal(false)}
                 disabled={cancelling}
-                className="border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                className="border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-4 py-2 text-xs font-medium text-gray-700 dark:text-[#d2d0ce] shadow-xs hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors cursor-pointer disabled:opacity-50"
               >
-                Non
+                {t.common.no}
               </button>
               <button
                 type="button"
@@ -714,7 +761,7 @@ Supprimer ce recrutement            </button>
                 className="inline-flex items-center gap-1 bg-red-600 text-white px-4 py-2 text-xs font-medium shadow-xs hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {cancelling ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                Oui, annuler
+                {l("Oui, annuler", "Yes, cancel")}
               </button>
             </div>
           </div>
@@ -722,20 +769,25 @@ Supprimer ce recrutement            </button>
       )}
 
       {showDeleteModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 backdrop-blur-xs" onClick={() => setShowDeleteModal(false)}>
-          <div className="w-full max-w-sm mrc border border-gray-200/80 bg-white shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
-            <h4 className="text-sm font-semibold text-gray-900 mb-2">Supprimer le recrutement</h4>
-            <p className="text-sm text-slate-600 mb-6">
-              Voulez-vous vraiment supprimer définitivement ce recrutement ? Cette action est irréversible.
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-900/30 dark:bg-black/60 backdrop-blur-xs" onClick={() => setShowDeleteModal(false)}>
+          <div className="w-full max-w-sm mrc border border-gray-200/80 dark:border-[#3b3a39] bg-white dark:bg-[#252423] shadow-xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-[#f3f2f1] mb-2">
+              {l("Supprimer le recrutement", "Delete recruitment")}
+            </h4>
+            <p className="text-sm text-slate-600 dark:text-[#c8c6c4] mb-6">
+              {l(
+                "Voulez-vous vraiment supprimer définitivement ce recrutement ? Cette action est irréversible.",
+                "Are you sure you want to permanently delete this recruitment? This action cannot be undone."
+              )}
             </p>
             <div className="flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={deleting}
-                className="border border-gray-200 bg-white px-4 py-2 text-xs font-medium text-gray-700 shadow-xs hover:bg-gray-50 transition-colors cursor-pointer disabled:opacity-50"
+                className="border border-gray-200 dark:border-[#3b3a39] bg-white dark:bg-[#1b1a19] px-4 py-2 text-xs font-medium text-gray-700 dark:text-[#d2d0ce] shadow-xs hover:bg-gray-50 dark:hover:bg-[#323130] transition-colors cursor-pointer disabled:opacity-50"
               >
-                Non
+                {t.common.no}
               </button>
               <button
                 type="button"
@@ -744,7 +796,7 @@ Supprimer ce recrutement            </button>
                 className="inline-flex items-center gap-1 bg-red-600 text-white px-4 py-2 text-xs font-medium shadow-xs hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {deleting ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
-                Oui, supprimer
+                {l("Oui, supprimer", "Yes, delete")}
               </button>
             </div>
           </div>
@@ -752,8 +804,4 @@ Supprimer ce recrutement            </button>
       )}
     </div>
   );
-}
-
-function recruitingPriorityLabel(priority: string): string {
-  return priorityLabels[priority as keyof typeof priorityLabels] || priority;
 }

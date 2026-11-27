@@ -1,20 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Home,
-  Building2,
-  FolderOpen,
-  MailPlus,
-  User,
-  Settings,
-  List,
-  BookOpen,
-  ChevronRight,
-  Search,
-} from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { BookOpen, ChevronRight, Search } from "lucide-react";
 import AppShell from "@/components/layouts/AppShell";
 import { AtlasoftHelpIcon } from "@/components/layouts/AtlasoftIcons";
+import { useLanguage } from "@/context/LanguageContext";
 
 function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -66,22 +56,6 @@ interface DocSection {
   label: string;
 }
 
-const sections: DocSection[] = [
-  { id: "dashboard", label: "Tableau de bord" },
-  { id: "talents", label: "Talents" },
-  { id: "evaluations", label: "Évaluations" },
-  { id: "departements", label: "Départements" },
-  { id: "documents", label: "Documents" },
-  { id: "jobs", label: "Offres d'emploi" },
-  { id: "recruitments", label: "Recrutements" },
-  { id: "invitations", label: "Invitations" },
-  { id: "profile", label: "Profil" },
-  { id: "settings", label: "Paramètres" },
-  { id: "connexion", label: "Connexion" },
-  { id: "admin", label: "Administration" },
-  { id: "features", label: "Fonctionnalités" },
-];
-
 function HelpContent({ section, searchQuery }: { section: string; searchQuery: string }) {
   switch (section) {
     case "dashboard":
@@ -118,10 +92,10 @@ function HelpContent({ section, searchQuery }: { section: string; searchQuery: s
 function DocHeader({ title, description, searchQuery }: { title: string; description: string; searchQuery: string }) {
   return (
     <div>
-      <h2 className="text-lg font-bold text-slate-900">
+      <h2 className="text-lg font-bold text-slate-900 dark:text-[#f3f2f1]">
         <HighlightText text={title} query={searchQuery} />
       </h2>
-      <p className="text-sm text-slate-500 mt-1">
+      <p className="text-sm text-slate-500 dark:text-[#a19f9d] mt-1">
         <HighlightText text={description} query={searchQuery} />
       </p>
     </div>
@@ -129,23 +103,41 @@ function DocHeader({ title, description, searchQuery }: { title: string; descrip
 }
 
 function DashboardDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Tableau de bord" description="Page d'accueil de TalentFlow" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          Le tableau de bord est la première page que vous voyez après connexion. Il sert de hub central
-          pour accéder rapidement aux différentes sections de l&apos;application.
+      <DocHeader
+        title={l("Tableau de bord", "Dashboard")}
+        description={l("Page d'accueil de TalentFlow", "TalentFlow home page")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "Le tableau de bord est la première page que vous voyez après connexion. Il sert de hub central pour accéder rapidement aux différentes sections de l'application.",
+            "The dashboard is the first page you see after signing in. It serves as a central hub for quick access to each section of the application."
+          )}
         </Section>
-        <Section title="Cartes d&apos;accès rapide" searchQuery={searchQuery}>
-          Chaque carte représente une section clé de l&apos;application. Passez la souris sur une carte
-          pour voir les détails et cliquez sur le bouton pour accéder directement à la section.
+        <Section title={l("Cartes d'accès rapide", "Quick access cards")} searchQuery={searchQuery}>
+          {l(
+            "Chaque carte représente une section clé de l'application. Passez la souris sur une carte pour voir les détails et cliquez sur le bouton pour accéder directement à la section.",
+            "Each card represents a core section of the application. Hover over a card for details and click it to jump directly to that section."
+          )}
         </Section>
-        <Section title="Sections disponibles" searchQuery={searchQuery}>
+        <Section title={l("Sections disponibles", "Available sections")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Gestion des talents</strong> — Consulter et gérer les profils talents</li>
-            <li><strong>Analyse &amp; Statistiques</strong> — Suivre les indicateurs clés de recrutement</li>
-            <li><strong>Documents &amp; Ressources</strong> — Centraliser les CV et rapports d&apos;évaluation</li>
+            <li>
+              <strong>{l("Gestion des talents", "Talent management")}</strong> —{" "}
+              {l("Consulter et gérer les profils talents", "View and manage talent profiles")}
+            </li>
+            <li>
+              <strong>{l("Analyse & Statistiques", "Analytics & Statistics")}</strong> —{" "}
+              {l("Suivre les indicateurs clés de recrutement", "Track key recruitment metrics")}
+            </li>
+            <li>
+              <strong>{l("Documents & Ressources", "Documents & Resources")}</strong> —{" "}
+              {l("Centraliser les CV et rapports d'évaluation", "Centralize resumes and evaluation reports")}
+            </li>
           </ul>
         </Section>
       </div>
@@ -154,28 +146,46 @@ function DashboardDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function DepartementsDoc({ searchQuery }: { searchQuery: string }) {
+  const { language, l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Départements" description="Gestion des départements de l'entreprise" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Départements vous permet de structurer votre organisation en créant et gérant
-          les départements de votre entreprise, chacun avec ses propres exigences.
+      <DocHeader
+        title={l("Départements", "Departments")}
+        description={l("Gestion des départements de l'entreprise", "Company department management")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Départements vous permet de structurer votre organisation en créant et gérant les départements de votre entreprise, chacun avec ses propres exigences.",
+            "The Departments page lets you structure your organization by creating and managing company departments, each with its own requirements."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Recherche</strong> — Filtrez les départements par nom</li>
-            <li><strong>Tri</strong> — Triez par nom ou par date de création</li>
-            <li><strong>Création</strong> — Ajoutez un nouveau département avec son nom, années d&apos;expérience requises et compétences</li>
-            <li><strong>Modification</strong> — Éditez un département existant en un clic</li>
-            <li><strong>Suppression</strong> — Supprimez un département avec confirmation</li>
-            <li><strong>Pagination</strong> — Navigation paginée (8 éléments par page)</li>
-            <li><strong>Détails</strong> — Cliquez sur une ligne pour voir tous les détails dans un modal</li>
+            <li><strong>{l("Recherche", "Search")}</strong> — {l("Filtrez les départements par nom", "Filter departments by name")}</li>
+            <li><strong>{l("Tri", "Sorting")}</strong> — {l("Triez par nom ou par date de création", "Sort by name or creation date")}</li>
+            <li><strong>{l("Création", "Creation")}</strong> — {l("Ajoutez un nouveau département avec son nom, années d'expérience requises et compétences", "Add a new department with its name, required years of experience, and skills")}</li>
+            <li><strong>{l("Modification", "Editing")}</strong> — {l("Éditez un département existant en un clic", "Edit an existing department in one click")}</li>
+            <li><strong>{l("Suppression", "Deletion")}</strong> — {l("Supprimez un département avec confirmation", "Delete a department with confirmation")}</li>
+            <li><strong>{l("Pagination", "Pagination")}</strong> — {l("Navigation paginée (8 éléments par page)", "Paginated navigation (8 items per page)")}</li>
+            <li><strong>{l("Détails", "Details")}</strong> — {l("Cliquez sur une ligne pour voir tous les détails dans un modal", "Click a row to inspect full details in a modal")}</li>
           </ul>
         </Section>
-        <Section title="Compétences requises" searchQuery={searchQuery}>
-          Les compétences sont saisies sous forme de texte séparé par le symbole <code className="bg-slate-100 px-1 rounded">+</code>.
-          Dans le tableau, seules les 3 premières compétences sont affichées pour une meilleure lisibilité.
+        <Section title={l("Compétences requises", "Required skills")} searchQuery={searchQuery}>
+          {language === "en" ? (
+            <>
+              Skills are entered as text separated by the{" "}
+              <code className="bg-slate-100 dark:bg-[#323130] dark:text-[#f3f2f1] px-1 rounded">+</code>{" "}
+              symbol. In the table, only the first 3 skills are displayed for readability.
+            </>
+          ) : (
+            <>
+              Les compétences sont saisies sous forme de texte séparé par le symbole{" "}
+              <code className="bg-slate-100 dark:bg-[#323130] dark:text-[#f3f2f1] px-1 rounded">+</code>.
+              Dans le tableau, seules les 3 premières compétences sont affichées pour une meilleure lisibilité.
+            </>
+          )}
         </Section>
       </div>
     </article>
@@ -183,20 +193,27 @@ function DepartementsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function DocumentsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Documents" description="Centralisation et gestion des CV et documents" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Documents vous permet d&apos;importer, consulter et gérer tous les CV et documents
-          liés aux candidatures et aux talents.
+      <DocHeader
+        title={l("Documents", "Documents")}
+        description={l("Centralisation et gestion des CV et documents", "Centralization and management of resumes and documents")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Documents vous permet d'importer, consulter et gérer tous les CV et documents liés aux candidatures et aux talents.",
+            "The Documents page lets you upload, preview, and manage all resumes and candidate documents."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Import de CV</strong> — Importez un fichier PDF pour analyse automatique</li>
-            <li><strong>Recherche</strong> — Filtrez les documents par nom ou contenu</li>
-            <li><strong>Prévisualisation</strong> — Visualisez le contenu du CV directement dans l&apos;interface</li>
-            <li><strong>Informations extraites</strong> — Consultez les données extraites automatiquement (nom, email, compétences, etc.)</li>
+            <li><strong>{l("Import de CV", "Resume upload")}</strong> — {l("Importez un fichier PDF pour analyse automatique", "Upload a PDF file for automatic parsing and analysis")}</li>
+            <li><strong>{l("Recherche", "Search")}</strong> — {l("Filtrez les documents par nom ou contenu", "Filter documents by name or content")}</li>
+            <li><strong>{l("Prévisualisation", "Preview")}</strong> — {l("Visualisez le contenu du CV directement dans l'interface", "View the resume directly inside the interface")}</li>
+            <li><strong>{l("Informations extraites", "Extracted data")}</strong> — {l("Consultez les données extraites automatiquement (nom, email, compétences, etc.)", "Inspect automatically extracted data (name, email, skills, etc.)")}</li>
           </ul>
         </Section>
       </div>
@@ -205,28 +222,35 @@ function DocumentsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function InvitationsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Invitations" description="Gestion des invitations des recruteurs" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Invitations vous permet d&apos;inviter des recruteurs à rejoindre votre espace de travail
-          et de suivre le statut de chaque invitation envoyée.
+      <DocHeader
+        title={l("Invitations", "Invitations")}
+        description={l("Gestion des invitations des recruteurs", "Recruiter invitation management")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Invitations vous permet d'inviter des recruteurs à rejoindre votre espace de travail et de suivre le statut de chaque invitation envoyée.",
+            "The Invitations page allows you to invite recruiters to join your workspace and track the status of every sent invitation."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Inviter</strong> — Envoyez une invitation par email à un nouveau recruteur</li>
-            <li><strong>Statuts</strong> — Suivez les invitations (En attente, Acceptée, Expirée)</li>
-            <li><strong>Filtres</strong> — Filtrez par statut ou recherchez par email</li>
-            <li><strong>Détails</strong> — Cliquez sur une invitation pour voir tous les détails</li>
-            <li><strong>Actions</strong> — Renvoyez, copiez le lien ou révoquez une invitation depuis le modal de détails</li>
+            <li><strong>{l("Inviter", "Invite")}</strong> — {l("Envoyez une invitation par email à un nouveau recruteur", "Send an email invitation to a new recruiter")}</li>
+            <li><strong>{l("Statuts", "Statuses")}</strong> — {l("Suivez les invitations (En attente, Acceptée, Expirée)", "Track invitations (Pending, Accepted, Expired)")}</li>
+            <li><strong>{l("Filtres", "Filters")}</strong> — {l("Filtrez par statut ou recherchez par email", "Filter by status or search by email")}</li>
+            <li><strong>{l("Détails", "Details")}</strong> — {l("Cliquez sur une invitation pour voir tous les détails", "Click any invitation to view all details")}</li>
+            <li><strong>{l("Actions", "Actions")}</strong> — {l("Renvoyez, copiez le lien ou révoquez une invitation depuis le modal de détails", "Resend, copy the link, or revoke an invitation from the details modal")}</li>
           </ul>
         </Section>
-        <Section title="Statuts des invitations" searchQuery={searchQuery}>
+        <Section title={l("Statuts des invitations", "Invitation statuses")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>En attente</strong> — L&apos;invitation a été envoyée mais pas encore acceptée</li>
-            <li><strong>Acceptée</strong> — Le recruteur a rejoint l&apos;espace de travail</li>
-            <li><strong>Expirée</strong> — Le délai de validité est dépassé</li>
+            <li><strong>{l("En attente", "Pending")}</strong> — {l("L'invitation a été envoyée mais pas encore acceptée", "The invitation has been sent but not yet accepted")}</li>
+            <li><strong>{l("Acceptée", "Accepted")}</strong> — {l("Le recruteur a rejoint l'espace de travail", "The recruiter has joined the workspace")}</li>
+            <li><strong>{l("Expirée", "Expired")}</strong> — {l("Le délai de validité est dépassé", "The validity period has passed")}</li>
           </ul>
         </Section>
       </div>
@@ -235,22 +259,28 @@ function InvitationsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function ProfileDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Profil" description="Gestion de votre compte utilisateur" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Profil vous permet de consulter et modifier les informations de votre compte,
-          de gérer votre photo de profil, de changer votre mot de passe et de consulter
-          vos statistiques d&apos;activité.
+      <DocHeader
+        title={l("Profil", "Profile")}
+        description={l("Gestion de votre compte utilisateur", "Manage your user account")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Profil vous permet de consulter et modifier les informations de votre compte, de gérer votre photo de profil, de changer votre mot de passe et de consulter vos statistiques d'activité.",
+            "The Profile page lets you review and update your account details, manage your profile photo, change your password, and monitor activity metrics."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Photo de profil</strong> — Modifiez votre avatar depuis l&apos;interface</li>
-            <li><strong>Informations personnelles</strong> — Modifiez votre nom complet et votre adresse email</li>
-            <li><strong>Mot de passe</strong> — Changez votre mot de passe (obligatoire à la première connexion)</li>
-            <li><strong>Activités et statistiques</strong> — Consultez le nombre de CV analysés, les requêtes LLM par action et les statistiques d&apos;invitations (administrateurs uniquement)</li>
-            <li><strong>Informations du compte</strong> — Consultez votre rôle, date d&apos;inscription, statut de vérification et méthode d&apos;authentification</li>
+            <li><strong>{l("Photo de profil", "Profile picture")}</strong> — {l("Modifiez votre avatar depuis l'interface", "Update your avatar directly in the UI")}</li>
+            <li><strong>{l("Informations personnelles", "Personal info")}</strong> — {l("Modifiez votre nom complet et votre adresse email", "Edit your full name and email address")}</li>
+            <li><strong>{l("Mot de passe", "Password")}</strong> — {l("Changez votre mot de passe (obligatoire à la première connexion)", "Change your password (required on first login)")}</li>
+            <li><strong>{l("Activités et statistiques", "Activity & stats")}</strong> — {l("Consultez le nombre de CV analysés, les requêtes LLM par action et les statistiques d'invitations (administrateurs uniquement)", "View analyzed resumes count, LLM requests by action, and invitation metrics (admins only)")}</li>
+            <li><strong>{l("Informations du compte", "Account details")}</strong> — {l("Consultez votre rôle, date d'inscription, statut de vérification et méthode d'authentification", "Check your role, signup date, verification status, and authentication provider")}</li>
           </ul>
         </Section>
       </div>
@@ -259,24 +289,32 @@ function ProfileDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function SettingsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Paramètres" description="Configuration de votre espace de travail" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Paramètres regroupe la configuration de vos préférences de notification,
-          les options de sécurité et la gestion de votre compte.
+      <DocHeader
+        title={l("Paramètres", "Settings")}
+        description={l("Configuration de votre espace de travail", "Workspace configuration")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Paramètres regroupe la configuration de vos préférences d'apparence et de langue, vos notifications, les options de sécurité et la gestion de votre compte.",
+            "The Settings page centralizes your appearance and language preferences, notifications, security options, and account management."
+          )}
         </Section>
-        <Section title="Onglets disponibles" searchQuery={searchQuery}>
+        <Section title={l("Onglets disponibles", "Available tabs")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Notifications</strong> — Activez ou désactivez les notifications par email pour chaque type d&apos;événement (nouveau candidat, invitation acceptée, mises à jour système)</li>
-            <li><strong>Sécurité</strong> — Modifiez votre mot de passe, consultez les détails de votre compte (rôle, statut, email vérifié) et accédez à la zone dangereuse</li>
+            <li><strong>{l("Notifications", "Notifications")}</strong> — {l("Activez ou désactivez les notifications par email pour chaque type d'événement (nouveau candidat, invitation acceptée, mises à jour système)", "Enable or disable email notifications for each event type (new candidate, accepted invitation, system updates)")}</li>
+            <li><strong>{l("Apparence & Langue", "Appearance & Language")}</strong> — {l("Basculez entre le mode clair et le mode sombre, et choisissez la langue de l'interface (Français / English)", "Switch between light and dark themes, and choose the interface language (Français / English)")}</li>
+            <li><strong>{l("Sécurité", "Security")}</strong> — {l("Modifiez votre mot de passe, consultez les détails de votre compte (rôle, statut, email vérifié) et accédez à la zone dangereuse", "Change your password, review account security details (role, status, verified email), and access the danger zone")}</li>
           </ul>
         </Section>
-        <Section title="Zone dangereuse" searchQuery={searchQuery}>
+        <Section title={l("Zone dangereuse", "Danger zone")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Déconnexion</strong> — Déconnectez-vous de votre session</li>
-            <li><strong>Suppression du compte</strong> — Supprimez définitivement votre compte et toutes vos données (CV, évaluations, talents, recrutements). Une confirmation par texte est requise avant suppression.</li>
+            <li><strong>{l("Déconnexion", "Sign out")}</strong> — {l("Déconnectez-vous de votre session", "Sign out of your active session")}</li>
+            <li><strong>{l("Suppression du compte", "Delete account")}</strong> — {l("Supprimez définitivement votre compte et toutes vos données (CV, évaluations, talents, recrutements). Une confirmation par texte est requise avant suppression.", "Permanently delete your account and all your data (resumes, evaluations, talents, recruitments). Text confirmation is required before deletion.")}</li>
           </ul>
         </Section>
       </div>
@@ -285,28 +323,36 @@ function SettingsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function JobsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Offres d'emploi" description="Gestion des offres d'emploi générées par l'IA" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Offres d&apos;emploi vous permet de créer, consulter et gérer les offres d&apos;emploi
-          de votre entreprise. Les offres peuvent être générées automatiquement par l&apos;IA à partir
-          d&apos;une simple description.
+      <DocHeader
+        title={l("Offres d'emploi", "Job offers")}
+        description={l("Gestion des offres d'emploi générées par l'IA", "Management of AI-generated job offers")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Offres d'emploi vous permet de créer, consulter et gérer les offres d'emploi de votre entreprise. Les offres peuvent être générées automatiquement par l'IA à partir d'une simple description.",
+            "The Job Offers page lets you create, view, and manage your company's open roles. Job listings can be automatically generated by AI from a brief description."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Génération IA</strong> — Créez une offre d&apos;emploi automatiquement à partir d&apos;une description textuelle</li>
-            <li><strong>Recherche</strong> — Filtrez les offres par titre, type de contrat ou mode de travail</li>
-            <li><strong>Pagination</strong> — Navigation paginée (8 éléments par page)</li>
-            <li><strong>Consultation</strong> — Visualisez les détails complets d&apos;une offre (titre, département, salaire, etc.)</li>
-            <li><strong>Modification</strong> — Éditez une offre existante</li>
-            <li><strong>Suppression</strong> — Supprimez une offre avec confirmation</li>
+            <li><strong>{l("Génération IA", "AI generation")}</strong> — {l("Créez une offre d'emploi automatiquement à partir d'une description textuelle", "Automatically generate a structured job offer from a text prompt")}</li>
+            <li><strong>{l("Recherche", "Search")}</strong> — {l("Filtrez les offres par titre, type de contrat ou mode de travail", "Filter offers by title, contract type, or work mode")}</li>
+            <li><strong>{l("Pagination", "Pagination")}</strong> — {l("Navigation paginée (8 éléments par page)", "Paginated browsing (8 items per page)")}</li>
+            <li><strong>{l("Consultation", "Inspection")}</strong> — {l("Visualisez les détails complets d'une offre (titre, département, salaire, etc.)", "View full job details (title, department, salary, etc.)")}</li>
+            <li><strong>{l("Modification", "Editing")}</strong> — {l("Éditez une offre existante", "Update an existing job offer")}</li>
+            <li><strong>{l("Suppression", "Deletion")}</strong> — {l("Supprimez une offre avec confirmation", "Delete an offer with confirmation")}</li>
           </ul>
         </Section>
-        <Section title="Informations disponibles" searchQuery={searchQuery}>
-          Chaque offre d&apos;emploi affiche le titre, le département concerné, le type de contrat,
-          le mode de travail, le niveau de séniorité, la fourchette de salaire et le statut de l&apos;offre.
+        <Section title={l("Informations disponibles", "Available details")} searchQuery={searchQuery}>
+          {l(
+            "Chaque offre d'emploi affiche le titre, le département concerné, le type de contrat, le mode de travail, le niveau de séniorité, la fourchette de salaire et le statut de l'offre.",
+            "Each job offer shows its title, target department, contract type, work mode, seniority level, salary range, and publication status."
+          )}
         </Section>
       </div>
     </article>
@@ -314,45 +360,53 @@ function JobsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function RecruitmentsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Recrutements" description="Suivi du pipeline de recrutement des talents" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Recrutements vous permet de suivre l&apos;ensemble du pipeline de recrutement
-          des candidats désignés comme talents, depuis la mise en relation jusqu&apos;à la décision finale.
+      <DocHeader
+        title={l("Recrutements", "Recruitments")}
+        description={l("Suivi du pipeline de recrutement des talents", "Talent recruitment pipeline tracking")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Recrutements vous permet de suivre l'ensemble du pipeline de recrutement des candidats désignés comme talents, depuis la mise en relation jusqu'à la décision finale.",
+            "The Recruitments page lets you track the complete hiring pipeline for designated talents, from initial outreach through the final hiring decision."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Liste des recrutements</strong> — Visualisez tous les recrutements en cours sous forme de cartes</li>
-            <li><strong>Recherche</strong> — Filtrez par nom du candidat ou intitulé du poste</li>
-            <li><strong>Filtres</strong> — Filtrez par statut et priorité via un panneau dédié</li>
-            <li><strong>Pagination</strong> — Navigation paginée (12 éléments par page)</li>
-            <li><strong>Détails</strong> — Consultez les informations complètes du recrutement dans un modal à trois onglets (Informations, Entretien, Email)</li>
-            <li><strong>Score du département</strong> — Le score du département associé au poste apparaît dans l&apos;en-tête du modal</li>
-            <li><strong>Notes modifiables</strong> — Ajoutez ou modifiez les notes directement depuis le modal de détails</li>
-            <li><strong>Annulation</strong> — Annulez un recrutement depuis le modal (uniquement pour les recrutements en attente). Les entretiens et emails associés sont supprimés automatiquement</li>
+            <li><strong>{l("Liste des recrutements", "Recruitment list")}</strong> — {l("Visualisez tous les recrutements en cours sous forme de cartes", "Browse all active recruitment processes as cards")}</li>
+            <li><strong>{l("Recherche", "Search")}</strong> — {l("Filtrez par nom du candidat ou intitulé du poste", "Filter by candidate name or job title")}</li>
+            <li><strong>{l("Filtres", "Filters")}</strong> — {l("Filtrez par statut et priorité via un panneau dédié", "Filter by status and priority from the filter panel")}</li>
+            <li><strong>{l("Pagination", "Pagination")}</strong> — {l("Navigation paginée (12 éléments par page)", "Paginated browsing (12 items per page)")}</li>
+            <li><strong>{l("Détails", "Details")}</strong> — {l("Consultez les informations complètes du recrutement dans un modal à trois onglets (Informations, Entretien, Email)", "Inspect full recruitment info inside a 3-tab modal (Information, Interview, Email)")}</li>
+            <li><strong>{l("Score du département", "Department score")}</strong> — {l("Le score du département associé au poste apparaît dans l'en-tête du modal", "The job's matching department score appears in the modal header")}</li>
+            <li><strong>{l("Notes modifiables", "Editable notes")}</strong> — {l("Ajoutez ou modifiez les notes directement depuis le modal de détails", "Add or edit notes directly inside the details modal")}</li>
+            <li><strong>{l("Annulation", "Cancellation")}</strong> — {l("Annulez un recrutement depuis le modal (uniquement pour les recrutements en attente). Les entretiens et emails associés sont supprimés automatiquement", "Cancel a recruitment from the modal (pending recruitments only). Linked interviews and emails are removed automatically")}</li>
           </ul>
         </Section>
-        <Section title="Onglet Entretien" searchQuery={searchQuery}>
+        <Section title={l("Onglet Entretien", "Interview tab")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Planifiez un entretien avec date, heure, durée, lieu et nom de l&apos;intervieweur</li>
-            <li>Consultez la liste des entretiens déjà planifiés avec leur statut</li>
+            <li>{l("Planifiez un entretien avec date, heure, durée, lieu et nom de l'intervieweur", "Schedule an interview with date, time, duration, location, and interviewer name")}</li>
+            <li>{l("Consultez la liste des entretiens déjà planifiés avec leur statut", "View scheduled interviews along with their current status")}</li>
           </ul>
         </Section>
-        <Section title="Onglet Email" searchQuery={searchQuery}>
+        <Section title={l("Onglet Email", "Email tab")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Choisissez un entretien planifié existant pour pré-remplir automatiquement la date, l&apos;heure, la durée et le lieu</li>
-            <li>Saisissez le nom de l&apos;entreprise et la langue souhaitée</li>
-            <li>Générez un email d&apos;invitation professionnel via l&apos;IA (DeepSeek)</li>
-            <li>Modifiez le sujet et le corps HTML avant envoi</li>
-            <li>Consultez l&apos;historique des emails envoyés</li>
+            <li>{l("Choisissez un entretien planifié existant pour pré-remplir automatiquement la date, l'heure, la durée et le lieu", "Select an existing scheduled interview to auto-fill date, time, duration, and location")}</li>
+            <li>{l("Saisissez le nom de l'entreprise et la langue souhaitée", "Enter your company name and desired language")}</li>
+            <li>{l("Générez un email d'invitation professionnel via l'IA (DeepSeek)", "Generate a professional invitation email using AI (DeepSeek)")}</li>
+            <li>{l("Modifiez le sujet et le corps HTML avant envoi", "Edit the subject and HTML body before sending")}</li>
+            <li>{l("Consultez l'historique des emails envoyés", "Review previously sent email history")}</li>
           </ul>
         </Section>
-        <Section title="Statuts de recrutement" searchQuery={searchQuery}>
-          Les recrutements peuvent avoir différents statuts : en attente, invitation envoyée, entretien confirmé,
-          entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché ou annulé.
-          Chaque statut est représenté par une couleur distinctive.
+        <Section title={l("Statuts de recrutement", "Recruitment statuses")} searchQuery={searchQuery}>
+          {l(
+            "Les recrutements peuvent avoir différents statuts : en attente, invitation envoyée, entretien confirmé, entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché ou annulé. Chaque statut est représenté par une couleur distinctive.",
+            "Recruitments track distinct stages: pending, invitation sent, interview confirmed, interview completed, offer sent, accepted, rejected, candidate declined, hired, or cancelled. Each status uses a distinct color badge."
+          )}
         </Section>
       </div>
     </article>
@@ -360,20 +414,27 @@ function RecruitmentsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function AdminDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Administration" description="Gestion des utilisateurs de la plateforme" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Administration est accessible uniquement aux administrateurs. Elle permet de
-          consulter la liste de tous les utilisateurs de la plateforme et leurs statistiques d&apos;utilisation.
+      <DocHeader
+        title={l("Administration", "Administration")}
+        description={l("Gestion des utilisateurs de la plateforme", "Platform user management")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Administration est accessible uniquement aux administrateurs. Elle permet de consulter la liste de tous les utilisateurs de la plateforme et leurs statistiques d'utilisation.",
+            "The Administration page is restricted to administrators. It displays all platform users along with their usage metrics."
+          )}
         </Section>
-        <Section title="Fonctionnalités" searchQuery={searchQuery}>
+        <Section title={l("Fonctionnalités", "Features")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Liste des utilisateurs</strong> — Visualisez tous les comptes recruteurs de la plateforme</li>
-            <li><strong>Recherche</strong> — Filtrez les utilisateurs par nom ou email</li>
-            <li><strong>Statistiques</strong> — Consultez le nombre de CV analysés et de requêtes LLM par utilisateur</li>
-            <li><strong>Actualisation</strong> — Rafraîchissez la liste pour voir les données à jour</li>
+            <li><strong>{l("Liste des utilisateurs", "User directory")}</strong> — {l("Visualisez tous les comptes recruteurs de la plateforme", "View all recruiter accounts across the platform")}</li>
+            <li><strong>{l("Recherche", "Search")}</strong> — {l("Filtrez les utilisateurs par nom ou email", "Filter users by name or email")}</li>
+            <li><strong>{l("Statistiques", "Metrics")}</strong> — {l("Consultez le nombre de CV analysés et de requêtes LLM par utilisateur", "Track parsed resumes and LLM requests per user")}</li>
+            <li><strong>{l("Actualisation", "Refresh")}</strong> — {l("Rafraîchissez la liste pour voir les données à jour", "Refresh the list for live usage data")}</li>
           </ul>
         </Section>
       </div>
@@ -382,156 +443,162 @@ function AdminDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Fonctionnalités implémentées" description="Liste complète des fonctionnalités disponibles" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Authentification et comptes" searchQuery={searchQuery}>
+      <DocHeader
+        title={l("Fonctionnalités implémentées", "Implemented features")}
+        description={l("Liste complète des fonctionnalités disponibles", "Complete list of available capabilities")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Authentification et comptes", "Authentication & accounts")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Page de connexion sécurisée avec email et mot de passe</li>
-            <li>Protection des routes par authentification</li>
-            <li>Gestion de session avec stockage côté client (SessionProvider)</li>
-            <li>Page de modification du profil utilisateur</li>
-            <li>Photo de profil modifiable avec aperçu</li>
-            <li>Informations personnelles éditables (nom, email)</li>
-            <li>Changement de mot de passe avec confirmation</li>
-            <li>Bannière de changement de mot de passe obligatoire à la première connexion</li>
-            <li>Page d&apos;acceptation d&apos;invitation avec création de compte</li>
-            <li>Déconnexion sécurisée</li>
-            <li>Authentification via LinkedIn</li>
+            <li>{l("Page de connexion sécurisée avec email et mot de passe", "Secure sign-in page with email and password")}</li>
+            <li>{l("Protection des routes par authentification", "Default-deny route protection via authentication")}</li>
+            <li>{l("Gestion de session avec stockage côté client (SessionProvider)", "Client session management (SessionProvider)")}</li>
+            <li>{l("Page de modification du profil utilisateur", "User profile editing page")}</li>
+            <li>{l("Photo de profil modifiable avec aperçu", "Editable profile photo with live preview")}</li>
+            <li>{l("Informations personnelles éditables (nom, email)", "Editable personal info (name, email)")}</li>
+            <li>{l("Changement de mot de passe avec confirmation", "Password change with confirmation")}</li>
+            <li>{l("Bannière de changement de mot de passe obligatoire à la première connexion", "Mandatory password change banner on first login")}</li>
+            <li>{l("Page d'acceptation d'invitation avec création de compte", "Invitation acceptance page with account creation")}</li>
+            <li>{l("Déconnexion sécurisée", "Secure sign-out")}</li>
+            <li>{l("Authentification via LinkedIn", "LinkedIn authentication")}</li>
           </ul>
         </Section>
 
-        <Section title="Profil et statistiques" searchQuery={searchQuery}>
+        <Section title={l("Profil et statistiques", "Profile & statistics")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Photo de profil avec téléchargement, aperçu et annulation</li>
-            <li>Édition en ligne du nom et de l&apos;email</li>
-            <li>Changement de mot de passe avec validation</li>
-            <li>Statistiques d&apos;activité : nombre de CV analysés</li>
-            <li>Tableau des requêtes LLM par action avec total</li>
-            <li>Statistiques d&apos;invitations (administrateurs uniquement)</li>
-            <li>Informations du compte : rôle, statut, authentification, date d&apos;inscription</li>
+            <li>{l("Photo de profil avec téléchargement, aperçu et annulation", "Profile picture upload, preview, and cancel")}</li>
+            <li>{l("Édition en ligne du nom et de l'email", "Inline editing for name and email")}</li>
+            <li>{l("Changement de mot de passe avec validation", "Validated password updates")}</li>
+            <li>{l("Statistiques d'activité : nombre de CV analysés", "Activity stats: analyzed resumes count")}</li>
+            <li>{l("Tableau des requêtes LLM par action avec total", "LLM requests breakdown table by action with total")}</li>
+            <li>{l("Statistiques d'invitations (administrateurs uniquement)", "Invitation statistics (admins only)")}</li>
+            <li>{l("Informations du compte : rôle, statut, authentification, date d'inscription", "Account info: role, status, provider, registration date")}</li>
           </ul>
         </Section>
 
-        <Section title="Talents" searchQuery={searchQuery}>
+        <Section title={l("Talents", "Talents")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Affichage des talents sous forme de cartes en grille</li>
-            <li>Score du candidat pour son meilleur département</li>
-            <li>Date de désignation et nom du recruteur</li>
-            <li>Photo du candidat ou avatar par défaut</li>
-            <li>Mise à jour automatique depuis les évaluations</li>
-            <li>Modal de détails avec compétences et expériences</li>
-            <li>Action de recrutement depuis le profil talent</li>
-            <li>Retrait d&apos;un talent avec confirmation</li>
+            <li>{l("Affichage des talents sous forme de cartes en grille", "Grid card view of designated talents")}</li>
+            <li>{l("Score du candidat pour son meilleur département", "Candidate score for top matching department")}</li>
+            <li>{l("Date de désignation et nom du recruteur", "Designation date and recruiter name")}</li>
+            <li>{l("Photo du candidat ou avatar par défaut", "Candidate photo or fallback avatar")}</li>
+            <li>{l("Mise à jour automatique depuis les évaluations", "Automatic sync from candidate evaluations")}</li>
+            <li>{l("Modal de détails avec compétences et expériences", "Details modal with skills and experience")}</li>
+            <li>{l("Action de recrutement depuis le profil talent", "Initiate recruitment directly from talent profile")}</li>
+            <li>{l("Retrait d'un talent avec confirmation", "Remove talent status with confirmation")}</li>
           </ul>
         </Section>
 
-        <Section title="Évaluations" searchQuery={searchQuery}>
+        <Section title={l("Évaluations", "Evaluations")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Liste des candidats évalués par l&apos;IA sous forme de cartes</li>
-            <li>Aperçu des compétences, expérience et langues</li>
-            <li>Modal de détails avec compatibilité par département</li>
-            <li>Affichage des exigences remplies et manquantes</li>
-            <li>Expériences supplémentaires du candidat</li>
-            <li>Désignation d&apos;un candidat comme talent</li>
-            <li>Validation LLM des évaluations générées</li>
+            <li>{l("Liste des candidats évalués par l'IA sous forme de cartes", "Card list of AI-evaluated candidates")}</li>
+            <li>{l("Aperçu des compétences, expérience et langues", "Overview of skills, experience, and languages")}</li>
+            <li>{l("Modal de détails avec compatibilité par département", "Details modal with per-department match breakdown")}</li>
+            <li>{l("Affichage des exigences remplies et manquantes", "Display of met and missing requirements")}</li>
+            <li>{l("Expériences supplémentaires du candidat", "Additional candidate experiences")}</li>
+            <li>{l("Désignation d'un candidat comme talent", "Designate a candidate as talent")}</li>
+            <li>{l("Validation LLM des évaluations générées", "LLM validation of generated evaluations")}</li>
           </ul>
         </Section>
 
-        <Section title="Départements" searchQuery={searchQuery}>
+        <Section title={l("Départements", "Departments")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Liste paginée des départements (8 par page)</li>
-            <li>Recherche par nom</li>
-            <li>Tri par nom ou date de création</li>
-            <li>Création d&apos;un département avec expérience et compétences requises</li>
-            <li>Modification d&apos;un département</li>
-            <li>Suppression avec confirmation</li>
-            <li>Affichage limité à 3 compétences dans le tableau avec indicateur "+N"</li>
-            <li>Modal de détails au clic sur une ligne</li>
+            <li>{l("Liste paginée des départements (8 par page)", "Paginated department list (8 per page)")}</li>
+            <li>{l("Recherche par nom", "Search by name")}</li>
+            <li>{l("Tri par nom ou date de création", "Sort by name or creation date")}</li>
+            <li>{l("Création d'un département avec expérience et compétences requises", "Create departments with required experience and skills")}</li>
+            <li>{l("Modification d'un département", "Edit departments")}</li>
+            <li>{l("Suppression avec confirmation", "Delete with confirmation")}</li>
+            <li>{l("Affichage limité à 3 compétences dans le tableau avec indicateur \"+N\"", "Table capped at 3 skills with \"+N\" indicator")}</li>
+            <li>{l("Modal de détails au clic sur une ligne", "Row click details modal")}</li>
           </ul>
         </Section>
 
-        <Section title="Documents et CV" searchQuery={searchQuery}>
+        <Section title={l("Documents et CV", "Documents & Resumes")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Import de CV au format PDF</li>
-            <li>Analyse automatique des documents (extraction d&apos;identité, compétences, expériences, formations, certifications, langues)</li>
-            <li>Extraction des informations depuis le CV</li>
-            <li>Prévisualisation des documents</li>
-            <li>Recherche dans les documents</li>
-            <li>Progression de l&apos;import avec étapes visuelles (multi-étape)</li>
-            <li>Gestion des erreurs d&apos;import</li>
-            <li>Pagination (8 éléments par page)</li>
-            <li>Suppression de document avec confirmation</li>
+            <li>{l("Import de CV au format PDF", "PDF resume upload")}</li>
+            <li>{l("Analyse automatique des documents (extraction d'identité, compétences, expériences, formations, certifications, langues)", "Automatic document parsing (identity, skills, work history, education, certifications, languages)")}</li>
+            <li>{l("Extraction des informations depuis le CV", "Structured extraction from resumes")}</li>
+            <li>{l("Prévisualisation des documents", "Document preview")}</li>
+            <li>{l("Recherche dans les documents", "Search across documents")}</li>
+            <li>{l("Progression de l'import avec étapes visuelles (multi-étape)", "Multi-step visual import progress")}</li>
+            <li>{l("Gestion des erreurs d'import", "Import error handling")}</li>
+            <li>{l("Pagination (8 éléments par page)", "Pagination (8 items per page)")}</li>
+            <li>{l("Suppression de document avec confirmation", "Document deletion with confirmation")}</li>
           </ul>
         </Section>
 
-        <Section title="Offres d'emploi" searchQuery={searchQuery}>
+        <Section title={l("Offres d'emploi", "Job offers")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Génération d&apos;offres d&apos;emploi par IA à partir d&apos;une description</li>
-            <li>Liste des offres en grille avec recherche et pagination</li>
-            <li>Consultation détaillée d&apos;une offre (titre, département, contrat, salaire, séniorité)</li>
-            <li>Modification et suppression d&apos;offres</li>
-            <li>Filtres par type de contrat et mode de travail</li>
+            <li>{l("Génération d'offres d'emploi par IA à partir d'une description", "AI job description generation from a text prompt")}</li>
+            <li>{l("Liste des offres en grille avec recherche et pagination", "Grid listing with search and pagination")}</li>
+            <li>{l("Consultation détaillée d'une offre (titre, département, contrat, salaire, séniorité)", "Detailed offer view (title, department, contract, salary, seniority)")}</li>
+            <li>{l("Modification et suppression d'offres", "Offer editing and deletion")}</li>
+            <li>{l("Filtres par type de contrat et mode de travail", "Filters by contract type and work mode")}</li>
           </ul>
         </Section>
 
-        <Section title="Recrutements" searchQuery={searchQuery}>
+        <Section title={l("Recrutements", "Recruitments")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Pipeline de recrutement des talents sous forme de cartes</li>
-            <li>Recherche par nom du candidat ou intitulé du poste</li>
-            <li>Filtres par statut et priorité</li>
-            <li>Pagination (12 éléments par page)</li>
-            <li>Modal de détails à trois onglets (Informations, Entretien, Email)</li>
-            <li>Affichage du score du département dans l&apos;en-tête du modal</li>
-            <li>Notes modifiables directement dans le modal</li>
-            <li>Sélection d&apos;un entretien planifié pour générer un email</li>
-            <li>Génération d&apos;email d&apos;invitation par IA (DeepSeek) avec choix de langue</li>
-            <li>Annulation d&apos;un recrutement avec suppression des entretiens et emails associés</li>
-            <li>Statuts : en attente, invitation envoyée, entretien confirmé, entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché, annulé</li>
+            <li>{l("Pipeline de recrutement des talents sous forme de cartes", "Card-based talent recruitment pipeline")}</li>
+            <li>{l("Recherche par nom du candidat ou intitulé du poste", "Search by candidate name or job title")}</li>
+            <li>{l("Filtres par statut et priorité", "Filter by status and priority")}</li>
+            <li>{l("Pagination (12 éléments par page)", "Pagination (12 items per page)")}</li>
+            <li>{l("Modal de détails à trois onglets (Informations, Entretien, Email)", "Three-tab details modal (Information, Interview, Email)")}</li>
+            <li>{l("Affichage du score du département dans l'en-tête du modal", "Department score displayed in modal header")}</li>
+            <li>{l("Notes modifiables directement dans le modal", "Notes editable directly inside modal")}</li>
+            <li>{l("Sélection d'un entretien planifié pour générer un email", "Select a scheduled interview to generate an email")}</li>
+            <li>{l("Génération d'email d'invitation par IA (DeepSeek) avec choix de langue", "AI interview invite email generation (DeepSeek) with language selector")}</li>
+            <li>{l("Annulation d'un recrutement avec suppression des entretiens et emails associés", "Recruitment cancellation with automatic cleanup of linked interviews and emails")}</li>
+            <li>{l("Statuts : en attente, invitation envoyée, entretien confirmé, entretien terminé, offre envoyée, acceptée, refusée, candidat décliné, embauché, annulé", "Statuses: pending, invitation sent, interview confirmed, interview completed, offer sent, accepted, rejected, candidate declined, hired, cancelled")}</li>
           </ul>
         </Section>
 
-        <Section title="Invitations" searchQuery={searchQuery}>
+        <Section title={l("Invitations", "Invitations")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Invitation de recruteurs par email</li>
-            <li>Suivi des statuts (en attente, acceptée, expirée)</li>
-            <li>Filtrage par statut et recherche par email</li>
-            <li>Tri par date ou email</li>
-            <li>Modal de détails avec actions (renvoyer, copier le lien, révoquer, supprimer)</li>
-            <li>Barre de métriques (en attente, acceptées, expirées, total)</li>
-            <li>Page d&apos;acceptation d&apos;invitation publique</li>
+            <li>{l("Invitation de recruteurs par email", "Invite recruiters by email")}</li>
+            <li>{l("Suivi des statuts (en attente, acceptée, expirée)", "Status tracking (pending, accepted, expired)")}</li>
+            <li>{l("Filtrage par statut et recherche par email", "Status filtering and email search")}</li>
+            <li>{l("Tri par date ou email", "Sort by date or email")}</li>
+            <li>{l("Modal de détails avec actions (renvoyer, copier le lien, révoquer, supprimer)", "Details modal with actions (resend, copy link, revoke, delete)")}</li>
+            <li>{l("Barre de métriques (en attente, acceptées, expirées, total)", "Metrics bar (pending, accepted, expired, total)")}</li>
+            <li>{l("Page d'acceptation d'invitation publique", "Public invitation acceptance page")}</li>
           </ul>
         </Section>
 
-        <Section title="Administration" searchQuery={searchQuery}>
+        <Section title={l("Administration", "Administration")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Liste des utilisateurs de la plateforme (administrateurs uniquement)</li>
-            <li>Recherche par nom ou email</li>
-            <li>Statistiques par utilisateur : nombre de CV analysés et requêtes LLM</li>
-            <li>Actualisation des données en temps réel</li>
+            <li>{l("Liste des utilisateurs de la plateforme (administrateurs uniquement)", "Platform user list (administrators only)")}</li>
+            <li>{l("Recherche par nom ou email", "Search by name or email")}</li>
+            <li>{l("Statistiques par utilisateur : nombre de CV analysés et requêtes LLM", "Per-user metrics: parsed resumes and LLM requests")}</li>
+            <li>{l("Actualisation des données en temps réel", "Live data refresh")}</li>
           </ul>
         </Section>
 
-        <Section title="Paramètres et sécurité" searchQuery={searchQuery}>
+        <Section title={l("Paramètres et sécurité", "Settings & security")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Gestion des préférences de notification par email (nouveau candidat, invitation acceptée, mises à jour)</li>
-            <li>Modification du mot de passe avec confirmation</li>
-            <li>Informations de sécurité du compte (rôle, statut, email vérifié, date d&apos;inscription)</li>
-            <li>Déconnexion de la session</li>
-            <li>Suppression du compte avec confirmation par texte obligatoire</li>
+            <li>{l("Gestion des préférences de notification par email (nouveau candidat, invitation acceptée, mises à jour)", "Email notification preferences (new candidate, accepted invitation, updates)")}</li>
+            <li>{l("Préférences d'apparence (mode clair / mode sombre) et langue (Français / English)", "Appearance preferences (light / dark mode) and language (Français / English)")}</li>
+            <li>{l("Modification du mot de passe avec confirmation", "Password updates with confirmation")}</li>
+            <li>{l("Informations de sécurité du compte (rôle, statut, email vérifié, date d'inscription)", "Account security info (role, status, email verified, signup date)")}</li>
+            <li>{l("Déconnexion de la session", "Session sign-out")}</li>
+            <li>{l("Suppression du compte avec confirmation par texte obligatoire", "Account deletion with mandatory confirmation phrase")}</li>
           </ul>
         </Section>
 
-        <Section title="Interface et navigation" searchQuery={searchQuery}>
+        <Section title={l("Interface et navigation", "Interface & navigation")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Barre latérale de navigation responsive</li>
-            <li>Indicateur de page active</li>
-            <li>Mode mobile avec menu hamburger</li>
-            <li>Notifications en temps réel (toasts) avec indicateur de notification</li>
-            <li>Feed d&apos;activités récentes sur le tableau de bord</li>
-            <li>Indicateur de progression des tâches système (SystemJobs)</li>
-            <li>Design épuré et cohérent</li>
+            <li>{l("Barre latérale de navigation responsive", "Responsive navigation sidebar")}</li>
+            <li>{l("Indicateur de page active", "Active page indicator")}</li>
+            <li>{l("Mode mobile avec menu hamburger", "Mobile drawer menu")}</li>
+            <li>{l("Notifications en temps réel (toasts) avec indicateur de notification", "Real-time notifications (toasts) with unread indicator")}</li>
+            <li>{l("Feed d'activités récentes sur le tableau de bord", "Recent activity feed on dashboard")}</li>
+            <li>{l("Indicateur de progression des tâches système (SystemJobs)", "System background task progress indicator")}</li>
+            <li>{l("Design épuré et cohérent", "Clean and consistent design")}</li>
           </ul>
         </Section>
       </div>
@@ -540,27 +607,35 @@ function FeaturesDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function TalentsDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Talents" description="Candidats désignés comme talents par les recruteurs" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Talents affiche les candidats que les recruteurs ont désignés comme talents.
-          Chaque talent est présenté sous forme de carte avec ses informations clés et son score.
+      <DocHeader
+        title={l("Talents", "Talents")}
+        description={l("Candidats désignés comme talents par les recruteurs", "Candidates designated as talents by recruiters")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Talents affiche les candidats que les recruteurs ont désignés comme talents. Chaque talent est présenté sous forme de carte avec ses informations clés et son score.",
+            "The Talents page showcases candidates marked as talents by recruiters. Each talent appears as a summary card with key profile details and top match score."
+          )}
         </Section>
-        <Section title="Cartes talent" searchQuery={searchQuery}>
+        <Section title={l("Cartes talent", "Talent cards")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Photo</strong> — Photo du candidat ou avatar par défaut</li>
-            <li><strong>Score</strong> — Score le plus élevé obtenu par le candidat</li>
-            <li><strong>Département</strong> — Meilleur département correspondant au profil</li>
-            <li><strong>Talent depuis</strong> — Date de désignation en tant que talent</li>
-            <li><strong>Défini par</strong> — Nom du recruteur ayant désigné le talent</li>
+            <li><strong>{l("Photo", "Photo")}</strong> — {l("Photo du candidat ou avatar par défaut", "Candidate photo or default avatar")}</li>
+            <li><strong>{l("Score", "Score")}</strong> — {l("Score le plus élevé obtenu par le candidat", "Highest department match score achieved")}</li>
+            <li><strong>{l("Département", "Department")}</strong> — {l("Meilleur département correspondant au profil", "Best-matching department for the profile")}</li>
+            <li><strong>{l("Talent depuis", "Talent since")}</strong> — {l("Date de désignation en tant que talent", "Date when talent status was granted")}</li>
+            <li><strong>{l("Défini par", "Set by")}</strong> — {l("Nom du recruteur ayant désigné le talent", "Name of the recruiter who designated the talent")}</li>
           </ul>
         </Section>
-        <Section title="Statut talent" searchQuery={searchQuery}>
-          Le statut de talent est attribué depuis la page Évaluations. Après avoir consulté
-          les résultats détaillés de l&apos;évaluation d&apos;un candidat, vous pouvez décider de le
-          désigner comme talent. Les talents apparaissent automatiquement dans cette page.
+        <Section title={l("Statut talent", "Talent status")} searchQuery={searchQuery}>
+          {l(
+            "Le statut de talent est attribué depuis la page Évaluations. Après avoir consulté les résultats détaillés de l'évaluation d'un candidat, vous pouvez décider de le désigner comme talent. Les talents apparaissent automatiquement dans cette page.",
+            "Talent status is assigned from the Evaluations page. After reviewing a candidate's evaluation breakdown, you can designate them as a talent so they appear automatically here."
+          )}
         </Section>
       </div>
     </article>
@@ -568,32 +643,49 @@ function TalentsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function EvaluationsDoc({ searchQuery }: { searchQuery: string }) {
+  const { language, l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Évaluations" description="Consultation des candidats évalués par l'intelligence artificielle" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page Évaluations liste les candidats dont le CV a été analysé par l&apos;intelligence
-          artificielle. Chaque candidat est présenté sous forme de carte avec un aperçu de son profil.
+      <DocHeader
+        title={l("Évaluations", "Evaluations")}
+        description={l("Consultation des candidats évalués par l'intelligence artificielle", "Review AI-evaluated candidates")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page Évaluations liste les candidats dont le CV a été analysé par l'intelligence artificielle. Chaque candidat est présenté sous forme de carte avec un aperçu de son profil.",
+            "The Evaluations page lists candidates whose resumes have been analyzed by AI. Each candidate is shown as a card summarizing their profile."
+          )}
         </Section>
-        <Section title="Cartes candidat" searchQuery={searchQuery}>
+        <Section title={l("Cartes candidat", "Candidate cards")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Photo</strong> — Photo du candidat avec superposition du CV en arrière-plan</li>
-            <li><strong>Compétences</strong> — Nombre de compétences détectées</li>
-            <li><strong>Expérience</strong> — Années d&apos;expérience totale</li>
-            <li><strong>Langues</strong> — Nombre de langues parlées</li>
-            <li><strong>Statut talent</strong> — Indique si le candidat est déjà désigné comme talent</li>
+            <li><strong>{l("Photo", "Photo")}</strong> — {l("Photo du candidat avec superposition du CV en arrière-plan", "Candidate photo with background resume preview")}</li>
+            <li><strong>{l("Compétences", "Skills")}</strong> — {l("Nombre de compétences détectées", "Number of detected skills")}</li>
+            <li><strong>{l("Expérience", "Experience")}</strong> — {l("Années d'expérience totale", "Total years of experience")}</li>
+            <li><strong>{l("Langues", "Languages")}</strong> — {l("Nombre de langues parlées", "Number of spoken languages")}</li>
+            <li><strong>{l("Statut talent", "Talent status")}</strong> — {l("Indique si le candidat est déjà désigné comme talent", "Indicates whether the candidate is already designated as talent")}</li>
           </ul>
         </Section>
-        <Section title="Modal de détails" searchQuery={searchQuery}>
-          Cliquez sur une carte pour ouvrir le modal d&apos;évaluation détaillée. Celui-ci affiche
-          la compatibilité du candidat avec chaque département, les exigences remplies ou non,
-          les expériences manquantes et les expériences supplémentaires.
+        <Section title={l("Modal de détails", "Details modal")} searchQuery={searchQuery}>
+          {l(
+            "Cliquez sur une carte pour ouvrir le modal d'évaluation détaillée. Celui-ci affiche la compatibilité du candidat avec chaque département, les exigences remplies ou non, les expériences manquantes et les expériences supplémentaires.",
+            "Click any card to open the detailed evaluation modal showing compatibility scores across departments, met or unmet requirements, missing skills, and additional experiences."
+          )}
         </Section>
-        <Section title="Désigner un talent" searchQuery={searchQuery}>
-          Depuis le modal de détails, vous pouvez désigner un candidat comme talent en cliquant
-          sur le bouton <strong>Définir comme un Talent</strong>. Une fois désigné, le candidat
-          apparaîtra dans la page Talents.
+        <Section title={l("Désigner un talent", "Designate a talent")} searchQuery={searchQuery}>
+          {language === "en" ? (
+            <>
+              From the details modal, you can mark a candidate as talent by clicking{" "}
+              <strong>Set as Talent</strong>. Once designated, the candidate appears on the Talents page.
+            </>
+          ) : (
+            <>
+              Depuis le modal de détails, vous pouvez désigner un candidat comme talent en cliquant
+              sur le bouton <strong>Définir comme un Talent</strong>. Une fois désigné, le candidat
+              apparaîtra dans la page Talents.
+            </>
+          )}
         </Section>
       </div>
     </article>
@@ -601,25 +693,33 @@ function EvaluationsDoc({ searchQuery }: { searchQuery: string }) {
 }
 
 function ConnexionDoc({ searchQuery }: { searchQuery: string }) {
+  const { l } = useLanguage();
   return (
     <article className="space-y-6">
-      <DocHeader title="Connexion" description="Page d'authentification de TalentFlow" searchQuery={searchQuery} />
-      <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-        <Section title="Comment ça fonctionne" searchQuery={searchQuery}>
-          La page de connexion est la première page que vous voyez en accédant à TalentFlow.
-          Elle vous permet de vous authentifier avec vos identifiants pour accéder à votre
-          espace de travail.
+      <DocHeader
+        title={l("Connexion", "Sign in")}
+        description={l("Page d'authentification de TalentFlow", "TalentFlow authentication page")}
+        searchQuery={searchQuery}
+      />
+      <div className="space-y-4 text-sm text-slate-600 dark:text-[#c8c6c4] leading-relaxed">
+        <Section title={l("Comment ça fonctionne", "How it works")} searchQuery={searchQuery}>
+          {l(
+            "La page de connexion est la première page que vous voyez en accédant à TalentFlow. Elle vous permet de vous authentifier avec vos identifiants pour accéder à votre espace de travail.",
+            "The sign-in page is the entry point for TalentFlow. It lets you authenticate with your credentials to access your workspace."
+          )}
         </Section>
-        <Section title="Formulaire de connexion" searchQuery={searchQuery}>
+        <Section title={l("Formulaire de connexion", "Sign-in form")} searchQuery={searchQuery}>
           <ul className="list-disc pl-5 space-y-1">
-            <li><strong>Email</strong> — Saisissez votre adresse email professionnelle</li>
-            <li><strong>Mot de passe</strong> — Saisissez votre mot de passe</li>
-            <li><strong>Connexion</strong> — Cliquez sur le bouton pour vous connecter</li>
+            <li><strong>{l("Email", "Email")}</strong> — {l("Saisissez votre adresse email professionnelle", "Enter your work email address")}</li>
+            <li><strong>{l("Mot de passe", "Password")}</strong> — {l("Saisissez votre mot de passe", "Enter your password")}</li>
+            <li><strong>{l("Connexion", "Sign in")}</strong> — {l("Cliquez sur le bouton pour vous connecter", "Click the button to sign in")}</li>
           </ul>
         </Section>
-        <Section title="Sécurité" searchQuery={searchQuery}>
-          La connexion est sécurisée et les sessions sont gérées côté client.
-          Les routes de l&apos;application sont protégées par authentification.
+        <Section title={l("Sécurité", "Security")} searchQuery={searchQuery}>
+          {l(
+            "La connexion est sécurisée et les sessions sont gérées côté client. Les routes de l'application sont protégées par authentification.",
+            "Authentication is secured and all application routes enforce authenticated access automatically."
+          )}
         </Section>
       </div>
     </article>
@@ -629,75 +729,95 @@ function ConnexionDoc({ searchQuery }: { searchQuery: string }) {
 function Section({ title, children, searchQuery }: { title: string; children: React.ReactNode; searchQuery: string }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-slate-800 mb-2">
+      <h3 className="text-sm font-semibold text-slate-800 dark:text-[#f3f2f1] mb-2">
         <HighlightText text={title} query={searchQuery} />
       </h3>
-      <div className="text-slate-600">{highlightTree(children, searchQuery)}</div>
+      <div className="text-slate-600 dark:text-[#c8c6c4]">{highlightTree(children, searchQuery)}</div>
     </div>
   );
 }
 
 export default function HelpPage() {
+  const { t, l } = useLanguage();
   const [activeSection, setActiveSection] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const sections: DocSection[] = useMemo(
+    () => [
+      { id: "dashboard", label: l("Tableau de bord", "Dashboard") },
+      { id: "talents", label: t.nav.talents },
+      { id: "evaluations", label: t.nav.evaluations },
+      { id: "departements", label: t.nav.departments },
+      { id: "documents", label: t.nav.documents },
+      { id: "jobs", label: t.nav.jobOffersPlural },
+      { id: "recruitments", label: t.nav.recruitments },
+      { id: "invitations", label: t.nav.invitations },
+      { id: "profile", label: l("Profil", "Profile") },
+      { id: "settings", label: t.nav.settings },
+      { id: "connexion", label: l("Connexion", "Sign in") },
+      { id: "admin", label: t.nav.admin },
+      { id: "features", label: l("Fonctionnalités", "Features") },
+    ],
+    [t, l]
+  );
+
   return (
     <AppShell
-      title="Guide d'utilisation"
+      title={t.nav.helpGuide}
       icon={<AtlasoftHelpIcon size={22} />}
-      breadcrumbs={[{ label: "Accueil", href: "/dashboard" }, { label: "Aide" }]}
+      breadcrumbs={[{ label: t.nav.home, href: "/dashboard" }, { label: t.nav.help }]}
       backgroundClassName="bg-[#f3f2f1]"
       headerLeftExtra={
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1 text-[#605e5c] hover:text-[#323130] lg:hidden"
-          aria-label="Sommaire"
+          className="p-1 text-[#605e5c] dark:text-[#a19f9d] hover:text-[#323130] dark:hover:text-[#f3f2f1] lg:hidden"
+          aria-label={l("Sommaire", "Table of contents")}
         >
           <BookOpen className="h-5 w-5" />
         </button>
       }
       headerCenter={
         <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#605e5c]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#605e5c] dark:text-[#a19f9d]" />
           <input
             type="text"
-            placeholder="Rechercher dans la documentation..."
+            placeholder={l("Rechercher dans la documentation...", "Search documentation...")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-[2px] border border-[#8a8886] bg-white pl-9 pr-3 py-1.5 text-[12.5px] text-[#323130] focus:border-[#0078d4] focus:outline-none"
+            className="w-full rounded-[2px] border border-[#8a8886] dark:border-[#3b3a39] bg-white dark:bg-[#252423] pl-9 pr-3 py-1.5 text-[12.5px] text-[#323130] dark:text-[#f3f2f1] placeholder:text-[#605e5c] dark:placeholder:text-[#a19f9d] focus:border-[#0078d4] focus:outline-none"
           />
         </div>
       }
     >
-        <main className="flex-1 px-6 max-w-7xl mx-auto w-full py-6">
-          <div className="flex gap-6">
-            <aside className={`shrink-0 w-56 ${sidebarOpen ? "block" : "hidden"} lg:block`}>
-              <nav className="sticky top-6 space-y-0.5">
-                {sections.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => { setActiveSection(s.id); setSidebarOpen(false); }}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
-                      activeSection === s.id
-                        ? "bg-slate-200 text-slate-900 font-semibold"
-                        : "text-slate-500 hover:text-slate-800 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span><HighlightText text={s.label} query={searchQuery} /></span>
-                    {activeSection === s.id && (
-                      <ChevronRight className="h-3.5 w-3.5 ml-auto text-slate-400" />
-                    )}
-                  </button>
-                ))}
-              </nav>
-            </aside>
+      <main className="flex-1 px-6 max-w-7xl mx-auto w-full py-6">
+        <div className="flex gap-6">
+          <aside className={`shrink-0 w-56 ${sidebarOpen ? "block" : "hidden"} lg:block`}>
+            <nav className="sticky top-6 space-y-0.5">
+              {sections.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => { setActiveSection(s.id); setSidebarOpen(false); }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm rounded-md transition-colors ${
+                    activeSection === s.id
+                      ? "bg-slate-200 dark:bg-[#323130] text-slate-900 dark:text-white font-semibold"
+                      : "text-slate-500 dark:text-[#a19f9d] hover:text-slate-800 dark:hover:text-[#f3f2f1] hover:bg-slate-100 dark:hover:bg-[#252423]"
+                  }`}
+                >
+                  <span><HighlightText text={s.label} query={searchQuery} /></span>
+                  {activeSection === s.id && (
+                    <ChevronRight className="h-3.5 w-3.5 ml-auto text-slate-400" />
+                  )}
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-            <div className="flex-1 min-w-0 bg-white border border-slate-100 mrc p-6 shadow-xs">
-              <HelpContent section={activeSection} searchQuery={searchQuery} />
-            </div>
+          <div className="flex-1 min-w-0 bg-white dark:bg-[#252423] border border-slate-100 dark:border-[#3b3a39] text-slate-700 dark:text-[#c8c6c4] mrc p-6 shadow-xs">
+            <HelpContent section={activeSection} searchQuery={searchQuery} />
           </div>
-        </main>
+        </div>
+      </main>
     </AppShell>
   );
 }

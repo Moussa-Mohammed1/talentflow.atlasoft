@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
-import { useToastStore, type ToastType } from "@/stores/toast-store";
+import { useToastStore } from "@/stores/toast-store";
 
 export function useToast() {
   const addToast = useToastStore((s) => s.addToast);
@@ -73,15 +73,28 @@ export function useToast() {
     [addToast, updateToast],
   );
 
-  return {
-    success,
-    error,
-    warning,
-    info,
-    loading,
-    updateToast,
-    removeToast,
-    clearAll,
-    promise,
-  };
+  return useMemo(
+    () => ({
+      success,
+      error,
+      warning,
+      info,
+      loading,
+      updateToast,
+      removeToast,
+      clearAll,
+      promise,
+    }),
+    [
+      success,
+      error,
+      warning,
+      info,
+      loading,
+      updateToast,
+      removeToast,
+      clearAll,
+      promise,
+    ],
+  );
 }

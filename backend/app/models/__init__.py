@@ -21,3 +21,4 @@ from app.models.recruitment import Recruitment, RecruitmentStatus, RecruitmentPr
 from app.models.interview import Interview, InterviewType, InterviewStatus
 from app.models.recruitment_email import RecruitmentEmail, EmailType, EmailStatus
 from app.models.llm_usage import LLMUsage
+from app.models.embeddings import CandidateEmbedding, JobOfferEmbedding

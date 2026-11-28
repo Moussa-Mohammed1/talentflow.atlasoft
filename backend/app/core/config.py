@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     celery_task_always_eager: bool = False
     celery_preload_models: bool = True
 
+    embedding_model_name: str = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    embedding_dimension: int = 384
+    embedding_local_files_only: bool = True
+
     @property
     def effective_celery_broker_url(self) -> str:
         return (self.celery_broker_url or self.redis_url or "redis://localhost:6379/0").strip()

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Integer, DateTime, String, Column, ForeignKey
+from sqlalchemy import Boolean, Integer, DateTime, Float, String, Text, Column, ForeignKey
 from app.core.database import Base
 from datetime import datetime
 
@@ -14,6 +14,14 @@ class Candidat(Base):
     phone = Column(String, nullable=False, index=True)
 
     photo = Column(String, nullable=True)
+
+    current_role = Column(String(255), nullable=True, index=True)
+
+    location = Column(String(255), nullable=True, index=True)
+
+    total_experience_years = Column(Float, nullable=True, default=0.0)
+
+    summary = Column(Text, nullable=True)
 
     resume_id = Column(Integer, ForeignKey("resumes.id", ondelete="CASCADE"), nullable=False)
 

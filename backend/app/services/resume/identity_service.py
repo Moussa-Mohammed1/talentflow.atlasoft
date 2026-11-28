@@ -11,6 +11,8 @@ from app.models.job import JobType
 from app.repositories.candidat_repository import CandidatRepository
 from app.schemas.identity_extraction import ResumeIdentityRead
 from app.services.candidat_service import update_candidat_from_identity
+from app.services.cv_pipeline.normalizer import CVAttributeNormalizer
+from app.services.cv_pipeline.spacy_ner import SpacyNERExtractor
 from app.services.identity_extraction.pipeline import ResumeIdentityPipeline
 from app.services.resume_extraction.extractor import TextExtractionService, UnsupportedFileTypeError
 from app.services.resume_photo_service import ResumePhotoService
@@ -64,6 +66,14 @@ class ResumeIdentityService:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
 
         candidat = CandidatRepository.upsert_from_identity(db, resume_id=resume.id, identity=validated)
+        ner_summary = SpacyNERExtractor().extract(text)
+        normalizer = CVAttributeNormalizer()
+        if ner_summary.locations and not candidat.location:
+            candidat.location = normalizer.normalize_location(ner_summary.locations[0])
+        if ner_summary.roles and not candidat.current_role:
+            candidat.current_role = normalizer.normalize_role(ner_summary.roles[0])
+        db.commit()
+        db.refresh(candidat)
 
         with ResumeLoader.open_file(resume.path) as resume_full_path:
             photo_path = ResumeIdentityService._extract_photo(resume_full_path, candidat.id)

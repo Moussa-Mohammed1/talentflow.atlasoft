@@ -195,7 +195,12 @@ def get_full_resume_detail(db: Session, resume_id: int):
             email=candidat.email,
             phone=candidat.phone,
             photo=candidat.photo,
+            current_role=candidat.current_role,
+            location=candidat.location,
+            total_experience_years=candidat.total_experience_years or 0.0,
+            summary=candidat.summary,
             created_at=candidat.created_at,
+            is_talent=candidat.is_talent,
         ),
         experiences=[
             ExperienceDetailSchema(

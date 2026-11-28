@@ -48,5 +48,6 @@ class ResumeAnalysisRead(BaseModel):
     languages: dict | None = None
     educations: dict | None = None
     certifications: dict | None = None
+    structured_profile: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)

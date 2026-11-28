@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import Column, Date, DateTime, Enum as SQLEnum, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, Date, DateTime, Enum as SQLEnum, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
@@ -44,6 +44,8 @@ class JobOffers(Base):
     description = Column(Text, nullable=True)
     responsibilities = Column(Text, nullable=True)
     department_id = Column(Integer, ForeignKey("departments.id", ondelete="SET NULL"), nullable=True)
+    location = Column(String(255), nullable=True)
+    required_experience_years = Column(Float, nullable=True)
     employment_type = Column(SQLEnum(EmploymentType, name="employment_type_enum", values_callable=lambda enum: [item.value for item in enum]), nullable=False)
     work_mode = Column(SQLEnum(WorkMode, name="work_mode_enum", values_callable=lambda enum: [item.value for item in enum]), nullable=False)
     seniority_level = Column(SQLEnum(SeniorityLevel, name="seniority_level_enum", values_callable=lambda enum: [item.value for item in enum]), nullable=False)

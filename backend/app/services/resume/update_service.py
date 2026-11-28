@@ -34,6 +34,14 @@ class ResumeUpdateService:
             candidat.email = payload.email
         if payload.phone is not None:
             candidat.phone = payload.phone
+        if payload.current_role is not None:
+            candidat.current_role = payload.current_role
+        if payload.location is not None:
+            candidat.location = payload.location
+        if payload.total_experience_years is not None:
+            candidat.total_experience_years = payload.total_experience_years
+        if payload.summary is not None:
+            candidat.summary = payload.summary
         db.commit()
         db.refresh(candidat)
         return {"status": "success", "message": "Candidat mis à jour"}

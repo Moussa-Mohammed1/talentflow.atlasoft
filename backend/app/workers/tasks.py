@@ -182,6 +182,7 @@ def execute_resume_analysis_job(
                 lang_analysis,
                 educations=edu_analysis,
                 certifications=cert_analysis,
+                raw_text=raw_text,
             )
         else:
             stats = {"persistence_reason": "candidate_identity_not_extracted"}

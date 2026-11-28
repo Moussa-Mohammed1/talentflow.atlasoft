@@ -18,6 +18,9 @@ from app.services.language_extraction.pipeline import ResumeLanguageExtractionPi
 from app.services.resume_extraction.extractor import TextExtractionService, UnsupportedFileTypeError
 from app.services.skill_extraction.pipeline import PretrainedBilingualExtractor
 from app.services.certification_extraction.pipeline import PretrainedBilingualCertificationExtractor
+from app.services.cv_pipeline.normalizer import CVAttributeNormalizer
+from app.services.cv_pipeline.spacy_ner import SpacyNERExtractor
+from app.schemas.cv_pipeline import StructuredCVProfile
 
 from .job_manager import AnalysisJobs, JobManager
 from .notification_helper import NotificationHelper
@@ -60,6 +63,7 @@ class ResumeAnalysisWorkflow:
         self._language_analysis: ResumeLanguageAnalysisRead | None = None
         self._education_analysis: ResumeEducationAnalysisRead | None = None
         self._certification_analysis: ResumeCertificationAnalysisRead | None = None
+        self._structured_profile: StructuredCVProfile | None = None
         self._persistence_stats: dict | None = None
         self._jobs: AnalysisJobs | None = None
 
@@ -128,8 +132,51 @@ class ResumeAnalysisWorkflow:
             "stats": result.get("stats", {}),
         })
 
+    def _build_structured_profile(self):
+        normalizer = CVAttributeNormalizer()
+        ner_summary = SpacyNERExtractor().extract(self._raw_text)
+        skill_items = (
+            (self._skill_analysis.technologies + self._skill_analysis.competencies)
+            if self._skill_analysis
+            else []
+        )
+        norm_skills = normalizer.normalize_skills(skill_items)
+        norm_exps = normalizer.normalize_experiences(
+            self._experience_analysis.experiences if self._experience_analysis else []
+        )
+        norm_edus = normalizer.normalize_educations(
+            self._education_analysis.educations if self._education_analysis else []
+        )
+        norm_certs = normalizer.normalize_certifications(
+            self._certification_analysis.certifications if self._certification_analysis else []
+        )
+        norm_langs = normalizer.normalize_languages(
+            self._language_analysis.languages if self._language_analysis else []
+        )
+        candidat = PersistenceService.get_candidat_or_none(self.db, self._resume.id)
+        identity_attrs = normalizer.build_identity_attributes(
+            fullname=candidat.fullname if candidat else "",
+            email=candidat.email if candidat else "",
+            phone=candidat.phone if candidat else "",
+            ner=ner_summary,
+            experiences=norm_exps,
+            skills=norm_skills,
+        )
+        self._structured_profile = StructuredCVProfile(
+            raw_text=self._raw_text,
+            cleaned_text=self._raw_text,
+            identity=identity_attrs,
+            skills=norm_skills,
+            experiences=norm_exps,
+            educations=norm_edus,
+            certifications=norm_certs,
+            languages=norm_langs,
+            ner=ner_summary,
+        )
+
     def _persist(self):
         self._skill_analysis = ResumeSkillAnalysisRead.model_validate(self._converted_skills)
+        self._build_structured_profile()
         candidat = PersistenceService.get_candidat_or_none(self.db, self._resume.id)
 
         if candidat is None:
@@ -151,6 +198,8 @@ class ResumeAnalysisWorkflow:
             self.db, candidat.id, self._skill_analysis, self._experience_analysis, self._language_analysis,
             educations=self._education_analysis,
             certifications=self._certification_analysis,
+            raw_text=self._raw_text,
+            structured_profile=self._structured_profile,
         )
 
     def _fail_all_jobs(self, reason: str = "L'analyse a échoué"):
@@ -173,6 +222,7 @@ class ResumeAnalysisWorkflow:
             languages=self._language_analysis.model_dump(),
             educations=self._education_analysis.model_dump() if self._education_analysis else None,
             certifications=self._certification_analysis.model_dump() if self._certification_analysis else None,
+            structured_profile=self._structured_profile.model_dump(mode="json") if self._structured_profile else None,
         )
 
     def execute(self) -> ResumeAnalysisRead:

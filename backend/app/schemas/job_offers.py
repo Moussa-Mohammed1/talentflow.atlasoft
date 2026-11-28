@@ -17,9 +17,12 @@ class JobOfferCreate(BaseModel):
     description: str | None = Field(default=None)
     responsibilities: str | None = Field(default=None)
     department_id: int | None = Field(default=None)
+    location: str | None = Field(default=None, max_length=255)
+    required_experience_years: float | None = Field(default=None, ge=0.0)
     employment_type: EmploymentType
     work_mode: WorkMode
     seniority_level: SeniorityLevel
+    status: JobOfferStatus = Field(default=JobOfferStatus.PUBLISHED)
     openings: int = Field(default=1, ge=1)
     publish_date: date | None = Field(default=None)
     closing_date: date | None = Field(default=None)
@@ -30,6 +33,8 @@ class JobOfferUpdate(BaseModel):
     description: str | None = Field(default=None)
     responsibilities: str | None = Field(default=None)
     department_id: int | None = Field(default=None)
+    location: str | None = Field(default=None, max_length=255)
+    required_experience_years: float | None = Field(default=None, ge=0.0)
     employment_type: EmploymentType | None = Field(default=None)
     work_mode: WorkMode | None = Field(default=None)
     seniority_level: SeniorityLevel | None = Field(default=None)
@@ -45,6 +50,8 @@ class JobOfferRead(BaseModel):
     description: str | None
     responsibilities: str | None
     department_id: int | None
+    location: str | None = None
+    required_experience_years: float | None = None
     employment_type: EmploymentType
     work_mode: WorkMode
     seniority_level: SeniorityLevel

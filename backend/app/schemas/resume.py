@@ -51,6 +51,10 @@ class CandidatDetailSchema(BaseModel):
     email: str
     phone: str
     photo: str | None = None
+    current_role: str | None = None
+    location: str | None = None
+    total_experience_years: float | None = 0.0
+    summary: str | None = None
     created_at: datetime | None = None
     is_talent: bool = False
 
@@ -111,6 +115,10 @@ class CandidatUpdateSchema(BaseModel):
     fullname: str | None = None
     email: str | None = None
     phone: str | None = None
+    current_role: str | None = None
+    location: str | None = None
+    total_experience_years: float | None = None
+    summary: str | None = None
     is_talent: bool | None = None
 
 

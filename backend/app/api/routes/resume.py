@@ -255,7 +255,8 @@ def update_certification(
     return ResumeUpdateService.update_certification(db, certification_id, payload)
 
 
-@router.get("/", response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
+@router.get("", response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK)
+@router.get("/", response_model=List[DocumentListSchema], status_code=status.HTTP_200_OK, include_in_schema=False)
 def get_resumes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

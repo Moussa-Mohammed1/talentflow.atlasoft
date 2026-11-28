@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layouts/AppShell";
 import { AtlasoftJobsIcon } from "@/components/layouts/AtlasoftIcons";
 import { AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, Plus, Search } from "lucide-react";
-import { jobOffersService } from "@/services/job-offers.service";
+import { jobOffersService, type JobOfferCreatePayload } from "@/services/job-offers.service";
 import { jobService } from "@/services/job.service";
 import { DepartmentService } from "@/services/department.service";
 import { useToast } from "@/hooks/useToast";
@@ -117,6 +117,21 @@ export default function JobsPage() {
     }
   };
 
+  const handleCreateManual = async (payload: JobOfferCreatePayload) => {
+    setIsSubmitting(true);
+    try {
+      await jobOffersService.create(payload);
+      setIsModalOpen(false);
+      setDescription("");
+      await fetchOffers();
+      toast.success(l("Offre d'emploi créée avec succès.", "Job offer created successfully."));
+    } catch {
+      toast.error(l("Une erreur est survenue, veuillez réessayer ultérieurement.", "An error occurred, please try again later."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDetailSaved = async () => {
     setSelectedOffer(null);
     await fetchOffers();
@@ -187,8 +202,8 @@ export default function JobsPage() {
             <div className="mb-6">
               <p className="text-sm leading-7 text-slate-600 dark:text-[#c8c6c4]">
                 {l(
-                  "Gérez les offres d'emploi. Les annonces sont générées automatiquement par l'IA à partir des descriptions fournies. Seules les offres au statut Publiée sont disponibles pour le recrutement.",
-                  "Manage job offers. Listings are structured automatically by AI from your descriptions. Only offers with Published status are available for recruitment."
+                  "Gérez les offres d'emploi. Créez des annonces manuellement ou laissez l'IA les structurer à partir d'une description. Seules les offres au statut Publiée sont disponibles pour le recrutement.",
+                  "Manage job offers. Create listings manually or let AI structure them from a description. Only offers with Published status are available for recruitment."
                 )}
               </p>
             </div>
@@ -284,9 +299,11 @@ export default function JobsPage() {
       {isModalOpen && (
         <CreateOfferModal
           description={description}
+          departments={departments}
           isSubmitting={isSubmitting}
           onDescriptionChange={setDescription}
           onSubmit={handleSubmit}
+          onCreateManual={handleCreateManual}
           onClose={() => { setIsModalOpen(false); setDescription(""); }}
         />
       )}

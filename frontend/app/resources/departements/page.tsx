@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Plus,
   Search,
@@ -41,6 +41,11 @@ export default function DepartementsPage() {
 
   const toast = useToast();
   const { locale, t, l } = useLanguage();
+  const lRef = useRef(l);
+
+  useEffect(() => {
+    lRef.current = l;
+  }, [l]);
 
   const loadDepartments = useCallback(async () => {
     try {
@@ -48,15 +53,30 @@ export default function DepartementsPage() {
       const data = await DepartmentService.list();
       setDepartments(data);
     } catch {
-      toast.error(l("Impossible de charger les départements", "Unable to load departments"));
+      toast.error(lRef.current("Impossible de charger les départements", "Unable to load departments"));
     } finally {
       setIsLoading(false);
     }
-  }, [l, toast]);
+  }, [toast]);
 
   useEffect(() => {
-    loadDepartments();
-  }, [loadDepartments]);
+    let active = true;
+    DepartmentService.list()
+      .then((data) => {
+        if (active) setDepartments(data);
+      })
+      .catch(() => {
+        if (active) {
+          toast.error(lRef.current("Impossible de charger les départements", "Unable to load departments"));
+        }
+      })
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [toast]);
 
   const filteredDepartments = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -275,9 +295,9 @@ export default function DepartementsPage() {
                         <td className="px-6 py-4">
                           {dept.required_skills && dept.required_skills.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5">
-                              {dept.required_skills.slice(0, 3).map((skill) => (
+                              {dept.required_skills.slice(0, 3).map((skill, index) => (
                                 <span
-                                  key={skill}
+                                  key={`${skill}-${index}`}
                                   className="inline-flex items-center rounded-xs bg-slate-100 dark:bg-[#1b1a19] border border-transparent dark:border-[#3b3a39] px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-[#d2d0ce]"
                                 >
                                   {skill}
@@ -330,9 +350,9 @@ export default function DepartementsPage() {
                   </div>
                   {dept.required_skills && dept.required_skills.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 border-t border-slate-50 dark:border-[#3b3a39] pt-2">
-                      {dept.required_skills.map((skill) => (
+                      {dept.required_skills.map((skill, index) => (
                         <span
-                          key={skill}
+                          key={`${skill}-${index}`}
                           className="inline-flex items-center rounded-md bg-slate-100 dark:bg-[#1b1a19] px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-[#d2d0ce]"
                         >
                           {skill}
@@ -347,12 +367,14 @@ export default function DepartementsPage() {
         )}
       </main>
 
-      <DepartmentModal
-        isOpen={isModalOpen}
-        department={editingDept}
-        onClose={handleCloseModal}
-        onSave={handleSave}
-      />
+      {isModalOpen && (
+        <DepartmentModal
+          key={editingDept?.id ?? "new"}
+          department={editingDept}
+          onClose={handleCloseModal}
+          onSave={handleSave}
+        />
+      )}
 
       {detailDept && (
         <DepartmentDetailModal
@@ -373,31 +395,19 @@ export default function DepartementsPage() {
 }
 
 function DepartmentModal({
-  isOpen,
   department,
   onClose,
   onSave,
 }: {
-  isOpen: boolean;
   department: Department | null;
   onClose: () => void;
   onSave: (name: string, requiredExpYears: number, requiredSkills: string) => Promise<void>;
 }) {
   const { t, l } = useLanguage();
-  const [name, setName] = useState("");
-  const [requiredExpYears, setRequiredExpYears] = useState(0);
-  const [requiredSkills, setRequiredSkills] = useState("");
+  const [name, setName] = useState(department?.name || "");
+  const [requiredExpYears, setRequiredExpYears] = useState(department?.required_exp_years ?? 0);
+  const [requiredSkills, setRequiredSkills] = useState(department?.required_skills?.join("+") || "");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setName(department?.name || "");
-      setRequiredExpYears(department?.required_exp_years ?? 0);
-      setRequiredSkills(department?.required_skills?.join("+") || "");
-    }
-  }, [isOpen, department]);
-
-  if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -558,9 +568,9 @@ function DepartmentDetailModal({
                 {l("Compétences requises", "Required skills")}
               </label>
               <div className="flex flex-wrap gap-1.5 max-h-80 overflow-y-scroll [scrollbar-width:none]">
-                {department.required_skills.map((skill) => (
+                {department.required_skills.map((skill, index) => (
                   <span
-                    key={skill}
+                    key={`${skill}-${index}`}
                     className="inline-flex items-center rounded-xs bg-slate-100 dark:bg-[#1b1a19] border border-transparent dark:border-[#3b3a39] px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-[#d2d0ce]"
                   >
                     {skill}

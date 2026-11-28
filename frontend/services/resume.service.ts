@@ -69,7 +69,7 @@ export function revokeResumeDocumentPreviews(documents: DocumentListItem[]) {
 }
 
 export async function getResumeDocuments() {
-  const response = await api.get<DocumentListItem[]>("/resumes/");
+  const response = await api.get<DocumentListItem[]>("/resumes");
   
   return Promise.all(
     response.data.map(async (document) => ({

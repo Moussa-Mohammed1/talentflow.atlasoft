@@ -2,6 +2,20 @@ import api from "@/lib/axios";
 import type { JobAcceptedResponse } from "@/types/job";
 import type { JobOffer } from "@/types/job-offers";
 
+export type JobOfferCreatePayload = {
+  title: string;
+  description?: string | null;
+  responsibilities?: string | null;
+  department_id?: number | null;
+  employment_type: JobOffer["employment_type"];
+  work_mode: JobOffer["work_mode"];
+  seniority_level: JobOffer["seniority_level"];
+  status?: JobOffer["status"];
+  openings?: number;
+  publish_date?: string | null;
+  closing_date?: string | null;
+};
+
 export type JobOfferUpdatePayload = Partial<Pick<JobOffer, "title" | "description" | "responsibilities" | "employment_type" | "work_mode" | "seniority_level" | "status" | "openings" | "publish_date" | "closing_date" | "department_id">>;
 
 export const jobOffersService = {
@@ -12,6 +26,11 @@ export const jobOffersService = {
 
   async getById(id: string): Promise<JobOffer> {
     const response = await api.get<JobOffer>(`/job-offers/${id}`);
+    return response.data;
+  },
+
+  async create(data: JobOfferCreatePayload): Promise<JobOffer> {
+    const response = await api.post<JobOffer>("/job-offers", data);
     return response.data;
   },
 

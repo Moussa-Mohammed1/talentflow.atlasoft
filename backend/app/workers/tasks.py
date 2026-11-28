@@ -160,7 +160,7 @@ def execute_resume_analysis_job(
             job_svc.set_progress(
                 job_id, recruiter_id, progress=90, current_step="extracting_languages", message="Extracting languages"
             )
-            lang_raw = ResumeLanguageExtractionPipeline().extract_languages(raw_text)
+            lang_raw = ResumeLanguageExtractionPipeline(db=db, recruiter_id=recruiter_id).extract_languages(raw_text)
             lang_analysis = ResumeLanguageAnalysisRead.model_validate({
                 "sections": lang_raw.get("sections", []),
                 "languages": lang_raw.get("languages", []),
@@ -375,3 +375,69 @@ def run_local_task_fallback(
 ) -> None:
     """Fallback executor for local bare-metal dev when Redis/Celery broker is unconfigured."""
     background_tasks.add_task(fn, **kwargs)
+
+
+def execute_recruitment_workflow_job(
+    *,
+    job_id: int,
+    recruiter_id: int,
+    request_payload: dict[str, Any],
+) -> dict[str, Any]:
+    from app.schemas.workflows import CandidateRecruitmentWorkflowRequest
+    from app.services.workflows.recruitment_graph import RecruitmentWorkflowRunner
+
+    db = SessionLocal()
+    job_svc = JobService(db)
+    try:
+        req = CandidateRecruitmentWorkflowRequest.model_validate(request_payload)
+        job_svc.start_job(
+            job_id,
+            recruiter_id,
+            f"Running LangGraph workflow for candidate #{req.candidate_id}",
+            current_step="running_langgraph_workflow",
+            progress=20,
+        )
+        result = RecruitmentWorkflowRunner(db, recruiter_id=recruiter_id).run(req)
+        payload = result.model_dump(mode="json")
+        if result.status == "failed":
+            job_svc.fail_job(
+                job_id,
+                recruiter_id,
+                message=result.error_message or "LangGraph workflow failed",
+                error_details=result.error_message or "Workflow failed",
+            )
+            return payload
+
+        job_svc.complete_job(
+            job_id,
+            recruiter_id,
+            f"LangGraph workflow finished ({result.status}) for candidate #{req.candidate_id}",
+            result_payload=payload,
+        )
+        return payload
+    except Exception as exc:
+        if not isinstance(exc, TRANSIENT_EXCEPTIONS):
+            job_svc.fail_job(
+                job_id,
+                recruiter_id,
+                message="LangGraph workflow execution failed",
+                error_details=str(exc),
+            )
+        raise
+    finally:
+        db.close()
+
+
+@celery_app.task(name="talentflow.ai.run_recruitment_workflow", bind=True, base=TrackedCeleryTask)
+def recruitment_workflow_celery_task(
+    self,
+    *,
+    job_id: int,
+    recruiter_id: int,
+    request_payload: dict[str, Any],
+) -> dict[str, Any]:
+    return execute_recruitment_workflow_job(
+        job_id=job_id,
+        recruiter_id=recruiter_id,
+        request_payload=request_payload,
+    )

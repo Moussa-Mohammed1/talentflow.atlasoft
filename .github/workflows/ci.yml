@@ -15,7 +15,7 @@ jobs:
         working-directory: backend
     services:
       postgres:
-        image: postgres:16-alpine
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: talentflow
           POSTGRES_PASSWORD: talentflow_ci_password
@@ -59,11 +59,19 @@ jobs:
           app/api/routes/health.py
           app/api/routes/files.py
           app/api/routes/job.py
+          app/api/routes/matching.py
           app/models/job.py
+          app/models/embeddings.py
           app/schemas/job.py
+          app/schemas/cv_pipeline.py
+          app/schemas/matching.py
           app/repositories/job_repository.py
           app/services/job_service.py
           app/services/storage
+          app/services/resume_extraction
+          app/services/cv_pipeline
+          app/services/embeddings
+          app/services/matching
           app/services/notification_manager.py
           app/workers
           tests

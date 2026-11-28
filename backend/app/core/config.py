@@ -32,6 +32,33 @@ class Settings(BaseSettings):
     llm_api_key: str = ""
     llm_model: str = "deepseek-chat"
 
+    # Layered LLM Provider Defaults & Encryption
+    gemini_api_key: str = ""
+    gemini_base_url: str = "https://generativelanguage.googleapis.com"
+    gemini_default_model: str = "gemini-2.5-flash"
+
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com/v1"
+    deepseek_default_model: str = "deepseek-chat"
+
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_api_key: str = ""
+    ollama_default_model: str = "qwen3:8b"
+
+    llm_config_encryption_key: str = ""
+
+    # Safe fallback task routing defaults
+    llm_default_provider: str = "deepseek"
+    llm_fallback_provider: str = "ollama"
+    llm_default_temperature: float = 0.1
+    llm_default_max_tokens: int = 4096
+    llm_default_timeout_seconds: int = 60
+
+    # Optional Langfuse Observability
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = "https://cloud.langfuse.com"
+
     linkedin_client_id: str = ""
     linkedin_client_secret: str = ""
     linkedin_redirect_uri: str = "http://localhost:8000/api/auth/linkedin/callback"

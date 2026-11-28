@@ -11,9 +11,13 @@ from app.api.routes.evaluate import router as evaluate_router
 from app.api.routes.job_offers import router as job_offers_router
 from app.api.routes.recruitment import router as recruitment_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.admin_llm import router as admin_llm_router
 from app.api.routes.files import router as files_router
 from app.api.routes.health import router as health_router
 from app.api.routes.matching import router as matching_router
+from app.api.routes.rag import router as rag_router
+from app.api.routes.workflows import router as workflows_router
+from app.api.routes.observability import router as observability_router
 
 api_router = APIRouter()
 @api_router.get("/", tags=["API"])
@@ -35,4 +39,8 @@ api_router.include_router(evaluate_router)
 api_router.include_router(job_offers_router)
 api_router.include_router(recruitment_router)
 api_router.include_router(admin_router)
+api_router.include_router(admin_llm_router)
 api_router.include_router(matching_router)
+api_router.include_router(rag_router)
+api_router.include_router(workflows_router)
+api_router.include_router(observability_router)

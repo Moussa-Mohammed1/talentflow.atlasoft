@@ -178,6 +178,15 @@ def reanalyze_languages(
     return ResumeLanguageService.reanalyze(db=db, recruiter_id=current_user.id, background_tasks=background_tasks, resume_id=resume_id)
 
 
+@router.post("/{resume_id}/reanalyze-certifications", response_model=ResumeCertificationRead, status_code=status.HTTP_200_OK)
+def reanalyze_certifications(
+    resume_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return ResumeCertificationService.reanalyze(db=db, recruiter_id=current_user.id, resume_id=resume_id)
+
+
 @router.post("/experience", response_model=ResumeExperienceRead, status_code=status.HTTP_200_OK)
 def extract_experience(
     payload: ResumePathRequest,

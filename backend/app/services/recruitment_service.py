@@ -272,8 +272,28 @@ class RecruitmentService:
             "language": data.language,
         }
 
+        grounded_context: str | None = None
+        if candidate is not None:
+            try:
+                from app.services.rag.retriever import GroundedContextRetriever
+
+                bundle = GroundedContextRetriever(self.db).retrieve(
+                    candidate_id=candidate.id,
+                    job_offer_id=job_offer.id if job_offer else None,
+                    top_k_chunks=3,
+                    recruiter_id=recruiter_id,
+                )
+                grounded_context = bundle.render_prompt_context()
+            except Exception as exc:
+                logger.debug("Grounded context retrieval skipped for email preview: %s", exc)
+
         try:
-            result = RecruitmentEmailGenerator.generate(variables, db=self.db, recruiter_id=recruiter_id)
+            result = RecruitmentEmailGenerator.generate(
+                variables,
+                db=self.db,
+                recruiter_id=recruiter_id,
+                grounded_context=grounded_context,
+            )
             return EmailPreviewResponse(subject=result["subject"], body=result["body"])
         except Exception as e:
             logger.error(f"Failed to generate email: {e}", exc_info=True)

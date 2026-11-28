@@ -37,7 +37,7 @@ class ResumeLookup(Enum):
 
 
 class ResumeAnalysisWorkflow:
-    """Orchestrates the full resume analysis pipeline (skills + experience + languages)."""
+    """Orchestrates the full resume analysis pipeline (skills, experience, education, certifications, languages)."""
 
     def __init__(
         self,
@@ -103,7 +103,7 @@ class ResumeAnalysisWorkflow:
         })
 
     def _extract_languages(self):
-        result = ResumeLanguageExtractionPipeline().extract_languages(self._raw_text)
+        result = ResumeLanguageExtractionPipeline(db=self.db, recruiter_id=self.recruiter_id).extract_languages(self._raw_text)
         count = len(result.get("languages", []))
         JobManager(self.db, self.recruiter_id).complete_languages(self._jobs.language_id, count)
         self._language_analysis = ResumeLanguageAnalysisRead.model_validate({
@@ -190,6 +190,7 @@ class ResumeAnalysisWorkflow:
                 "persisted_count": 0,
                 "languages_persisted_count": 0,
                 "educations_persisted_count": 0,
+                "certifications_persisted_count": 0,
                 "persistence_reason": "candidate_identity_not_extracted",
             }
             return

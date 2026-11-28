@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.services.LLM.validate_experience import LLMService
 from app.services.experience_extraction.date_parser import BilingualDateRangeParser
 from app.services.experience_extraction.models import ExperienceMention, ParsedDateRange
+from app.services.llm_router import LLMRouterService
 
 try:
     from dotenv import load_dotenv
@@ -49,11 +50,13 @@ class LLMExperienceVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        return LLMRouterService.is_task_configured("cv_extraction") or (
+            self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        )
 
     def review(self, text: str, candidates: list[ExperienceMention],
                db: Session | None = None, recruiter_id: int | None = None) -> LLMExperienceReview:
-        if not self.available:
+        if not (LLMRouterService.is_task_configured("cv_extraction", db=db) or self.available):
             logger.info("Experience LLM verification skipped: provider is not configured")
             return LLMExperienceReview(
                 False, self.provider or "none", candidates, 0, 0, 0, 0, "llm_verification_not_configured"

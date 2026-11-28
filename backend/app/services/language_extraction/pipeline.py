@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sqlalchemy.orm import Session
+
 from app.services.language_extraction.extractor import LanguageExtractor
 from app.services.language_extraction.llm_verifier import LLMLanguageVerifier
 from app.services.language_extraction.models import LanguageExtractionResult, LanguageMention, LanguageProficiency
@@ -9,10 +11,12 @@ from app.services.skill_extraction.section_analyzer import ResumeSectionAnalyzer
 
 
 class ResumeLanguageExtractionPipeline:
-    def __init__(self) -> None:
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
+        self.db = db
+        self.recruiter_id = recruiter_id
         self.section_analyzer = ResumeSectionAnalyzer()
         self.extractor = LanguageExtractor()
-        self.llm_verifier = LLMLanguageVerifier()
+        self.llm_verifier = LLMLanguageVerifier(db=db, recruiter_id=recruiter_id)
 
     @staticmethod
     def _merge(
@@ -79,7 +83,7 @@ class ResumeLanguageExtractionPipeline:
                 )
                 self._merge(merged, mention)
 
-        languages = sorted(merged.values(), key=lambda l: (-l.confidence, l.language.casefold()))
+        languages = sorted(merged.values(), key=lambda lang: (-lang.confidence, lang.language.casefold()))
 
         stats = {
             "language_count": len(languages),

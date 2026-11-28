@@ -2,61 +2,45 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
-from typing import Any
+from typing import Any, Literal
 
-from openai import OpenAI
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.services.llm_usage_recorder import record_llm_usage
+from app.services.llm_router import LLMRouterService, parse_json_payload
+
+
+class _JobOfferValidationResponse(BaseModel):
+    title: str = Field(default="Untitled Position", min_length=1)
+    description: str | None = None
+    responsibilities: str | None = None
+    department_name: str | None = None
+    employment_type: Literal["full_time", "part_time", "internship", "contract", "freelance"] = "full_time"
+    work_mode: Literal["on_site", "hybrid", "remote"] = "on_site"
+    seniority_level: Literal["junior", "mid", "senior", "lead"] = "mid"
+    openings: int = Field(default=1, ge=1)
 
 
 class LLMService:
-    DEFAULT_MODEL = "deepseek-chat"
-    DEFAULT_ENDPOINT = "https://api.deepseek.com/v1"
-
     @classmethod
-    def _client(cls) -> OpenAI:
-        api_key = os.getenv("LLM_API_KEY", "").strip()
-        if not api_key:
-            raise ValueError("LLM_API_KEY is not set in .env")
-        return OpenAI(api_key=api_key, base_url=cls.DEFAULT_ENDPOINT)
-
-    @classmethod
-    def model(cls) -> str:
-        return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
-
-    @classmethod
-    def validate(cls, description: str,
-                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, Any]:
+    def validate(
+        cls,
+        description: str,
+        db: Session | None = None,
+        recruiter_id: int | None = None,
+    ) -> dict[str, Any]:
         prompt = cls._build_job_offer_prompt(description)
-        print("calling deepseek for job offer generation...", flush=True)
-        start = datetime.utcnow()
-        response = cls._client().chat.completions.create(
-            model=cls.model(),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=float(os.getenv("TALENTFLOW_SKILL_LLM_TEMPERATURE", "0.1")),
+        result = LLMRouterService.generate(
+            task_category="job_offer_drafting",
+            prompt=prompt,
+            action="job_offer_generation",
+            db=db,
+            recruiter_id=recruiter_id,
+            json_mode=True,
             top_p=float(os.getenv("TALENTFLOW_SKILL_LLM_TOP_P", "0.8")),
-            max_tokens=int(os.getenv("TALENTFLOW_SKILL_LLM_NUM_PREDICT", "4096")),
+            validator=cls._parse_json_response,
         )
-        duration = int((datetime.utcnow() - start).total_seconds() * 1000)
-        content = response.choices[0].message.content or ""
-        print("printing result...", flush=True)
-        print(content, flush=True)
-        if db is not None and recruiter_id is not None:
-            try:
-                record_llm_usage(
-                    db=db,
-                    recruiter_id=recruiter_id,
-                    action="job_offer_generation",
-                    model=cls.model(),
-                    tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
-                    tokens_completion=response.usage.completion_tokens if response.usage else 0,
-                    duration_ms=duration,
-                )
-            except Exception:
-                pass
-        return cls._parse_json_response(content)
+        return result.parsed
 
     @staticmethod
     def _build_job_offer_prompt(description: str) -> str:
@@ -72,7 +56,6 @@ class LLMService:
         return (
             "You are an expert ATS job offer generator.\n"
             "Your task is to parse a raw job description and extract structured fields.\n\n"
-
             "Rules:\n"
             "- Infer the most appropriate values from the description.\n"
             "- If a field cannot be determined, use sensible defaults.\n"
@@ -82,7 +65,6 @@ class LLMService:
             "- openings must be a positive integer (default 1).\n"
             "- Clean and reformat the description text (remove typos, normalize whitespace).\n"
             "- responsibilities should be a concise bullet-point string or null.\n\n"
-
             "Return only one valid JSON object. No markdown and no explanation outside JSON.\n\n"
             "JSON schema:\n"
             f"{json.dumps(schema, ensure_ascii=False, indent=2)}\n\n"
@@ -92,58 +74,21 @@ class LLMService:
 
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
-        cleaned = raw_response.strip()
-        if "</think>" in cleaned:
-            cleaned = cleaned.split("</think>", 1)[1].strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.removeprefix("```").strip()
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:].strip()
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3].strip()
-
-        try:
-            parsed = json.loads(cleaned)
-        except json.JSONDecodeError:
-            parsed = None
-            obj_start = cleaned.find("{")
-            obj_end = cleaned.rfind("}")
-            if obj_start >= 0 and obj_end > obj_start:
-                try:
-                    parsed = json.loads(cleaned[obj_start : obj_end + 1])
-                except json.JSONDecodeError:
-                    pass
-            if parsed is None:
-                arr_start = cleaned.find("[")
-                arr_end = cleaned.rfind("]")
-                if arr_start >= 0 and arr_end > arr_start:
-                    parsed = json.loads(cleaned[arr_start : arr_end + 1])
-                else:
-                    raise
-
+        parsed = parse_json_payload(raw_response)
         if isinstance(parsed, list):
             parsed = parsed[0] if parsed else {}
-
         if not isinstance(parsed, dict):
-            raise ValueError(
-                f"LLM response must be a JSON object, got {type(parsed)}"
-            )
+            raise ValueError(f"LLM response must be a JSON object, got {type(parsed)}")
 
-        parsed.setdefault("title", "Untitled Position")
-        parsed.setdefault("description", None)
-        parsed.setdefault("responsibilities", None)
-        parsed.setdefault("employment_type", "full_time")
-        parsed.setdefault("work_mode", "on_site")
-        parsed.setdefault("seniority_level", "mid")
-        parsed.setdefault("openings", 1)
-
-        print(
-            f"\n\nLLM job offer: "
-            f"title={parsed['title']}, "
-            f"type={parsed['employment_type']}, "
-            f"mode={parsed['work_mode']}, "
-            f"level={parsed['seniority_level']}",
-            flush=True,
-        )
-
-        return parsed
+        normalized = {
+            "title": str(parsed.get("title") or "Untitled Position").strip() or "Untitled Position",
+            "description": parsed.get("description"),
+            "responsibilities": parsed.get("responsibilities"),
+            "department_name": parsed.get("department_name"),
+            "employment_type": parsed.get("employment_type") or "full_time",
+            "work_mode": parsed.get("work_mode") or "on_site",
+            "seniority_level": parsed.get("seniority_level") or "mid",
+            "openings": parsed.get("openings") or 1,
+        }
+        validated = _JobOfferValidationResponse.model_validate(normalized)
+        return validated.model_dump()

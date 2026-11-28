@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import os
 from datetime import datetime
-from pathlib import Path
+from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -30,6 +29,7 @@ from app.schemas.evaluate import (
     ScoreBreakdown,
     TalentCard,
 )
+from app.services.llm_observability import observe_span, record_langfuse_score
 from app.services.resume_service import open_stored_resume
 from app.services.scoring_engine import compute_compatibility
 
@@ -76,6 +76,28 @@ class EvaluationService:
     SKILL_CREDIT_YEARS = 1.0
 
     def evaluate(self, candidate_id: int) -> EvaluateResponse:
+        with observe_span(
+            "evaluation.candidate",
+            as_type="chain",
+            input_data={"candidate_id": candidate_id},
+            tags=["evaluation"],
+        ) as span:
+            response = self._execute_evaluate(candidate_id)
+            top_score = response.evaluations[0].compatibility if response.evaluations else 0.0
+            record_langfuse_score(
+                name="candidate_evaluation_top_score",
+                value=top_score,
+                trace_id=span.trace_id,
+            )
+            span.set_output(
+                {
+                    "departments_evaluated": len(response.evaluations),
+                    "top_score": top_score,
+                }
+            )
+            return response
+
+    def _execute_evaluate(self, candidate_id: int) -> EvaluateResponse:
         candidate = self._load_candidate(candidate_id)
         if candidate is None:
             raise HTTPException(
@@ -333,18 +355,11 @@ class EvaluationService:
         candidate_info: dict[str, Any],
         evaluations: list[DepartmentEvaluation],
     ) -> list[DepartmentEvaluation]:
-        if load_dotenv is not None:
-            load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+        from app.services.llm_router import LLMRouterService
 
-        provider = (
-            os.getenv("TALENTFLOW_EVALUATION_LLM_PROVIDER")
-            or os.getenv("TALENTFLOW_SKILL_LLM_PROVIDER")
-            or ""
-        ).strip().casefold()
-
-        if provider not in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}:
+        if not LLMRouterService.is_task_configured("candidate_evaluation", db=self.db):
             print(
-                f"⚠ LLM not configured (provider='{provider}') — using computed scores",
+                "⚠ LLM not configured for candidate_evaluation — using computed scores",
                 flush=True,
             )
             return evaluations

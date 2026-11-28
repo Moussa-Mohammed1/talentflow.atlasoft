@@ -30,6 +30,7 @@ from app.services.cv_pipeline.normalizer import CVAttributeNormalizer
 from app.services.embeddings.chunker import JobOfferTextBuilder
 from app.services.embeddings.embedder import EmbeddingService
 from app.services.embeddings.indexer import EmbeddingIndexService
+from app.services.llm_observability import observe_span
 
 
 def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
@@ -246,6 +247,35 @@ class HybridMatchingService:
         )
 
     def match_candidates(
+        self,
+        request: HybridMatchRequest,
+        *,
+        precomputed_query_embedding: list[float] | None = None,
+    ) -> HybridMatchResponse:
+        with observe_span(
+            "matching.hybrid_search",
+            as_type="retriever",
+            input_data={
+                "job_offer_id": str(request.job_offer_id) if request.job_offer_id else None,
+                "role": request.role or request.filters.role,
+                "required_skills": request.required_skills,
+                "limit": request.limit,
+            },
+            tags=["matching", "pgvector"],
+        ) as span:
+            response = self._execute_match_candidates(
+                request, precomputed_query_embedding=precomputed_query_embedding
+            )
+            span.set_output(
+                {
+                    "total_evaluated": response.total_candidates_evaluated,
+                    "returned": len(response.results),
+                    "top_score": response.results[0].signals.hybrid_score if response.results else None,
+                }
+            )
+            return response
+
+    def _execute_match_candidates(
         self,
         request: HybridMatchRequest,
         *,

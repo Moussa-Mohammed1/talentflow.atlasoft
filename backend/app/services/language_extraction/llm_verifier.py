@@ -5,11 +5,18 @@ import logging
 import os
 from typing import Any
 
-import requests
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
-from app.services.language_extraction.models import LanguageMention, LanguageProficiency
+from app.services.language_extraction.models import LanguageMention
+from app.services.llm_router import LLMRouterService, parse_json_payload
 
 logger = logging.getLogger(__name__)
+
+
+class _LanguageValidationResponse(BaseModel):
+    languages: list[dict[str, Any]] = Field(default_factory=list)
+    rejected: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class LLMReviewResult:
@@ -29,34 +36,25 @@ class LLMReviewResult:
 
 
 class LLMLanguageVerifier:
-    DEFAULT_ENDPOINT = "http://localhost:11434/api/generate"
-    DEFAULT_MODEL = "qwen3:8b"
-
-    @classmethod
-    def endpoint(cls) -> str:
-        return (
-            os.getenv("TALENTFLOW_LANGUAGE_LLM_ENDPOINT")
-            or os.getenv("TALENTFLOW_SKILL_LLM_ENDPOINT")
-            or cls.DEFAULT_ENDPOINT
-        ).strip() or cls.DEFAULT_ENDPOINT
-
-    @classmethod
-    def model(cls) -> str:
-        return (
-            os.getenv("TALENTFLOW_LANGUAGE_LLM_MODEL")
-            or os.getenv("TALENTFLOW_SKILL_LLM_MODEL")
-            or cls.DEFAULT_MODEL
-        ).strip() or cls.DEFAULT_MODEL
+    def __init__(self, db: Session | None = None, recruiter_id: int | None = None) -> None:
+        self.db = db
+        self.recruiter_id = recruiter_id
 
     @property
     def available(self) -> bool:
-        try:
-            return bool(self.endpoint() and self.model())
-        except Exception:
-            return False
+        return LLMRouterService.is_task_configured("cv_extraction", db=self.db)
 
-    def review(self, text: str, languages: list[LanguageMention]) -> LLMReviewResult:
-        if not self.available:
+    def review(
+        self,
+        text: str,
+        languages: list[LanguageMention],
+        db: Session | None = None,
+        recruiter_id: int | None = None,
+    ) -> LLMReviewResult:
+        effective_db = db if db is not None else self.db
+        effective_recruiter_id = recruiter_id if recruiter_id is not None else self.recruiter_id
+
+        if not LLMRouterService.is_task_configured("cv_extraction", db=effective_db):
             return LLMReviewResult(
                 available=False,
                 languages=[lang.to_dict() for lang in languages],
@@ -75,48 +73,27 @@ class LLMLanguageVerifier:
         ]
 
         try:
-            response_data = self._call_llm(text, payload)
-            return self._parse_response(response_data, payload)
+            prompt = self._build_prompt(text, payload)
+            result = LLMRouterService.generate(
+                task_category="cv_extraction",
+                prompt=prompt,
+                action="language_validation",
+                db=effective_db,
+                recruiter_id=effective_recruiter_id,
+                json_mode=True,
+                top_p=float(os.getenv("TALENTFLOW_LANGUAGE_LLM_TOP_P", "0.8")),
+                validator=self._parse_json_response,
+            )
+            return self._parse_response(result.parsed, provider=f"{result.provider}:{result.model}")
         except Exception:
             logger.exception("Language LLM verification failed, falling back to deterministic results")
             return LLMReviewResult(
                 available=True,
                 languages=[lang.to_dict() for lang in languages],
                 rejected=[],
-                provider=self.model(),
+                provider=LLMRouterService.resolve_task_profile("cv_extraction", db=effective_db).primary_provider,
                 reason="LLM call failed, used deterministic extraction",
             )
-
-    def _call_llm(self, text: str, languages: list[dict[str, Any]]) -> dict[str, Any]:
-        prompt = self._build_prompt(text, languages)
-        logger.info(
-            "Language LLM request started: model=%s candidates=%d",
-            self.model(),
-            len(languages),
-        )
-        response = requests.post(
-            self.endpoint(),
-            json={
-                "model": self.model(),
-                "prompt": "/no_think\n" + prompt,
-                "stream": False,
-                "think": False,
-                "options": {
-                    "temperature": float(os.getenv("TALENTFLOW_LANGUAGE_LLM_TEMPERATURE", "0.1")),
-                    "top_p": float(os.getenv("TALENTFLOW_LANGUAGE_LLM_TOP_P", "0.8")),
-                    "num_predict": int(os.getenv("TALENTFLOW_LANGUAGE_LLM_NUM_PREDICT", "2048")),
-                },
-            },
-            timeout=float(os.getenv("TALENTFLOW_LANGUAGE_LLM_TIMEOUT", "120")),
-        )
-        response.raise_for_status()
-        payload = response.json()
-        parsed = self._parse_json_response(str(payload.get("response", "")))
-        logger.info(
-            "Language LLM request completed: decisions=%d",
-            len(parsed.get("languages", [])),
-        )
-        return parsed
 
     @staticmethod
     def _build_prompt(text: str, languages: list[dict[str, Any]]) -> str:
@@ -156,7 +133,7 @@ class LLMLanguageVerifier:
         )
 
     @staticmethod
-    def _parse_response(lm_response: dict[str, Any], original_payload: list[dict[str, Any]]) -> LLMReviewResult:
+    def _parse_response(lm_response: dict[str, Any], *, provider: str = "") -> LLMReviewResult:
         accepted = lm_response.get("languages", [])
         rejected = lm_response.get("rejected", [])
         if not isinstance(accepted, list):
@@ -168,46 +145,27 @@ class LLMLanguageVerifier:
             available=True,
             languages=accepted,
             rejected=rejected,
-            provider=LLMLanguageVerifier.model(),
+            provider=provider,
         )
 
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
-        cleaned = raw_response.strip()
-        if "</think>" in cleaned:
-            cleaned = cleaned.split("</think>", 1)[1].strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.removeprefix("```").strip()
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:].strip()
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3].strip()
-
-        try:
-            parsed = json.loads(cleaned)
-        except json.JSONDecodeError:
-            start = cleaned.find("{")
-            end = cleaned.rfind("}")
-            if start < 0 or end <= start:
-                raise
-            parsed = json.loads(cleaned[start : end + 1])
-
+        parsed = parse_json_payload(raw_response)
         if not isinstance(parsed, dict):
             raise ValueError("LLM response must be a JSON object")
-        parsed.setdefault("languages", [])
-        parsed.setdefault("rejected", [])
-        if not isinstance(parsed["languages"], list):
-            parsed["languages"] = []
-        if not isinstance(parsed["rejected"], list):
-            parsed["rejected"] = []
 
-        parsed["languages"] = [
-            item for item in parsed["languages"]
+        validated = _LanguageValidationResponse.model_validate(
+            {
+                "languages": parsed.get("languages") if isinstance(parsed.get("languages"), list) else [],
+                "rejected": parsed.get("rejected") if isinstance(parsed.get("rejected"), list) else [],
+            }
+        )
+        languages = [
+            item for item in validated.languages
             if isinstance(item, dict) and str(item.get("language", "")).strip()
         ]
-        parsed["rejected"] = [
-            item for item in parsed["rejected"]
+        rejected = [
+            item for item in validated.rejected
             if isinstance(item, dict) and str(item.get("language", "")).strip()
         ]
-
-        return parsed
+        return {"languages": languages, "rejected": rejected}

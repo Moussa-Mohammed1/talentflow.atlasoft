@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.services.LLM.validate_identity import LLMService
 from app.services.identity_extraction.validation import IdentityValidation
+from app.services.llm_router import LLMRouterService
 
 try:
     from dotenv import load_dotenv
@@ -38,12 +39,13 @@ class LLMIdentityVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        return LLMRouterService.is_task_configured("cv_extraction") or (
+            self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        )
 
     def review_resume_identity(self, text: str, identity: dict[str, Any],
                                 db: Session | None = None, recruiter_id: int | None = None) -> LLMIdentityReview:
-        print("verfiying")
-        if not self.available:
+        if not (LLMRouterService.is_task_configured("cv_extraction", db=db) or self.available):
             return LLMIdentityReview(False, self.provider or "none", {}, [], "llm_fallback_not_configured")
 
         try:

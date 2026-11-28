@@ -8,6 +8,7 @@ from typing import Any
 from sqlalchemy.orm import Session
 
 from app.services.LLM.validate_skills import LLMService
+from app.services.llm_router import LLMRouterService
 
 try:
     from dotenv import load_dotenv
@@ -40,11 +41,13 @@ class LLMSkillVerifier:
 
     @property
     def available(self) -> bool:
-        return self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        return LLMRouterService.is_task_configured("cv_extraction") or (
+            self.provider in {"ollama", "qwen", "qwen3", "local", "local_qwen", "gemini", "gemini_flash", "deepseek"}
+        )
 
     def verify(self, candidate: str, evidence: list[str], section: str,
                db: Session | None = None, recruiter_id: int | None = None) -> LLMVerification:
-        if not self.available:
+        if not (LLMRouterService.is_task_configured("cv_extraction", db=db) or self.available):
             return LLMVerification(False, 0.0, "llm_fallback_not_configured", "none")
 
         if os.getenv("TALENTFLOW_SKILL_LLM_CANDIDATE_VERIFY", "").strip().casefold() not in {"1", "true", "yes"}:
@@ -64,7 +67,7 @@ class LLMSkillVerifier:
 
     def review_resume_skills(self, text: str, skills: list[dict[str, Any]],
                               db: Session | None = None, recruiter_id: int | None = None) -> LLMReview:
-        if not self.available:
+        if not (LLMRouterService.is_task_configured("cv_extraction", db=db) or self.available):
             return LLMReview(False, self.provider or "none", [], [], "llm_fallback_not_configured")
 
         try:

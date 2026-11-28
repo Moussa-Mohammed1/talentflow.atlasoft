@@ -1,68 +1,57 @@
 from __future__ import annotations
 
 import json
-import os
-from datetime import datetime
 from typing import Any
 
-from openai import OpenAI
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app.services.llm_usage_recorder import record_llm_usage
+from app.services.llm_router import LLMRouterService, parse_json_payload
+
+
+class _RecruitmentEmailResponse(BaseModel):
+    subject: str = Field(default="Interview Invitation", min_length=1)
+    body: str = Field(default="", min_length=1)
 
 
 class RecruitmentEmailGenerator:
-    DEFAULT_MODEL = "deepseek-chat"
-    DEFAULT_ENDPOINT = "https://api.deepseek.com/v1"
-
     @classmethod
-    def _client(cls) -> OpenAI:
-        api_key = os.getenv("LLM_API_KEY", "").strip()
-        if not api_key:
-            raise ValueError("LLM_API_KEY is not set in .env")
-        return OpenAI(api_key=api_key, base_url=cls.DEFAULT_ENDPOINT)
-
-    @classmethod
-    def model(cls) -> str:
-        return os.getenv("LLM_MODEL", cls.DEFAULT_MODEL).strip() or cls.DEFAULT_MODEL
-
-    @classmethod
-    def generate(cls, variables: dict[str, str],
-                 db: Session | None = None, recruiter_id: int | None = None) -> dict[str, str]:
-        prompt = cls._build_prompt(variables)
-        print("Calling DeepSeek for email generation...", flush=True)
-        start = datetime.utcnow()
-        response = cls._client().chat.completions.create(
-            model=cls.model(),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.3,
+    def generate(
+        cls,
+        variables: dict[str, str],
+        db: Session | None = None,
+        recruiter_id: int | None = None,
+        grounded_context: str | None = None,
+    ) -> dict[str, str]:
+        prompt = cls._build_prompt(variables, grounded_context=grounded_context)
+        result = LLMRouterService.generate(
+            task_category="general_rag",
+            prompt=prompt,
+            action="recruitment_email_generation",
+            db=db,
+            recruiter_id=recruiter_id,
+            json_mode=True,
             top_p=0.9,
-            max_tokens=2048,
+            validator=cls._parse_json_response,
         )
-        duration = int((datetime.utcnow() - start).total_seconds() * 1000)
-        content = response.choices[0].message.content or ""
-        print("Email generation result received", flush=True)
-        if db is not None and recruiter_id is not None:
-            try:
-                record_llm_usage(
-                    db=db,
-                    recruiter_id=recruiter_id,
-                    action="recruitment_email_generation",
-                    model=cls.model(),
-                    tokens_prompt=response.usage.prompt_tokens if response.usage else 0,
-                    tokens_completion=response.usage.completion_tokens if response.usage else 0,
-                    duration_ms=duration,
-                )
-            except Exception:
-                pass
-        return cls._parse_json_response(content)
+        return result.parsed
 
     @classmethod
-    def _build_prompt(cls, variables: dict[str, str]) -> str:
+    def _build_prompt(
+        cls,
+        variables: dict[str, str],
+        *,
+        grounded_context: str | None = None,
+    ) -> str:
         schema = {
             "subject": "email subject line",
             "body": "full email body in HTML format",
         }
+        grounding_block = (
+            f"\nGrounded Candidate & Job Evidence (cite/reference ONLY verified facts from below):\n{grounded_context}\n"
+            if grounded_context
+            else ""
+        )
         return (
             "You are a professional recruitment assistant. Generate a polite and professional interview invitation email.\n\n"
             "Use the following variables:\n"
@@ -75,7 +64,8 @@ class RecruitmentEmailGenerator:
             f"- Location: {variables.get('location', 'TBD')}\n"
             f"- Recruiter Name: {variables.get('recruiter_name', '')}\n"
             f"- Company Signature: {variables.get('company_name', '3GCOM')}\n\n"
-            f"- Language: {variables.get('language', 'french')}\n\n"
+            f"- Language: {variables.get('language', 'french')}\n"
+            f"{grounding_block}\n"
             "Rules:\n"
             "1. The subject should be clear and professional.\n"
             "2. The body should be in HTML format with proper tags (p, br, strong, etc.).\n"
@@ -83,39 +73,21 @@ class RecruitmentEmailGenerator:
             f"4. Write the entire email in {variables.get('language', 'french')}.\n"
             "5. The tone should be warm and professional.\n"
             "6. End with the recruiter's name and company signature.\n"
-            "7. Return only one valid JSON object. No markdown and no explanation outside JSON.\n\n"
+            "7. Only reference candidate skills or experience present in the provided evidence.\n"
+            "8. Return only one valid JSON object. No markdown and no explanation outside JSON.\n\n"
             f"JSON schema:\n{json.dumps(schema, ensure_ascii=False, indent=2)}"
         )
 
     @staticmethod
     def _parse_json_response(raw_response: str) -> dict[str, Any]:
-        cleaned = raw_response.strip()
-        if "</think>" in cleaned:
-            cleaned = cleaned.split("</think>", 1)[1].strip()
-        if cleaned.startswith("```"):
-            cleaned = cleaned.removeprefix("```").strip()
-            if cleaned.startswith("json"):
-                cleaned = cleaned[4:].strip()
-            if cleaned.endswith("```"):
-                cleaned = cleaned[:-3].strip()
-
-        try:
-            parsed = json.loads(cleaned)
-        except json.JSONDecodeError:
-            obj_start = cleaned.find("{")
-            obj_end = cleaned.rfind("}")
-            if obj_start >= 0 and obj_end > obj_start:
-                try:
-                    parsed = json.loads(cleaned[obj_start : obj_end + 1])
-                except json.JSONDecodeError:
-                    raise ValueError("Failed to parse LLM response as JSON")
-            else:
-                raise ValueError("Failed to parse LLM response as JSON")
-
+        parsed = parse_json_payload(raw_response)
         if not isinstance(parsed, dict):
             raise ValueError(f"LLM response must be a JSON object, got {type(parsed)}")
 
-        return {
-            "subject": str(parsed.get("subject", "Interview Invitation")).strip(),
-            "body": str(parsed.get("body", "")).strip(),
-        }
+        validated = _RecruitmentEmailResponse.model_validate(
+            {
+                "subject": str(parsed.get("subject") or "Interview Invitation").strip(),
+                "body": str(parsed.get("body") or "").strip(),
+            }
+        )
+        return validated.model_dump()
